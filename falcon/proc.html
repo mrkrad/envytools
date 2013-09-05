@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Processor control &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Code virtual memory" href="vm.html" />
+    <link rel="prev" title="Branch instructions" href="branch.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="vm.html" title="Code virtual memory"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="branch.html" title="Branch instructions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="processor-control">
+<span id="falcon-proc"></span><h1><a class="toc-backref" href="#id1">Processor control</a><a class="headerlink" href="#processor-control" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#processor-control" id="id1">Processor control</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#execution-state" id="id3">Execution state</a><ul>
+<li><a class="reference internal" href="#the-exit-interrupt" id="id4">The EXIT interrupt</a></li>
+<li><a class="reference internal" href="#halting-microcode-execution-exit" id="id5">Halting microcode execution: exit</a></li>
+<li><a class="reference internal" href="#waiting-for-interrupts-sleep" id="id6">Waiting for interrupts: sleep</a></li>
+<li><a class="reference internal" href="#processor-execution-control-registers" id="id7">Processor execution control registers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#accessing-special-registers-mov" id="id8">Accessing special registers: mov</a></li>
+<li><a class="reference internal" href="#processor-capability-readout" id="id9">Processor capability readout</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="execution-state">
+<h2><a class="toc-backref" href="#id3">Execution state</a><a class="headerlink" href="#execution-state" title="Permalink to this headline">¶</a></h2>
+<p>The falcon processor can be in one of three states:</p>
+<ul class="simple">
+<li>RUNNING: processor is actively executing instructions</li>
+<li>STOPPED: no instructions are being executed, interrupts are ignored</li>
+<li>SLEEPING: no instructions are being executed, but interrupts can restart
+execution</li>
+</ul>
+<p>The state can be changed as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="14%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">From</th>
+<th class="head">To</th>
+<th class="head">Cause</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>any</td>
+<td>STOPPED</td>
+<td>Reset [non-crypto]</td>
+</tr>
+<tr class="row-odd"><td>any</td>
+<td>RUNNING</td>
+<td>Reset [crypto]</td>
+</tr>
+<tr class="row-even"><td>STOPPED</td>
+<td>RUNNING</td>
+<td><a class="reference internal" href="#falcon-io-uc-ctrl"><em>Start by UC_CTRL</em></a></td>
+</tr>
+<tr class="row-odd"><td>RUNNING</td>
+<td>STOPPED</td>
+<td><a class="reference internal" href="#falcon-isa-exit"><em>Exit instruction</em></a></td>
+</tr>
+<tr class="row-even"><td>RUNNING</td>
+<td>STOPPED</td>
+<td><a class="reference internal" href="intr.html#falcon-trap"><em>Double trap</em></a></td>
+</tr>
+<tr class="row-odd"><td>RUNNING</td>
+<td>SLEEPING</td>
+<td><a class="reference internal" href="#falcon-isa-sleep"><em>Sleep instruction</em></a></td>
+</tr>
+<tr class="row-even"><td>SLEEPING</td>
+<td>RUNNING</td>
+<td><a class="reference internal" href="intr.html#falcon-intr"><em>Interrupt</em></a></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="the-exit-interrupt">
+<span id="falcon-intr-exit"></span><h3><a class="toc-backref" href="#id4">The EXIT interrupt</a><a class="headerlink" href="#the-exit-interrupt" title="Permalink to this headline">¶</a></h3>
+<p>Whenever falcon execution state is changed to STOPPED for any reason other
+than reset (exit instruction, double trap, or the crypto reset scrubber
+finishing), falcon interrupt line 4 is active for one cycle (triggering
+the EXIT interrupt if it&#8217;s set to level mode).</p>
+</div>
+<div class="section" id="halting-microcode-execution-exit">
+<span id="falcon-isa-exit"></span><h3><a class="toc-backref" href="#id5">Halting microcode execution: exit</a><a class="headerlink" href="#halting-microcode-execution-exit" title="Permalink to this headline">¶</a></h3>
+<p>Halts microcode execution, raises EXIT interrupt.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="65%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>exit</td>
+<td>Halt microcode execution</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>[none]</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="68%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>[no operands]</td>
+<td>f8</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">EXIT</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="waiting-for-interrupts-sleep">
+<span id="falcon-isa-sleep"></span><h3><a class="toc-backref" href="#id6">Waiting for interrupts: sleep</a><a class="headerlink" href="#waiting-for-interrupts-sleep" title="Permalink to this headline">¶</a></h3>
+<p>If the <a class="reference internal" href="isa.html#falcon-sr-flags"><em>$flags</em></a> bit given as argument is set, puts
+the microprocessor in sleep state until an unmasked interrupt is received.
+Otherwise, is a nop. If interrupted, return pointer will point to start of
+the sleep instruction, restarting it if the $flags bit hasn&#8217;t been cleared.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="13%" />
+<col width="63%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>sleep</td>
+<td>Wait for interrupts</td>
+<td>28</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>FLAG</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="68%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>I8</td>
+<td>f4</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if ($flags &amp; 1 &lt;&lt; FLAG)
+        state = SLEEPING;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="processor-execution-control-registers">
+<span id="falcon-io-uc-ctrl"></span><h3><a class="toc-backref" href="#id7">Processor execution control registers</a><a class="headerlink" href="#processor-execution-control-registers" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="accessing-special-registers-mov">
+<span id="falcon-isa-movsr"></span><h2><a class="toc-backref" href="#id8">Accessing special registers: mov</a><a class="headerlink" href="#accessing-special-registers-mov" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="processor-capability-readout">
+<span id="falcon-io-uc-caps"></span><h2><a class="toc-backref" href="#id9">Processor capability readout</a><a class="headerlink" href="#processor-capability-readout" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Processor control</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#execution-state">Execution state</a><ul>
+<li><a class="reference internal" href="#the-exit-interrupt">The EXIT interrupt</a></li>
+<li><a class="reference internal" href="#halting-microcode-execution-exit">Halting microcode execution: exit</a></li>
+<li><a class="reference internal" href="#waiting-for-interrupts-sleep">Waiting for interrupts: sleep</a></li>
+<li><a class="reference internal" href="#processor-execution-control-registers">Processor execution control registers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#accessing-special-registers-mov">Accessing special registers: mov</a></li>
+<li><a class="reference internal" href="#processor-capability-readout">Processor capability readout</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="branch.html"
+                        title="previous chapter">Branch instructions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="vm.html"
+                        title="next chapter">Code virtual memory</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/proc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="vm.html" title="Code virtual memory"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="branch.html" title="Branch instructions"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

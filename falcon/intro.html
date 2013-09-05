@@ -1,0 +1,182 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="ISA" href="isa.html" />
+    <link rel="prev" title="falcon microprocessor" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="isa.html" title="ISA"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="falcon microprocessor"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<span id="falcon-intro"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>falcon is a class of general-purpose microprocessor units, used in multiple
+instances on nvidia GPUs starting from NV98. Originally developed as the
+controlling logic for VP3 video decoding engines as a replacement for xtensa
+used on VP2, it was later used in many other places, whenever a microprocessor
+of some sort was needed.</p>
+<p>A single falcon unit is made of:</p>
+<ul class="simple">
+<li>the core microprocessor with its code and data SRAM [see <a class="reference internal" href="proc.html#falcon-proc"><em>Processor control</em></a>]</li>
+<li>an IO space containing control registers of all subunits, accessible from
+the host as well as from the code running on the falcon microprocessor [see
+<a class="reference internal" href="io.html#falcon-io"><em>IO space</em></a>]</li>
+<li>common support logic:<ul>
+<li>interrupt controller [see <a class="reference internal" href="intr.html#falcon-intr"><em>Interrupt delivery</em></a>]</li>
+<li>periodic and watchdog timers [see <a class="reference internal" href="timer.html#falcon-timer"><em>Timers</em></a>]</li>
+<li>scratch registers for communication with host [see <a class="reference internal" href="io.html#falcon-io-scratch"><em>Scratch registers</em></a>]</li>
+<li>PCOUNTER signal output [see <a class="reference internal" href="perf.html#falcon-perf"><em>Performance monitoring signals</em></a>]</li>
+<li>some unknown other stuff</li>
+</ul>
+</li>
+<li>optionally, FIFO interface logic, for falcon units used as PFIFO engines and
+some others [see <a class="reference internal" href="fifo.html#falcon-fifo"><em>FIFO interface</em></a>]</li>
+<li>optionally, common memory interface logic [see <a class="reference internal" href="memif.html#falcon-memif"><em>Memory interface</em></a>]. However,
+some engines have their own type of memory interface.</li>
+<li>optionally, a cryptographic AES coprocessor. A falcon unit with such
+coprocessor is called a &#8220;secretful&#8221; unit. [see <a class="reference internal" href="crypt.html#falcon-crypt"><em>Cryptographic coprocessor</em></a>]</li>
+<li>any unit-specific logic the microprocessor is supposed to control</li>
+</ul>
+<p>The base falcon hardware comes in three different revisions:</p>
+<ul class="simple">
+<li>version 0: used on NV98, NVAA, NVAC</li>
+<li>version 3: used on NVA3+, adds a crude VM system for the code segment,
+edge/level interrupt modes, new instructions [division, software traps,
+bitfield manipulation, ...], and other features</li>
+<li>version 4: used on NVD9+ for some engines [others are still version 3]:
+adds support for 24-bit code addressing, debugging and ???</li>
+</ul>
+<p>The falcon units present on nvidia cards are:</p>
+<ul class="simple">
+<li>The VP3/VP4/VP5 engines [NV98 and NVAA+]:<ul>
+<li>PVLD, the variable length decoder                   <a class="reference external" href="../vdec/vp3/pvld.txt">../vdec/vp3/pvld.txt</a></li>
+<li>PVDEC, the video decoder                            <a class="reference external" href="../vdec/vp3/pvdec.txt">../vdec/vp3/pvdec.txt</a></li>
+<li>PPPP, the video post-processor                      <a class="reference external" href="../vdec/vp3/pppp.txt">../vdec/vp3/pppp.txt</a></li>
+</ul>
+</li>
+<li>The VP3 cryptographic engine [NV98, NVAA, NVAC]:<ul>
+<li>PCRYPT3, the cryptographic engine                   <a class="reference external" href="../vdec/vp3/pcrypt3.txt">../vdec/vp3/pcrypt3.txt</a></li>
+</ul>
+</li>
+<li>The NVA3:NVE4 copy engines:<ul>
+<li>PCOPY0 [NVA3:NVE4]                                  <a class="reference external" href="../fifo/pcopy.txt">../fifo/pcopy.txt</a></li>
+<li>PCOPY1 [NVC0:NVE4]                                  <a class="reference external" href="../fifo/pcopy.txt">../fifo/pcopy.txt</a></li>
+</ul>
+</li>
+<li>The NVA3+ daemon engines:<ul>
+<li>PDAEMON [NVA3+]                                     <a class="reference external" href="../pm/pdaemon.txt">../pm/pdaemon.txt</a></li>
+<li>PDISPLAY.DAEMON [NVD9+]                             <a class="reference external" href="../display/nv50/pdisplay-daemon.txt">../display/nv50/pdisplay-daemon.txt</a></li>
+</ul>
+</li>
+<li>The NVC0 PGRAPH CTXCTL engines:<ul>
+<li>PGRAPH.CTXCTL                                       <a class="reference external" href="../graph/nvc0-ctxctl/intro.txt">../graph/nvc0-ctxctl/intro.txt</a></li>
+<li>PGRAPH.GPC[*].CTXCTL                                <a class="reference external" href="../graph/nvc0-ctxctl/intro.txt">../graph/nvc0-ctxctl/intro.txt</a></li>
+</ul>
+</li>
+<li>The video compositing engine, PVCOMP [NVAF:NVC0]      <a class="reference external" href="../vdec/pvcomp.txt">../vdec/pvcomp.txt</a></li>
+<li>The unknown NVD9 PUNK1C3 engine                       <a class="reference external" href="../display/nv50/punk1c3.txt">../display/nv50/punk1c3.txt</a></li>
+<li>The H.264 encoding engine, PVENC [NVE4+]              <a class="reference external" href="../vdec/pvenc.txt">../vdec/pvenc.txt</a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">falcon microprocessor</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="isa.html"
+                        title="next chapter">ISA</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="isa.html" title="ISA"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="falcon microprocessor"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

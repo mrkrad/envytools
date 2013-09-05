@@ -1,0 +1,970 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>IO space &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Timers" href="timer.html" />
+    <link rel="prev" title="Code/data xfers to/from external memory" href="xfer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="timer.html" title="Timers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="xfer.html" title="Code/data xfers to/from external memory"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="io-space">
+<span id="falcon-io"></span><h1><a class="toc-backref" href="#id1">IO space</a><a class="headerlink" href="#io-space" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#io-space" id="id1">IO space</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#common-io-register-list" id="id3">Common IO register list</a></li>
+<li><a class="reference internal" href="#scratch-registers" id="id4">Scratch registers</a></li>
+<li><a class="reference internal" href="#engine-status-and-control-registers" id="id5">Engine status and control registers</a></li>
+<li><a class="reference internal" href="#v0-code-data-upload-registers" id="id6">v0 code/data upload registers</a></li>
+<li><a class="reference internal" href="#io-space-writes-iowr-iowrs" id="id7">IO space writes: iowr, iowrs</a></li>
+<li><a class="reference internal" href="#io-space-reads-iord" id="id8">IO space reads: iord</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Every falcon engine has an associated IO space. The space consists of 32-bit IO
+registers, and is accessible in two ways:</p>
+<ul class="simple">
+<li>host access by MMIO areas in BAR0</li>
+<li>falcon access by io* instructions</li>
+</ul>
+<p>The IO space contains control registers for the microprocessor itself,
+interrupt and timer setup, code/data space access ports, PFIFO communication
+registers, as well as registers for the engine-specific hardware that falcon
+is meant to control.</p>
+<p>The addresses are different between falcon and host. From falcon POV, the IO space
+is word-addressable 0x40000-byte space. However, most registers are duplicated
+64 times: bits 2-7 of the address are ignored. The few registers that don&#8217;t
+ignore these bits are called &#8220;indexed&#8221; registers. From host POV, the falcon IO
+space is a 0x1000-byte window in BAR0. Its base address is engine-dependent.
+First 0xf00 bytes of this window are tied to the falcon IO space, while last 0x100
+bytes contain several host-only registers. On nva3-d9, host mmio address
+falcon_base + X is directed to falcon IO space address X &lt;&lt; 6 | HOST_IO_INDEX &lt;&lt; 2.
+On nvd9+, some engines stopped using the indexed accesses. On those,
+host mmio address falcon_base + X is directed to falcon IO space address X.
+HOST_IO_INDEX is specified in the host-only MMIO register falcon_base + 0xffc:</p>
+<dl class="docutils">
+<dt>MMIO 0xffc: HOST_IO_INDEX</dt>
+<dd>bits 0-5: selects bits 2-7 of the falcon IO space when accessed from host.</dd>
+</dl>
+<p>Unaligned accesses to the IO space are unsupported, both from host and falcon.
+Low 2 bits of addresses should be 0 at all times.</p>
+</div>
+<div class="section" id="common-io-register-list">
+<h2><a class="toc-backref" href="#id3">Common IO register list</a><a class="headerlink" href="#common-io-register-list" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="5%" />
+<col width="7%" />
+<col width="13%" />
+<col width="18%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Host</th>
+<th class="head">Falcon</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x000</td>
+<td>0x00000</td>
+<td>all units</td>
+<td>INTR_SET</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr"><em>trigger interrupt</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x004</td>
+<td>0x00100</td>
+<td>all units</td>
+<td>INTR_CLEAR</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr"><em>clear interrupt</em></a></td>
+</tr>
+<tr class="row-even"><td>0x008</td>
+<td>0x00200</td>
+<td>all units</td>
+<td>INTR</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr"><em>interrupt status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x00c</td>
+<td>0x00300</td>
+<td>v3+ units</td>
+<td>INTR_MODE</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr-mode"><em>interrupt edge/level</em></a></td>
+</tr>
+<tr class="row-even"><td>0x010</td>
+<td>0x00400</td>
+<td>all units</td>
+<td>INTR_EN_SET</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr-enable"><em>interrupt enable set</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x014</td>
+<td>0x00500</td>
+<td>all units</td>
+<td>INTR_EN_CLR</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr-enable"><em>interrupt enable clear</em></a></td>
+</tr>
+<tr class="row-even"><td>0x018</td>
+<td>0x00600</td>
+<td>all units</td>
+<td>INTR_EN</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr-enable"><em>interrupt enable status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x01c</td>
+<td>0x00700</td>
+<td>all units</td>
+<td>INTR_DISPATCH</td>
+<td><a class="reference internal" href="intr.html#falcon-io-intr-route"><em>interrupt routing</em></a></td>
+</tr>
+<tr class="row-even"><td>0x020</td>
+<td>0x00800</td>
+<td>all units</td>
+<td>PERIODIC_PERIOD</td>
+<td><a class="reference internal" href="timer.html#falcon-io-periodic"><em>periodic timer period</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x024</td>
+<td>0x00900</td>
+<td>all units</td>
+<td>PERIODIC_TIME</td>
+<td><a class="reference internal" href="timer.html#falcon-io-periodic"><em>periodic timer counter</em></a></td>
+</tr>
+<tr class="row-even"><td>0x028</td>
+<td>0x00a00</td>
+<td>all units</td>
+<td>PERIODIC_ENABLE</td>
+<td><a class="reference internal" href="timer.html#falcon-io-periodic"><em>periodic interrupt enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x02c</td>
+<td>0x00b00</td>
+<td>all units</td>
+<td>TIME_LOW</td>
+<td><a class="reference internal" href="timer.html#falcon-io-ptimer"><em>PTIMER time low</em></a></td>
+</tr>
+<tr class="row-even"><td>0x030</td>
+<td>0x00c00</td>
+<td>all units</td>
+<td>TIME_HIGH</td>
+<td><a class="reference internal" href="timer.html#falcon-io-ptimer"><em>PTIMER time high</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x034</td>
+<td>0x00d00</td>
+<td>all units</td>
+<td>WATCHDOG_TIME</td>
+<td><a class="reference internal" href="timer.html#falcon-io-watchdog"><em>watchdog timer counter</em></a></td>
+</tr>
+<tr class="row-even"><td>0x038</td>
+<td>0x00e00</td>
+<td>all units</td>
+<td>WATCHDOG_ENABLE</td>
+<td><a class="reference internal" href="timer.html#falcon-io-watchdog"><em>watchdog interrupt enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x040</td>
+<td>0x01000</td>
+<td>all units</td>
+<td>SCRATCH0</td>
+<td><a class="reference internal" href="#falcon-io-scratch"><em>scratch register</em></a></td>
+</tr>
+<tr class="row-even"><td>0x044</td>
+<td>0x01100</td>
+<td>all units</td>
+<td>SCRATCH1</td>
+<td><a class="reference internal" href="#falcon-io-scratch"><em>scratch register</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x048</td>
+<td>0x01200</td>
+<td>all units</td>
+<td>FIFO_ENABLE</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo-enable"><em>PFIFO access enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x04c</td>
+<td>0x01300</td>
+<td>all units</td>
+<td>STATUS</td>
+<td>busy/idle status        [falcon/io.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x050</td>
+<td>0x01400</td>
+<td>all units</td>
+<td>CHANNEL_CUR</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-channel"><em>current PFIFO channel</em></a></td>
+</tr>
+<tr class="row-even"><td>0x054</td>
+<td>0x01500</td>
+<td>all units</td>
+<td>CHANNEL_NEXT</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-channel"><em>next PFIFO channel</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x058</td>
+<td>0x01600</td>
+<td>all units</td>
+<td>CHANNEL_CMD</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-channel"><em>PFIFO channel control</em></a></td>
+</tr>
+<tr class="row-even"><td>0x05c</td>
+<td>0x01700</td>
+<td>all units</td>
+<td>STATUS_MASK</td>
+<td>busy/idle status mask?  [falcon/io.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x060</td>
+<td>0x01800</td>
+<td>all units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x064</td>
+<td>0x01900</td>
+<td>all units</td>
+<td>FIFO_DATA</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo"><em>FIFO command data</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x068</td>
+<td>0x01a00</td>
+<td>all units</td>
+<td>FIFO_CMD</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo"><em>FIFO command</em></a></td>
+</tr>
+<tr class="row-even"><td>0x06c</td>
+<td>0x01b00</td>
+<td>v4+ units</td>
+<td>???</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo"><em>FIFO ???</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x070</td>
+<td>0x01c00</td>
+<td>all units</td>
+<td>FIFO_OCCUPIED</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo"><em>FIFO commands available</em></a></td>
+</tr>
+<tr class="row-even"><td>0x074</td>
+<td>0x01d00</td>
+<td>all units</td>
+<td>FIFO_ACK</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo"><em>FIFO command ack</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x078</td>
+<td>0x01e00</td>
+<td>all units</td>
+<td>FIFO_LIMIT</td>
+<td><a class="reference internal" href="fifo.html#falcon-io-fifo"><em>FIFO size</em></a></td>
+</tr>
+<tr class="row-even"><td>0x07c</td>
+<td>0x01f00</td>
+<td>all units</td>
+<td>SUBENGINE_RESET</td>
+<td>reset subengines        [falcon/io.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x080</td>
+<td>0x02000</td>
+<td>all units</td>
+<td>SCRATCH2</td>
+<td><a class="reference internal" href="#falcon-io-scratch"><em>scratch register</em></a></td>
+</tr>
+<tr class="row-even"><td>0x084</td>
+<td>0x02100</td>
+<td>all units</td>
+<td>SCRATCH3</td>
+<td><a class="reference internal" href="#falcon-io-scratch"><em>scratch register</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x088</td>
+<td>0x02200</td>
+<td>all units</td>
+<td>PM_TRIGGER</td>
+<td><a class="reference internal" href="perf.html#falcon-io-perf-user"><em>perfmon triggers</em></a></td>
+</tr>
+<tr class="row-even"><td>0x08c</td>
+<td>0x02300</td>
+<td>all units</td>
+<td>PM_MODE</td>
+<td><a class="reference internal" href="perf.html#falcon-io-perf-user"><em>perfmon signal mode</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x090</td>
+<td>0x02400</td>
+<td>all units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x094</td>
+<td>0x02500</td>
+<td>v3+ units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x098</td>
+<td>0x02600</td>
+<td>v3+ units</td>
+<td>BREAKPOINT[0]</td>
+<td><a class="reference internal" href="debug.html#falcon-io-breakpoint"><em>code breakpoint</em></a></td>
+</tr>
+<tr class="row-even"><td>0x09c</td>
+<td>0x02700</td>
+<td>v3+ units</td>
+<td>BREAKPOINT[1]</td>
+<td><a class="reference internal" href="debug.html#falcon-io-breakpoint"><em>code breakpoint</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x0a0</td>
+<td>0x02800</td>
+<td>v3+ units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x0a4</td>
+<td>0x02900</td>
+<td>v3+ units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x0a8</td>
+<td>0x02a00</td>
+<td>v4+ units</td>
+<td>PM_SEL</td>
+<td>perfmon signal select   [falcon/perf.txt]</td>
+</tr>
+<tr class="row-even"><td>0x0ac</td>
+<td>0x02b00</td>
+<td>v4+ units</td>
+<td>HOST_IO_INDEX</td>
+<td>IO space index for host [falcon/io.txt] [XXX: doc]</td>
+</tr>
+<tr class="row-odd"><td>0x100</td>
+<td>0x04000</td>
+<td>all units</td>
+<td>UC_CTRL</td>
+<td>microprocessor control  [falcon/proc.txt]</td>
+</tr>
+<tr class="row-even"><td>0x104</td>
+<td>0x04100</td>
+<td>all units</td>
+<td>UC_ENTRY</td>
+<td>microcode entry point   [falcon/proc.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x108</td>
+<td>0x04200</td>
+<td>all units</td>
+<td>UC_CAPS</td>
+<td>microprocessor caps     [falcon/proc.txt]</td>
+</tr>
+<tr class="row-even"><td>0x10c</td>
+<td>0x04300</td>
+<td>all units</td>
+<td>UC_BLOCK_ON_FIFO</td>
+<td>microprocessor block    [falcon/proc.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x110</td>
+<td>0x04400</td>
+<td>all units</td>
+<td>XFER_EXT_BASE</td>
+<td><a class="reference internal" href="xfer.html#falcon-io-xfer"><em>xfer external base</em></a></td>
+</tr>
+<tr class="row-even"><td>0x114</td>
+<td>0x04500</td>
+<td>all units</td>
+<td>XFER_FALCON_ADDR</td>
+<td><a class="reference internal" href="xfer.html#falcon-io-xfer"><em>xfer falcon address</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x118</td>
+<td>0x04600</td>
+<td>all units</td>
+<td>XFER_CTRL</td>
+<td><a class="reference internal" href="xfer.html#falcon-io-xfer"><em>xfer control</em></a></td>
+</tr>
+<tr class="row-even"><td>0x11c</td>
+<td>0x04700</td>
+<td>all units</td>
+<td>XFER_EXT_ADDR</td>
+<td><a class="reference internal" href="xfer.html#falcon-io-xfer"><em>xfer external offset</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x120</td>
+<td>0x04800</td>
+<td>all units</td>
+<td>XFER_STATUS</td>
+<td><a class="reference internal" href="xfer.html#falcon-io-xfer-status"><em>xfer status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x124</td>
+<td>0x04900</td>
+<td>crypto units</td>
+<td>CX_STATUS</td>
+<td>crypt xfer status       [falcon/crypt.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x128</td>
+<td>0x04a00</td>
+<td>v3+ units</td>
+<td>UC_STATUS</td>
+<td>microprocessor status   [falcon/proc.txt]</td>
+</tr>
+<tr class="row-even"><td>0x12c</td>
+<td>0x04b00</td>
+<td>v3+ units</td>
+<td>UC_CAPS2</td>
+<td>microprocessor caps     [falcon/proc.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x140</td>
+<td>0x05000</td>
+<td>v3+ units</td>
+<td>TLB_CMD</td>
+<td><a class="reference internal" href="vm.html#falcon-io-tlb"><em>code VM command</em></a></td>
+</tr>
+<tr class="row-even"><td>0x144</td>
+<td>0x05100</td>
+<td>v3+ units</td>
+<td>TLB_CMD_RES</td>
+<td><a class="reference internal" href="vm.html#falcon-io-tlb"><em>code VM command result</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x148</td>
+<td>0x05200</td>
+<td>v4+ units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x14c</td>
+<td>0x05300</td>
+<td>v4+ units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x150</td>
+<td>0x05400</td>
+<td>UNK31 units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x154</td>
+<td>0x05500</td>
+<td>UNK31 units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x158</td>
+<td>0x05600</td>
+<td>UNK31 units</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x160</td>
+<td>0x05800</td>
+<td>UAS units</td>
+<td>UAS_IO_WINDOW</td>
+<td>UAS I[] space window    [falcon/data.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x164</td>
+<td>0x05900</td>
+<td>UAS units</td>
+<td>UAS_CONFIG</td>
+<td>UAS configuration       [falcon/data.txt]</td>
+</tr>
+<tr class="row-even"><td>0x168</td>
+<td>0x05a00</td>
+<td>UAS units</td>
+<td>UAS_FAULT_ADDR</td>
+<td>UAS MMIO fault address  [falcon/data.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x16c</td>
+<td>0x05b00</td>
+<td>UAS units</td>
+<td>UAS_FAULT_STATUS</td>
+<td>UAS MMIO fault status   [falcon/data.txt]</td>
+</tr>
+<tr class="row-even"><td>0x180</td>
+<td>0x06000</td>
+<td>v3+ units</td>
+<td>CODE_INDEX</td>
+<td><a class="reference internal" href="vm.html#falcon-io-code"><em>code access window addr</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x184</td>
+<td>0x06100</td>
+<td>v3+ units</td>
+<td>CODE</td>
+<td><a class="reference internal" href="vm.html#falcon-io-code"><em>code access window</em></a></td>
+</tr>
+<tr class="row-even"><td>0x188</td>
+<td>0x06200</td>
+<td>v3+ units</td>
+<td>CODE_VIRT_ADDR</td>
+<td><a class="reference internal" href="vm.html#falcon-io-code"><em>code access virt addr</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1c0</td>
+<td>0x07000</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[0]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1c4</td>
+<td>0x07100</td>
+<td>v3+ units</td>
+<td>DATA[0]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1c8</td>
+<td>0x07200</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[1]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1cc</td>
+<td>0x07300</td>
+<td>v3+ units</td>
+<td>DATA[1]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1d0</td>
+<td>0x07400</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[2]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1d4</td>
+<td>0x07500</td>
+<td>v3+ units</td>
+<td>DATA[2]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1d8</td>
+<td>0x07600</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[3]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1dc</td>
+<td>0x07700</td>
+<td>v3+ units</td>
+<td>DATA[3]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1e0</td>
+<td>0x07800</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[4]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1e4</td>
+<td>0x07900</td>
+<td>v3+ units</td>
+<td>DATA[4]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1e8</td>
+<td>0x07a00</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[5]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1ec</td>
+<td>0x07b00</td>
+<td>v3+ units</td>
+<td>DATA[5]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1f0</td>
+<td>0x07c00</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[6]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1f4</td>
+<td>0x07d00</td>
+<td>v3+ units</td>
+<td>DATA[6]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x1f8</td>
+<td>0x07e00</td>
+<td>v3+ units</td>
+<td>DATA_INDEX[7]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0x1fc</td>
+<td>0x07f00</td>
+<td>v3+ units</td>
+<td>DATA[7]</td>
+<td><a class="reference internal" href="data.html#falcon-io-data"><em>data access window</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x200</td>
+<td>0x08000</td>
+<td>v4+ units</td>
+<td>DEBUG_CMD</td>
+<td>debuging command        [falcon/debug.txt]</td>
+</tr>
+<tr class="row-even"><td>0x204</td>
+<td>0x08100</td>
+<td>v4+ units</td>
+<td>DEBUG_ADDR</td>
+<td>address for DEBUG_CMD   [falcon/debug.txt]</td>
+</tr>
+<tr class="row-odd"><td>0x208</td>
+<td>0x08200</td>
+<td>v4+ units</td>
+<td>DEBUG_DATA_WR</td>
+<td>debug data to write     [falcon/debug.txt]</td>
+</tr>
+<tr class="row-even"><td>0x20c</td>
+<td>0x08300</td>
+<td>v4+ units</td>
+<td>DEBUG_DATA_RD</td>
+<td>debug data last read    [falcon/debug.txt]</td>
+</tr>
+<tr class="row-odd"><td>0xfe8</td>
+<td>-</td>
+<td>NVC0- v3</td>
+<td>PM_SEL</td>
+<td>perfmon signal select        [falcon/perf.txt]</td>
+</tr>
+<tr class="row-even"><td>0xfec</td>
+<td>-</td>
+<td>v0, v3</td>
+<td>UC_SP</td>
+<td>microprocessor $sp reg        [falcon/proc.txt]</td>
+</tr>
+<tr class="row-odd"><td>0xff0</td>
+<td>-</td>
+<td>v0, v3</td>
+<td>UC_PC</td>
+<td>microprocessor $pc reg        [falcon/proc.txt]</td>
+</tr>
+<tr class="row-even"><td>0xff4</td>
+<td>-</td>
+<td>v0, v3</td>
+<td>UPLOAD</td>
+<td><a class="reference internal" href="#falcon-io-upload"><em>old code/data upload</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xff8</td>
+<td>-</td>
+<td>v0, v3</td>
+<td>UPLOAD_ADDR</td>
+<td><a class="reference internal" href="#falcon-io-upload"><em>old code/data up addr</em></a></td>
+</tr>
+<tr class="row-even"><td>0xffc</td>
+<td>-</td>
+<td>v0, v3</td>
+<td>HOST_IO_INDEX</td>
+<td>IO space index for host        [falcon/io.txt]</td>
+</tr>
+</tbody>
+</table>
+<p>Registers starting from 0x400/0x10000 are engine-specific and described in engine
+documentation.</p>
+</div>
+<div class="section" id="scratch-registers">
+<span id="falcon-io-scratch"></span><h2><a class="toc-backref" href="#id4">Scratch registers</a><a class="headerlink" href="#scratch-registers" title="Permalink to this headline">¶</a></h2>
+<p>MMIO 0x040 / I[0x01000]: SCRATCH0
+MMIO 0x044 / I[0x01100]: SCRATCH1
+MMIO 0x080 / I[0x02000]: SCRATCH2
+MMIO 0x084 / I[0x02100]: SCRATCH3</p>
+<blockquote>
+<div>Scratch 32-bit registers, meant for host &lt;-&gt; falcon communication.</div></blockquote>
+</div>
+<div class="section" id="engine-status-and-control-registers">
+<h2><a class="toc-backref" href="#id5">Engine status and control registers</a><a class="headerlink" href="#engine-status-and-control-registers" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>MMIO 0x04c / I[0x01300]: STATUS</dt>
+<dd>Status of various parts of the engine. For each bit, 1 means busy, 0 means
+idle.
+bit 0: UC. Microcode. 1 if microcode is running and not on a sleep insn.
+bit 1: ???
+Further bits are engine-specific.</dd>
+<dt>MMIO 0x05c / I[0x01700]: STATUS_MASK</dt>
+<dd>A bitmask of nonexistent status bits. Each of bits 0-15 is set to 0 if
+corresponding STATUS line is tied to anything in this particular engine, 1
+if it&#8217;s unused. [?]</dd>
+<dt>MMIO 0x07c / I[0x01f00]: SUBENGINE_RESET</dt>
+<dd>When written with value 1, resets all subengines that this falcon engine
+controls - that is, everything in IO space addresses 0x10000:0x20000. Note
+that this includes the memory interface - using this register while an xfer
+is in progress is ill-advised.</dd>
+</dl>
+</div>
+<div class="section" id="v0-code-data-upload-registers">
+<span id="falcon-io-upload"></span><h2><a class="toc-backref" href="#id6">v0 code/data upload registers</a><a class="headerlink" href="#v0-code-data-upload-registers" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>MMIO 0xff4: UPLOAD</dt>
+<dd>The data to upload, see below</dd>
+<dt>MMIO 0xff8: UPLOAD_ADDR</dt>
+<dd>bits 2-15: bits 2-15 of the code/data address being uploaded.
+bit 20: target segment. 0 means data, 1 means code.
+bit 21: readback.
+bit 24: xfer busy [RO]
+bit 28: secret flag - secret engines only [see falcon/crypt.txt]
+bit 29: code busy [RO]</dd>
+</dl>
+<p>This pair of registers can be used on v0 to read/write code and data
+segments. It&#8217;s quite fragile and should only be used when no xfers are active.
+bit 24 of UPLOAD_ADDR is set when this is the case. On v3+, this pair is
+broken and should be avoided in favor of the new-style access via
+<a class="reference internal" href="vm.html#falcon-io-code"><em>CODE</em></a> and <a class="reference internal" href="data.html#falcon-io-data"><em>DATA</em></a> ports.</p>
+<p>To write data, poke address to UPLOAD_ADDR, then poke the data words to
+UPLOAD. The address will auto-increment as words are uploaded.</p>
+<p>To read data or code, poke address + readback flag to UPLOAD_ADDR, then read
+the word from UPLOAD. This only works for a single word, and you need to poke
+UPLOAD_ADDR again for each subsequent word.</p>
+<p>The code segment is organised in 0x100-byte pages. On secretful engines, each
+page can be secret or not. Reading from secret pages doesn&#8217;t work and you just
+get 0. Writing code segment can only be done in aligned page units.</p>
+<p>To write a code page, write start address of the page + secret flag [if
+needed] to UPLOAD_ADDR, then poke multiple of 0x40 words to UPLOAD. The
+address will autoincrement. The process cannot be interrupted except between
+pages. The &#8220;code busy&#8221; flag in UPLOAD_ADDR will be lit when this is the case.</p>
+</div>
+<div class="section" id="io-space-writes-iowr-iowrs">
+<span id="falcon-isa-iowr"></span><h2><a class="toc-backref" href="#id7">IO space writes: iowr, iowrs</a><a class="headerlink" href="#io-space-writes-iowr-iowrs" title="Permalink to this headline">¶</a></h2>
+<p>Writes a word to IO space. iowr does asynchronous writes [queues the write,
+but doesn&#8217;t wait for completion], iowrs does synchronous write [write is
+guaranteed to complete before executing next instruction]. On v0 cards,
+iowrs doesn&#8217;t exist and synchronisation can instead be done by re-reading
+the relevant register.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="10%" />
+<col width="54%" />
+<col width="19%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>iowr</td>
+<td>Asynchronous IO space write</td>
+<td>all units</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>iowrs</td>
+<td>Synchronous IO space write</td>
+<td>v3+ units</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>BASE, IDX, SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="53%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, I8, R1</td>
+<td>d0</td>
+</tr>
+<tr class="row-odd"><td>R2, 0, R1</td>
+<td>fa</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == iowr)
+        IOWR(BASE + IDX * 4, SRC);
+else
+        IOWRS(BASE + IDX * 4, SRC);</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="io-space-reads-iord">
+<span id="falcon-isa-iord"></span><h2><a class="toc-backref" href="#id8">IO space reads: iord</a><a class="headerlink" href="#io-space-reads-iord" title="Permalink to this headline">¶</a></h2>
+<p>Reads a word from IO space.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="10%" />
+<col width="54%" />
+<col width="19%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>???</td>
+<td>???</td>
+<td>v3+ units</td>
+<td>e</td>
+</tr>
+<tr class="row-odd"><td>iord</td>
+<td>IO space read</td>
+<td>all units</td>
+<td>f</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>DST, BASE, IDX</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="53%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == iord)
+        DST = IORD(BASE + IDX * 4);
+else
+        ???;</pre>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">IO space</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#common-io-register-list">Common IO register list</a></li>
+<li><a class="reference internal" href="#scratch-registers">Scratch registers</a></li>
+<li><a class="reference internal" href="#engine-status-and-control-registers">Engine status and control registers</a></li>
+<li><a class="reference internal" href="#v0-code-data-upload-registers">v0 code/data upload registers</a></li>
+<li><a class="reference internal" href="#io-space-writes-iowr-iowrs">IO space writes: iowr, iowrs</a></li>
+<li><a class="reference internal" href="#io-space-reads-iord">IO space reads: iord</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="xfer.html"
+                        title="previous chapter">Code/data xfers to/from external memory</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="timer.html"
+                        title="next chapter">Timers</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/io.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="timer.html" title="Timers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="xfer.html" title="Code/data xfers to/from external memory"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

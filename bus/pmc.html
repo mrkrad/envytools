@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PMC: Master control unit &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="PCI/PCIE/AGP bus interface and card management logic" href="index.html" />
+    <link rel="next" title="PTIMER: Timer engine" href="ptimer.html" />
+    <link rel="prev" title="PCI/PCIE/AGP bus interface and card management logic" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="ptimer.html" title="PTIMER: Timer engine"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PCI/PCIE/AGP bus interface and card management logic"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pmc-master-control-unit">
+<span id="pmc"></span><h1><a class="toc-backref" href="#id1">PMC: Master control unit</a><a class="headerlink" href="#pmc-master-control-unit" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pmc-master-control-unit" id="id1">PMC: Master control unit</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-register-list" id="id3">MMIO register list</a></li>
+<li><a class="reference internal" href="#card-identification" id="id4">Card identification</a></li>
+<li><a class="reference internal" href="#endian-switch" id="id5">Endian switch</a></li>
+<li><a class="reference internal" href="#engine-enables" id="id6">Engine enables</a></li>
+<li><a class="reference internal" href="#interrupts" id="id7">Interrupts</a></li>
+<li><a class="reference internal" href="#vram-hidden-area" id="id8">VRAM hidden area</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>PMC is the &#8220;master control&#8221; engine of the card. Its purpose is to provide
+card identication, manage enable/disable bits of other engines, and handle
+top-level interrupt routing.</p>
+<p>The PMC&#8217;s MMIO range is 0x0000:0x1000. It is always active.</p>
+</div>
+<div class="section" id="mmio-register-list">
+<span id="pmc-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO register list</a><a class="headerlink" href="#mmio-register-list" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="8%" />
+<col width="20%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Variants</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>000000</td>
+<td>all</td>
+<td>ID</td>
+<td><a class="reference internal" href="#pmc-mmio-id"><em>card identification</em></a></td>
+</tr>
+<tr class="row-odd"><td>000004</td>
+<td>NV11-</td>
+<td>ENDIAN</td>
+<td><a class="reference internal" href="#pmc-mmio-endian"><em>endian switch</em></a></td>
+</tr>
+<tr class="row-even"><td>000008</td>
+<td>NV92-</td>
+<td>BOOT_2</td>
+<td><a class="reference internal" href="#pmc-mmio-id"><em>???</em></a></td>
+</tr>
+<tr class="row-odd"><td>000100</td>
+<td>all</td>
+<td>INTR_HOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt status - host</em></a></td>
+</tr>
+<tr class="row-even"><td>000104</td>
+<td>NVA3-</td>
+<td>INTR_NRHOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt status - non-redirectable host</em></a></td>
+</tr>
+<tr class="row-odd"><td>000108</td>
+<td>NVA3-</td>
+<td>INTR_DAEMON</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt status - PDAEMON</em></a></td>
+</tr>
+<tr class="row-even"><td>000100</td>
+<td>all</td>
+<td>INTR_EN_HOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt enable - host</em></a></td>
+</tr>
+<tr class="row-odd"><td>000144</td>
+<td>NVA3-</td>
+<td>INTR_EN_NRHOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt enable - non-redirectable host</em></a></td>
+</tr>
+<tr class="row-even"><td>000148</td>
+<td>NVA3-</td>
+<td>INTR_EN_DAEMON</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt enable - PDAEMON</em></a></td>
+</tr>
+<tr class="row-odd"><td>000160</td>
+<td>all</td>
+<td>INTR_LN_HOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt line state - host</em></a></td>
+</tr>
+<tr class="row-even"><td>000164</td>
+<td>NVA3-</td>
+<td>INTR_LN_NRHOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt line state - non-redirectable host</em></a></td>
+</tr>
+<tr class="row-odd"><td>000168</td>
+<td>NVA3-</td>
+<td>INTR_LN_DAEMON</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt line state - PDAEMON</em></a></td>
+</tr>
+<tr class="row-even"><td>000200</td>
+<td>all</td>
+<td>ENABLE</td>
+<td><a class="reference internal" href="#pmc-mmio-enable"><em>engine master enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>000204</td>
+<td>NVC0-</td>
+<td>SUBFIFO_ENABLE</td>
+<td><a class="reference internal" href="#pmc-mmio-enable"><em>PSUBFIFO enables</em></a></td>
+</tr>
+<tr class="row-even"><td>000208</td>
+<td>NVC0-</td>
+<td>???</td>
+<td><a class="reference internal" href="#pmc-mmio-enable"><em>??? [related to enable?]</em></a></td>
+</tr>
+<tr class="row-odd"><td>00020c</td>
+<td>NVC4-</td>
+<td>???</td>
+<td><a class="reference internal" href="#pmc-mmio-enable"><em>??? [related to enable?]</em></a></td>
+</tr>
+<tr class="row-even"><td>000260:000274</td>
+<td>NVC0-</td>
+<td>???</td>
+<td><a class="reference internal" href="#pmc-mmio-enable"><em>??? related to PFIFO engines</em></a></td>
+</tr>
+<tr class="row-odd"><td>000300</td>
+<td>NV17-</td>
+<td>VRAM_HIDE_LOW</td>
+<td><a class="reference internal" href="#pmc-mmio-vram-hide"><em>VRAM hidden area low address and enable</em></a></td>
+</tr>
+<tr class="row-even"><td>000304</td>
+<td>NV17-</td>
+<td>VRAM_HIDE_HIGH</td>
+<td><a class="reference internal" href="#pmc-mmio-vram-hide"><em>VRAM hidden area high address</em></a></td>
+</tr>
+<tr class="row-odd"><td>000640</td>
+<td>NVA3-</td>
+<td>INTR_MASK_HOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt mask - host</em></a></td>
+</tr>
+<tr class="row-even"><td>000644</td>
+<td>NVA3-</td>
+<td>INTR_MASK_NRHOST</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt mask - non-redirectable host</em></a></td>
+</tr>
+<tr class="row-odd"><td>000648</td>
+<td>NVA3-</td>
+<td>INTR_MASK_PDAEMON</td>
+<td><a class="reference internal" href="#pmc-mmio-intr"><em>interrupt mask - PDAEMON</em></a></td>
+</tr>
+<tr class="row-even"><td>000a00</td>
+<td>NV94-</td>
+<td>NEW_ID</td>
+<td><a class="reference internal" href="#pmc-mmio-id"><em>card identification</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="card-identification">
+<span id="pmc-mmio-id"></span><h2><a class="toc-backref" href="#id4">Card identification</a><a class="headerlink" href="#card-identification" title="Permalink to this headline">¶</a></h2>
+<p>The main register used to identify the card is the ID register. However,
+the ID register has different formats depending on the chipset family:</p>
+<dl class="docutils">
+<dt>MMIO 0x000000: ID [NV01:NV04]</dt>
+<dd><ul class="first last simple">
+<li>bits 0-3: minor revision.</li>
+<li>bits 4-7: major revision.
+These two bitfields together are also visible as PCI revision. For
+NV03, revisions equal or higher than 0x20 mean NV03T.</li>
+<li>bits 8-11: implementation - always 1 except on NV02</li>
+<li>bits 12-15: always 0</li>
+<li>bits 16-19: chipset - 1 is NV01, 2 is NV02, 3 is NV03 or NV03T</li>
+<li>bits 20-27: always 0</li>
+<li>bits 28-31: foundry - 0 is SGS, 1 is Helios, 2 is TMSC</li>
+</ul>
+</dd>
+<dt>MMIO 0x000000: ID [NV04:NV10]</dt>
+<dd><ul class="first last simple">
+<li>bits 0-3: ???</li>
+<li>bits 4-11: always 0</li>
+<li>bits 12-15: architecture - always 4</li>
+<li>bits 16-19: minor revision</li>
+<li>bits 20-23: major revision - 0 is NV04, 1 and 2 are NV05.
+These two bitfields together are also visible as PCI revision.</li>
+<li>bits 24-27: always 0</li>
+<li>bits 28-31: foundry - 0 is SGS, 1 is Helios, 2 is TMSC</li>
+</ul>
+</dd>
+<dt>MMIO 0x000000: ID [NV10-]</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: stepping</li>
+<li>bits 16-19: device id [NV10:NV92]</li>
+<li>bits 15-19: device id [NV92:NVD8]</li>
+<li>bits 12-19: device id [NVD9-]
+The value of this bitfield is equal to low 4, 5, or 6 bits of the PCI
+device id. The bitfield size and position changed between cards due to
+varying amount of changeable bits. See <a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a> and
+<a class="reference internal" href="../chipsets.html#chipsets"><em>Chipsets</em></a> for more details.</li>
+<li>bits 20-27: chipset id.
+This is THE chipset id that comes after &#8220;NV&#8221;. See chipsets.txt for the
+list.</li>
+<li>bits 28-31: ???</li>
+</ul>
+</dd>
+</dl>
+<p>NV92[?] introduced another identification register in PMC, with unknown
+purpose:</p>
+<dl class="docutils">
+<dt>MMIO 0x000008: BOOT_2 [NV92?-]</dt>
+<dd>???</dd>
+</dl>
+<p>NV94 introduced a new identification register with rearranged bitfields:</p>
+<dl class="docutils">
+<dt>MMIO 0x000a00: NEW_ID</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: device id</li>
+<li>bits 8-11: same value as BOOT_2 register</li>
+<li>bits 12-19: stepping</li>
+<li>bits 20-27: chipset id</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="endian-switch">
+<span id="pmc-mmio-endian"></span><h2><a class="toc-backref" href="#id5">Endian switch</a><a class="headerlink" href="#endian-switch" title="Permalink to this headline">¶</a></h2>
+<p>PMC also contains the endian switch register. The endian switch can be set to
+either little or big endian, and affects all accesses to BAR0 and, if present,
+BAR2/BAR3 - see bus/bars.txt for more details. It is controlled by the ENDIAN
+register:</p>
+<dl class="docutils">
+<dt>MMIO 0x000004: ENDIAN [NV11-]</dt>
+<dd>When read, returns 0x01000001 if in big-endian mode, 0 if in little-endian
+mode. When written, if bit 24 of the written value is 1, flips the endian
+switch to the opposite value, otherwise does nothing.</dd>
+</dl>
+<p>The register operates in such idiosyncratic way because it is itself affected
+by the endian switch - thus the read value was chosen to be unaffected by
+wrong endian setting, while write behavior was chosen so that writing &#8220;1&#8221; in
+either endianness will switch the card to that endianness.</p>
+<p>This register and the endian switch don&#8217;t exist on pre-NV11 cards - they&#8217;re
+always little-endian.</p>
+<p>Note that this switch is also used by NV50+ PFIFO as its default endianness
+- see <a class="reference external" href="fifo/nv50-pfifo.txt">fifo/nv50-pfifo.txt</a> for details.</p>
+<p>The MMIO areas containing aliases of 8-bit VGA registers are unaffected by
+this switch, despite being in BAR0.</p>
+</div>
+<div class="section" id="engine-enables">
+<span id="pmc-mmio-enable"></span><h2><a class="toc-backref" href="#id6">Engine enables</a><a class="headerlink" href="#engine-enables" title="Permalink to this headline">¶</a></h2>
+<p>PMC contains the main engine enable register, which is used to turn whole
+engines on and off:</p>
+<dl class="docutils">
+<dt>MMIO 0x000200: ENABLE</dt>
+<dd>When given bit is set to 0, the corresponding engine is disabled, when set
+to 1, it is enabled. Most engines disappear from MMIO space and reset to
+default state when disabled.</dd>
+</dl>
+<p>On NV01, the bits are:</p>
+<ul class="simple">
+<li>0: <a class="reference internal" href="../nv01-paudio.html#nv01-paudio"><em>PAUDIO</em></a></li>
+<li>4: PDMA [memory/nv01-pdma.txt] and <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
+<li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv01-pgraph.txt]</li>
+<li>16: <a class="reference internal" href="nv01-prm.html#nv01-prm"><em>PRM</em></a></li>
+<li>24: PFB [display/nv01/pfb.txt]</li>
+</ul>
+<p>On NV03:NV04, the bits are:</p>
+<ul class="simple">
+<li>0: ??? [XXX]</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv03-pgraph.txt] and PDMA [graph/nv03-pdma.txt]</li>
+<li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
+<li>20: PFB [memory/nv03-pfb.txt]</li>
+<li>24: CRTC [display/nv03/vga.txt]</li>
+<li>28: PRAMDAC.VIDEO [display/nv03/pramdac.txt]</li>
+</ul>
+<p>On NV04:NV50, the bits are:</p>
+<ul class="simple">
+<li>0: ??? - alleged to be related to I2C [NV10-] [XXX]</li>
+<li>1: VPE [vdec/vpe/intro.txt] [NV17-]</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>8: PFIFO [fifo/nv04-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv04-pgraph.txt, graph/nv10-pgraph.txt, graph/nv20-pgraph.txt, graph/nv40-pgraph.txt]</li>
+<li>13: PGRAPH CS??? apparently exists on some late NV4x... [graph/nv40-pgraph.txt] [NV4?-]</li>
+<li>[XXX: figure out the CS thing, figure out the variants. Known not to exist on NV40, NV43, NV44, NV49]</li>
+<li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
+<li>20: PFB [memory/nv03-pfb.txt, memory/nv10-pfb.txt, memory/nv40-pfb.txt, memory/nv44-pfb.txt]</li>
+<li>24: PCRTC [display/nv03/vga.txt]</li>
+<li>25: PCRTC2 [display/nv03/vga.txt] [NV11-]</li>
+<li>26: PTV [display/nv03/ptv.txt] [NV17:NV20, NV25:NV50]</li>
+<li>28: PRAMDAC.VIDEO [display/nv03/pramdac.txt] [NV04:NV10] or PVIDEO [display/nv03/pvideo.txt] [NV10:NV50]</li>
+</ul>
+<p>On NV50:NVC0, the bits are:</p>
+<ul class="simple">
+<li>0: ??? - alleged to be related to I2C</li>
+<li>1: VPE [vdec/vpe/intro.txt] [NV50:NV98 NVA0:NVAA]</li>
+<li>1: PPPP [vdec/vp3/pppp.txt] [NV98:NVA0 NVAA-]</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>8: PFIFO [fifo/nv50-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv50-pgraph.txt]</li>
+<li>13: PCOPY [fifo/pcopy.txt] [NVA3-]</li>
+<li>14: PCRYPT2 [vdec/vp2/pcrypt2.txt] [NV84:NV98 NVA0:NVAA]</li>
+<li>14: PCRYPT3 [vdec/vp3/pcrypt3.txt] [NV98:NVA0 NVAA:NVA3]</li>
+<li>14: PVCOMP [vdec/pvcomp.txt] [NVAF]</li>
+<li>15: PBSP [vdec/vp2/pbsp.txt] [NV84:NV98 NVA0:NVAA]</li>
+<li>15: PVLD [vdec/vp3/pvld.txt] [NV98:NVA0 NVAA-]</li>
+<li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
+<li>17: PVP2 [vdec/vp2/pvp2.txt] [NV84:NV98 NVA0:NVAA]</li>
+<li>17: PVDEC [vdec/vp3/pvdec.txt] [NV98:NVA0 NVAA-]</li>
+<li>20: PFB [memory/nv50-pfb.txt]</li>
+<li>21: PGRAPH CHSW [NV84-] [fifo/nv50-pfifo.txt]</li>
+<li>22: PMPEG CHSW [NV84-]</li>
+<li>23: PCOPY CHSW [NVA3-]</li>
+<li>24: PVP2 CHSW [NV84:NV98 NVA0:NVAA] [fifo/nv50-pfifo.txt]</li>
+<li>24: PVDEC CHSW [NV98:NVA0 NVAA-] [fifo/nv50-pfifo.txt]</li>
+<li>25: PCRYPT2 CHSW [NV84:NV98 NVA0:NVAA] [fifo/nv50-pfifo.txt]</li>
+<li>25: PCRYPT3 CHSW [NV98:NVA0 NVAA:NVA3] [fifo/nv50-pfifo.txt]</li>
+<li>25: PVCOMP CHSW [NVAF] [fifo/nv50-pfifo.txt]</li>
+<li>26: PBSP CHSW [NV84:NV98 NVA0:NVAA] [fifo/nv50-pfifo.txt]</li>
+<li>26: PVLD CHSW [NV98:NVA0 NVAA-] [fifo/nv50-pfifo.txt]</li>
+<li>27: ??? [NV84-]</li>
+<li>28: ??? [NV84-]</li>
+<li>30: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>31: ???</li>
+</ul>
+<p>On NVC0+, the bits are:</p>
+<ul class="simple">
+<li>0: ??? - alleged to be related to I2C</li>
+<li>1: PPPP [vdec/vp3/pppp.txt]</li>
+<li>2: PXBAR [memory/nvc0-pxbar.txt]</li>
+<li>3: PMFB [memory/nvc0-pmfb.txt]</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>5: PIBUS [bus/pibus.txt]</li>
+<li>6: PCOPY[0] [fifo/pcopy.txt]</li>
+<li>7: PCOPY[1] [fifo/pcopy.txt]</li>
+<li>8: PFIFO [fifo/nvc0-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nvc0-pgraph.txt]</li>
+<li>13: PDAEMON [pm/pdaemon.txt]</li>
+<li>15: PVLD [vdec/vp3/pvld.txt]</li>
+<li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
+<li>17: PVDEC [vdec/vp3/pvdec.txt]</li>
+<li>18: PVENC [NVE4-] [vdec/pvenc.txt]</li>
+<li>20: PBFB [memory/nvc0-pbfb.txt]</li>
+<li>21: PCOPY[2] [NVE4-] [fifo/pcopy.txt]</li>
+<li>26: ??? [NVE4-]</li>
+<li>27: ???</li>
+<li>28: PCOUNTER [pcounter/intro.txt]</li>
+<li>29: PFFB [memory/nvc0-pffb.txt]</li>
+<li>30: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>31: ???</li>
+</ul>
+<p>NVC0 also introduced SUBFIFO_ENABLE register:</p>
+<dl class="docutils">
+<dt>MMIO 0x000204: SUBFIFO_ENABLE</dt>
+<dd>Enables PFIFO&#8217;s PSUBFIFOs. Bit i corresponds to PSUBFIFO[i]. See
+<a class="reference external" href="fifo/nvc0-pfifo.txt">fifo/nvc0-pfifo.txt</a> for details.</dd>
+</dl>
+<p>There are also two other registers looking like ENABLE, but with seemingly
+no effect and currently unknown purpose:</p>
+<dl class="docutils">
+<dt>MMIO 0x000208: ??? [NVC0-]</dt>
+<dd>Has the same bits as ENABLE, comes up as all-1 on boot, except for PDISPLAY
+bit which comes up as 0.</dd>
+<dt>MMIO 0x00020c: ??? [NVC4-]</dt>
+<dd><p class="first">Has bits which correspond to PFIFO engines in ENABLE, ie.</p>
+<ul class="simple">
+<li>1: PPPP</li>
+<li>6: PCOPY[0]</li>
+<li>7: PCOPY[1]</li>
+<li>12: PGRAPH</li>
+<li>15: PVLD</li>
+<li>17: PVDEC</li>
+</ul>
+<p class="last">Comes up as all-1.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="interrupts">
+<span id="pmc-intr"></span><span id="pmc-mmio-intr"></span><h2><a class="toc-backref" href="#id7">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
+<p>Another thing that PMC handles is the top-level interrupt routing. On cards
+earlier than NVA3, PMC gets interrupt lines from all interested engines on
+the card, aggregates them together, adds in an option to trigger a &#8220;software&#8221;
+interrupt manually, and routes them to the PCI INTA pin. There is an enable
+register, but it only allows one to enable/disable all hardware or all
+software interrupts.</p>
+<p>NVA3 introduced fine-grained interrupt masking, as well as an option to route
+interrupts to PDAEMON. The HOST interrupts have a new redirection stage in
+PDAEMON [see <a class="reference external" href="pm/pdaemon.txt">pm/pdaemon.txt</a>] - while normally routed to the PCI interrupt line,
+they may be switched over to PDAEMON delivery when it so decides. As a side
+effect of that, powering off PDAEMON will disable host interrupt delivery.
+A subset of interrupt types can also be routed to NRHOST destination, which
+is identical to HOST, but doesn&#8217;t go through the PDAEMON redirection circuitry.</p>
+<p>MMIO 0x000100: INTR_HOST
+MMIO 0x000104: INTR_NRHOST [NVA3-]
+MMIO 0x000108: INTR_DAEMON [NVA3-]</p>
+<blockquote>
+<div>Interrupt status. Bits 0-30 are hardware interrupts, bit 31 is software
+interrupt. 1 if the relevant input interrupt line is active and, for NVA3+
+chipsets, enabled in INTR_MASK_*. Bits 0-30 are read-only, bit 31 can be
+written to set/clear the software interrupt. Bit 31 can only be set to 1 if
+software interrupts are enabled in INTR_MASK_*, except for NRHOST on NVC0+,
+where it works even if masked.</div></blockquote>
+<p>MMIO 0x000140: INTR_EN_HOST
+MMIO 0x000144: INTR_EN_NRHOST [NVA3-]
+MMIO 0x000148: INTR_EN_DAEMON [NVA3-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bit 0: hardware interrupt enable - if 1, and any of bits 0-30 of INTR_* are
+active, the corresponding output interrupt line will be asserted.</li>
+<li>bit 1: software interrupt enable - if 1, bit 31 of INTR_* is active, the
+corresponding output interrupt line will be asserted.</li>
+</ul>
+</div></blockquote>
+<p>MMIO 0x000160: INTR_LN_HOST
+MMIO 0x000164: INTR_LN_NRHOST [NVA3-]
+MMIO 0x000168: INTR_LN_DAEMON [NVA3-]</p>
+<blockquote>
+<div>Provides a way to peek at the status of corresponding output interrupt line.
+On NV01:NVC0, 0 if the output line is active, 1 if inactive. On NVC0+, 1 if
+active, 0 if inactive.</div></blockquote>
+<p>MMIO 0x000640: INTR_MASK_HOST [NVA3-]
+MMIO 0x000644: INTR_MASK_NRHOST [NVA3-]
+MMIO 0x000648: INTR_MASK_DAEMON [NVA3-]</p>
+<blockquote>
+<div>Interrupt mask. If a bit is set to 0 here, it&#8217;ll be masked off to always-0
+in the INTR_* register, otherwise it&#8217;ll be connected to the corresponding
+input interrupt line. For HOST and DAEMON, all interrupts can be enabled.
+For NRHOST on pre-NVC0 cards, only input line #8 [PFIFO] can be enabled, for
+NRHOST on NVC0+ cards all interrupts but the software interrupt can be
+enabled - however in this case software interrupt works even without being
+enabled.</div></blockquote>
+<p>The HOST and NRHOST output interrupt lines are connected to the PCI INTA pin
+on the card. HOST goes through PDAEMON&#8217;s HOST interrupt masking circuitry
+[IHM], while NRHOST doesn&#8217;t. DAEMON goes to PDAEMON&#8217;s falcon interrupt line #10
+[PMC_DAEMON].</p>
+<p>On pre-NVA3, each PMC interrupt input is a single 0/1 line. On NVA3+, some
+inputs have a single line for all three outputs, while some others have 2
+lines: one for HOST and DAEMON outputs, and one for NRHOST outuput.</p>
+<p>The input interrupts are, for NV01:</p>
+<ul class="simple">
+<li>0: <a class="reference internal" href="../nv01-paudio.html#nv01-paudio-intr"><em>PAUDIO</em></a></li>
+<li>4: PDMA [memory/nv01-pdma.txt]</li>
+<li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv01-pgraph.txt]</li>
+<li>16: <a class="reference internal" href="nv01-prm.html#nv01-prm-intr"><em>PRM</em></a></li>
+<li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
+<li>24: PGRAPH&#8217;s vblank interrupt [graph/nv01-pgraph.txt]</li>
+<li>28: software</li>
+</ul>
+<p>For NV03:</p>
+<ul class="simple">
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv03-pgraph.txt]</li>
+<li>13: PDMA [graph/nv03-pdma.txt]</li>
+<li>16: PRAMDAC.VIDEO [display/nv03/pramdac.txt]</li>
+<li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
+<li>24: PGRAPH&#8217;s vblank interrupt [graph/nv03-pgraph.txt, display/nv03/vga.txt]</li>
+<li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a></li>
+<li>31: software</li>
+</ul>
+<p>For NV04:NV50:</p>
+<ul class="simple">
+<li>0: VPE [vdec/vpe/intro.txt] [NV17:NV20 and NV25:NV50]</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>8: PFIFO [fifo/nv04-pfifo.txt]</li>
+<li>12: PGRAPH [graph/nv04-pgraph.txt, graph/nv10-pgraph.txt, graph/nv20-pgraph.txt, graph/nv40-pgraph.txt]</li>
+<li>16: PRAMDAC.VIDEO [display/nv03/pramdac.txt] [NV04:NV10] or PVIDEO [display/nv03/pvideo.txt] [NV10:NV50]</li>
+<li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
+<li>24: PCRTC [display/nv03/vga.txt]</li>
+<li>25: PCRTC2 [display/nv03/vga.txt] [NV17:NV20 and NV25:NV50]</li>
+<li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a></li>
+<li>31: software</li>
+</ul>
+<p>For NV50:NVC0:</p>
+<ul class="simple">
+<li>0: VPE [vdec/vpe/intro.txt] [NV50:NV98 NVA0:NVAA]</li>
+<li>0: PPPP [vdec/vp3/pppp.txt] [NV98:NVA0 NVAA-]</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>8: PFIFO [fifo/nv50-pfifo.txt] - has separate NRHOST line on NVA3+</li>
+<li>9: ??? [NVA3?-]</li>
+<li>11: ??? [NVA3?-]</li>
+<li>12: PGRAPH [graph/nv50-pgraph.txt]</li>
+<li>13: ??? [NVA3?-]</li>
+<li>14: PCRYPT2 [vdec/vp2/pcrypt2.txt] [NV84:NV98 NVA0:NVAA]</li>
+<li>14: PCRYPT3 [vdec/vp3/pcrypt3.txt] [NV98:NVA0 NVAA:NVA3]</li>
+<li>14: PVCOMP [vdec/pvcomp.txt] [NVAF-]</li>
+<li>15: PBSP [vdec/vp2/pbsp.txt] [NV84:NV98 NVA0:NVAA]</li>
+<li>15: PVLD [vdec/vp3/pvld.txt] [NV98:NVA0 NVAA-]</li>
+<li>16: ??? [NVA3?-]</li>
+<li>17: PVP2 [vdec/vp2/pvp2.txt] [NV84:NV98 NVA0:NVAA]</li>
+<li>17: PVDEC [vdec/vp3/pvdec.txt] [NV98:NVA0 NVAA-]</li>
+<li>18: PDAEMON [pm/pdaemon.txt] [NVA3-]</li>
+<li>19: PTHERM [pm/ptherm.txt] [NVA3-]</li>
+<li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
+<li>21: PNVIO&#8217;s GPIO interrupts [io/pnvio.txt]</li>
+<li>22: PCOPY [fifo/pcopy.txt]</li>
+<li>26: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>27: ??? [NVA3?-]</li>
+<li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a></li>
+<li>29: PPCI [bus/pci.txt] [NV84-]</li>
+<li>31: software</li>
+</ul>
+<p>For NVC0+:</p>
+<ul class="simple">
+<li>0: PPPP [vdec/vp3/pppp.txt] - has separate NRHOST line</li>
+<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>5: PCOPY[0] [fifo/pcopy.txt] - has separate NRHOST line</li>
+<li>6: PCOPY[1] [fifo/pcopy.txt] - has separate NRHOST line</li>
+<li>7: PCOPY[2] [NVE4-] [fifo/pcopy.txt] - has separate NRHOST line</li>
+<li>8: PFIFO [fifo/nvc0-pfifo.txt]</li>
+<li>9: ???</li>
+<li>12: PGRAPH [graph/nvc0-pgraph.txt] - has separate NRHOST line</li>
+<li>13: PBFB [memory/nvc0-pbfb.txt]</li>
+<li>15: PVLD [vdec/vp3/pvld.txt] - has separate NRHOST line</li>
+<li>16: PVENC [NVE4-] [vdec/pvenc.txt] - has separate NRHOST line</li>
+<li>17: PVDEC [vdec/vp3/pvdec.txt] - has separate NRHOST line</li>
+<li>18: PTHERM [pm/ptherm.txt]</li>
+<li>19: ??? [NVD9-]</li>
+<li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
+<li>21: PNVIO&#8217;s GPIO interrupts [io/pnvio.txt]</li>
+<li>23: ???</li>
+<li>24: PDAEMON [pm/pdaemon.txt]</li>
+<li>25: PMFB [memory/nvc0-pmfb.txt]</li>
+<li>26: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>27: PFFB [memory/nvc0-pffb.txt]</li>
+<li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a> - has separate NRHOST line</li>
+<li>29: PPCI [bus/pci.txt]</li>
+<li>30: PIBUS [bus/pibus.txt]</li>
+<li>31: software</li>
+</ul>
+</div>
+<div class="section" id="vram-hidden-area">
+<span id="pmc-mmio-vram-hide"></span><h2><a class="toc-backref" href="#id8">VRAM hidden area</a><a class="headerlink" href="#vram-hidden-area" title="Permalink to this headline">¶</a></h2>
+<p>NV17/NV20 added a feature to disable host reads through selected range of
+VRAM. The registers are:</p>
+<dl class="docutils">
+<dt>MMIO 0x000300: VRAM_HIDE_LOW</dt>
+<dd><ul class="first last simple">
+<li>bits 0-28: address of start of the hidden area. bits 0-1 are ignored, the
+area is always 4-byte aligned.</li>
+<li>bit 31: hidden area enabled</li>
+</ul>
+</dd>
+<dt>MMIO 0x000304: VRAM_HIDE_HIGH</dt>
+<dd><ul class="first last simple">
+<li>bits 0-28: address of end of the hidden area. bits 0-1 are ignored, the
+area is always 4-byte aligned.</li>
+</ul>
+</dd>
+</dl>
+<p>The start and end addresses are both inclusive. All BAR1, BAR2/BAR3, PEEPHOLE
+and PMEM/PRAMIN reads whose offsets fall into this window will be silently
+mangled to read 0 instead. Writes are unaffected. Note that offset from start
+of the BAR/PEEPHOLE/PRAMIN/PMEM is used for the comparison, not the actual
+VRAM address - thus the selected window will cover a different thing in each
+affected space.</p>
+<p>The VRAM hidden area functionality got silently nuked on NVC0+ chipsets. The
+registers are still present, but they don&#8217;t do anything.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PMC: Master control unit</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-register-list">MMIO register list</a></li>
+<li><a class="reference internal" href="#card-identification">Card identification</a></li>
+<li><a class="reference internal" href="#endian-switch">Endian switch</a></li>
+<li><a class="reference internal" href="#engine-enables">Engine enables</a></li>
+<li><a class="reference internal" href="#interrupts">Interrupts</a></li>
+<li><a class="reference internal" href="#vram-hidden-area">VRAM hidden area</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">PCI/PCIE/AGP bus interface and card management logic</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ptimer.html"
+                        title="next chapter">PTIMER: Timer engine</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/bus/pmc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="ptimer.html" title="PTIMER: Timer engine"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="PCI/PCIE/AGP bus interface and card management logic"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

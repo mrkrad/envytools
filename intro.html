@@ -1,0 +1,447 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nVidia GPU introduction &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="index.html" />
+    <link rel="next" title="Chipsets" href="chipsets.html" />
+    <link rel="prev" title="nVidia hardware documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="chipsets.html" title="Chipsets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="nVidia hardware documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nvidia-gpu-introduction">
+<span id="intro"></span><h1><a class="toc-backref" href="#id4">nVidia GPU introduction</a><a class="headerlink" href="#nvidia-gpu-introduction" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#nvidia-gpu-introduction" id="id4">nVidia GPU introduction</a><ul>
+<li><a class="reference internal" href="#introduction" id="id5">Introduction</a></li>
+<li><a class="reference internal" href="#card-schmatic" id="id6">Card schmatic</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nv03-nv50" id="id7">GPU schematic - NV03:NV50</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nv50-nvc0" id="id8">GPU schematic - NV50:NVC0</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nvc0" id="id9">GPU schematic - NVC0-</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id5">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This file is a short introduction to nvidia GPUs and graphics cards. Note
+that the schematics shown here are simplified and do not take all details
+into account - consult specific unit documentation when needed.</p>
+</div>
+<div class="section" id="card-schmatic">
+<h2><a class="toc-backref" href="#id6">Card schmatic</a><a class="headerlink" href="#card-schmatic" title="Permalink to this headline">¶</a></h2>
+<p>An nvidia-based graphics card is made of a main GPU chip and many supporting
+chips. Note that the following schematic attempts to show as many chips as
+possible - not all of them are included on all cards.</p>
+<div class="highlight-python"><pre>     +------+ memory bus +---------+ analog video    +-------+
+     | VRAM |------------|         |-----------------|       |
+     +------+            |         | I2C bus         |  VGA  |
+                         |         |-----------------|       |
++--------------+         |         |                 +-------+
+| PCI/AGP/PCIE |---------|         |
++--------------+         |         | TMDS video      +-------+
+                         |         |-----------------|       |
+   +----------+ parallel |         | analog video    |       |
+   | BIOS ROM |----------|         |-----------------| DVI-I |
+   +----------+  or SPI  |         | I2C bus + GPIO  |       |
+                         |         |-----------------|       |
+   +----------+ I2C bus  |         |                 +-------+
+   | HDCP ROM |----------|         |
+   +----------+          |         | videolink out   +------------+
+                         |         |-----------------|  external  |  +----+
+  +-----------+ VID GPIO |         | I2C bus         |     TV     |--| TV |
+  |  voltage  |----------|         |-----------------|  encoder   |  +----+
+  | regulator |          |   GPU   |                 +------------+
+  +-----------+          |         |
+        |       I2C bus  |         |
+        +----------------|         | videolink in+out +-----+
+        |                |         |------------------| SLI |
+ +--------------+        |         | GPIOs            +-----+
+ |   thermal    | ALERT  |         |
+ |  monitoring  |--------|         | ITU-R-656 +------------+
+ | +fan control | GPIO   |         |-----------|            |  +-------+
+ +--------------+        |         | I2C bus   | TV decoder |--| TV in |
+        |                |         |-----------|            |  +-------+
+        |                |         |           +------------+
+     +-----+    FAN GPIO |         |
+     | fan |-------------|         | media port +--------------+
+     +-----+             |         |------------| MPEG decoder |
+                         |         |            +--------------+
+  +-------+ HDMI bypass  |         |
+  | SPDIF |--------------|         |     +----------------------+
+  +-------+ audio input  |         |-----| configuration straps |
+                         |         |     +----------------------+
+                         +---------+</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">while this schematic shows a TV output using an external encoder
+chip, newer cards have an internal TV encoder and can connect
+the output directly to the GPU. Also, external encoders are not
+limitted to TV outputs - they&#8217;re also used for TMDS, DisplayPort
+and LVDS outputs on some cards.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">in many cases, I2C buses can be shared between various devices even
+when not shown by the above schema.</p>
+</div>
+<p>In summary, a card contains:</p>
+<ul class="simple">
+<li>a GPU chipset [see <a class="reference internal" href="chipsets.html#chipsets"><em>Chipsets</em></a> for a list]</li>
+<li>a PCI, AGP, or PCI-Express host interface</li>
+<li>on-board GPU memory [aka VRAM] - depending on GPU, various memory types can
+be supported: VRAM, EDO, SGRAM, SDR, DDR, DDR2, GDDR3, DDR3, GDDR5.</li>
+<li>a parallel or SPI-connected flash ROM containing the video BIOS. The BIOS
+image, in addition to standard VGA BIOS code, contains information about
+the devices and connectors present on the card and scripts to boot up and
+manage devices on the card.</li>
+<li>configuration straps - a set of resistors used to configure various
+functions of the card that need to be up before the card is POSTed.
+[<a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a>]</li>
+<li>a small I2C EEPROM with encrypted HDCP keys [optional, some NV84:NVA3, now
+discontinued in favor of storing the keys in fuses on the GPU]</li>
+<li>a voltage regulator [starting with NV10 [?] family] - starting with roughly
+NV30 family, the target voltage can be set via GPIO pins on the GPU. The
+voltage regulator may also have &#8220;power good&#8221; and &#8220;emergency shutdown&#8221;
+signals connected to the GPU via GPIOs. In some rare cases, particularly
+on high-end cards, the voltage regulator may also be accessible via I2C.</li>
+<li>optionally [usually on high-end cards], a thermal monitoring chip
+accessible via I2C, to supplement/replace the bultin thermal sensor of
+the GPU. May or may not include autonomous fan control and fan speed
+measurement capability. Usually has a &#8220;thermal alert&#8221; pin connected to
+a GPIO.</li>
+<li>a fan - control and speed measurement done either by the thermal monitoring
+chip, or by the GPU via GPIOs.</li>
+<li>SPDIF input [rare, some NV84:NVA3] - used for audio bypass to HDMI-capable
+TMDS outputs, newer GPUs include a builtin audio codec instead.</li>
+<li>on-chip video outputs - video output connectors connected directly to
+the GPU. Supported output types depend on the GPU and include VGA, TV
+[composite, S-Video, or component], TMDS [ie. the protocol used in DVI
+digital and HDMI], FPD-Link [aka LVDS], DisplayPort.</li>
+<li>external output encoders - usually found with older GPUs which don&#8217;t
+support TV, TMDS or FPD-Link outputs directly. The encoder is connected
+to the GPU via a parallel data bus [&#8220;videolink&#8221;] and a controlling I2C
+bus.</li>
+<li>SLI connectors [optional, newer high-end cards only] - video links used
+to transmit video to display from slave cards in SLI configuration to the
+master. Uses the same circuitry as outputs to external output encoders.</li>
+<li>TV decoder chip [sometimes with a tuner] connected to the capture port of
+the GPU and to an I2C bus - rare, on old cards only</li>
+<li>external MPEG decoder chip connected to so-called mediaport on the GPU -
+alleged to exist on some NV03/NV04/NV10 cards, but never seen in the wild</li>
+</ul>
+<p>In addition to normal cards, nvidia GPUs may be found integrated on
+motherboards - in this case they&#8217;re often missing own BIOS and HDCP ROMs,
+instead having them intergrated with the main system ROM. There are also
+IGPs [Integrated Graphics Processors], which are a special variant of GPU
+integrated into the main system chipset. They don&#8217;t have on-board memory
+or memory controller, sharing the main system RAM instead.</p>
+</div>
+<div class="section" id="gpu-schematic-nv03-nv50">
+<h2><a class="toc-backref" href="#id7">GPU schematic - NV03:NV50</a><a class="headerlink" href="#gpu-schematic-nv03-nv50" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre> PCI/AGP/PCIE bus  +----------+        +--------+
+-------------------| PMC+PBUS |--+     |  VRAM  |
+                   +----------+  |     +--------+
+                        |        |          |
+                        |        |          |
+                        |        |          |
+                  +-----------+  |       +-----+  +------+  +---------+
+                  |PTIMER+PPMI|  |       | PFB |  | PROM |  | PSTRAPS |
+                  +-----------+  |       +-----+  +------+  +---------+
+                        |        |          |
+             SYSRAM     |        +----------+
+             access bus |                   | VRAM
+                        |     +-------+     | access bus
+                        +-----| PFIFO |-----+
+                        |     +-------+     |
+                        |         | |       |
+                        |         | +---+   |
+                        |         |     |   |  +-------------+
+     +----------+       |    +--------+ |   |  | video input |
+     | PCOUNTER |       +----| PGRAPH |-----+  +-------------+
+     +----------+       |    +--------+ |   |         |
+                        |               |   |    +--------+
+      +--------+        |         +-----+   +----| PMEDIA |
+      | therm  |        |         |         |    +--------+
+      | sensor |        |      +------+     |         |
+      +--------+        +------| PVPE |-----+  +--------------+
+                               +------+     |  | MPEG decoder |
+                                            |  +--------------+
+                                            |
+                               +--------+   |   +-------+   +----------+
+                               | PVIDEO |---+---| PCRTC |---| I2C+GPIO |
+                               +--------+       +-------+   +----------+
+                                    |               |
+                                +---+-------+-------+
+                                |           |
+                             +-----+   +---------+   +-----------------+
+                             | PTV |   | PRAMDAC |   | PCLOCK+PCONTROL |
+                             +-----+   +---------+   +-----------------+
+                                |           |
+                                |           |
+                          +--------+ +--------------+
+                          | TV out | | video output |
+                          +--------+ +--------------+</pre>
+</div>
+<p>The GPU is made of:</p>
+<ul class="simple">
+<li>control circuitry:<ul>
+<li><a class="reference internal" href="bus/pmc.html#pmc"><em>PMC</em></a>: master control area</li>
+<li>PBUS: bus control and an area where &#8220;misc&#8221; registers are thrown in. Known
+to contain at least:<ul>
+<li><a class="reference internal" href="bus/hwsq.html#hwsq"><em>HWSQ</em></a>, a simple script engine, can poke card registers and
+sleep in a given sequence [NV17+]</li>
+<li>a thermal sensor [NV30+]</li>
+<li>clock gating control [NV17+]</li>
+<li>indirect VRAM access from host circuitry [NV30+]</li>
+<li>ROM timings control</li>
+<li>PWM controller for fans and panel backlight [NV17+]</li>
+</ul>
+</li>
+<li>PPMI: PCI Memory Interface, handles SYSRAM accesses from other units of
+the GPU</li>
+<li><a class="reference internal" href="bus/ptimer.html#ptimer"><em>PTIMER</em></a>: measures wall time and delivers alarm interrupts</li>
+<li>PCLOCK+PCONTROL: clock generation and distribution [contained in PRAMDAC
+on pre-NV40 GPUs]</li>
+<li>PFB: memory controller and arbiter</li>
+<li>PROM: VIOS ROM access</li>
+<li>PSTRAPS: configuration straps access [<a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a>]</li>
+</ul>
+</li>
+<li>processing engines:<ul>
+<li>PFIFO: gathers processing commands from the command buffers prepared by
+the host and delivers them to PGRAPH and PVPE engines in orderly manner
+[<a class="reference external" href="fifo/intro.txt">fifo/intro.txt</a>]</li>
+<li>PGRAPH: memory copying, 2d and 3d rendering engine</li>
+<li>PVPE: a trio of video decoding/encoding engines<ul>
+<li>PMPEG: MPEG1 and MPEG2 mocomp and IDCT decoding engine [NV17+]</li>
+<li>PME: motion estimation engine [NV40+]</li>
+<li>PVP1: VP1 video processor [NV41+]</li>
+</ul>
+</li>
+<li>PCOUNTER: performance monitoring counters for the processing engines and
+memory controller [<a class="reference external" href="pcounter/intro.txt">pcounter/intro.txt</a>]</li>
+</ul>
+</li>
+<li>display engines:<ul>
+<li>PCRTC: generates display control signals and reads framebuffer data for
+display, present in two instances on NV11+ cards; also handles GPIO and I2C</li>
+<li>PVIDEO: reads and preprocesses overlay video data</li>
+<li>PRAMDAC: multiplexes PCRTC, PVIDEO and cursor image data, applies palette
+LUT, coverts to output signals, present in two instances on NV11+ cards;
+on pre-NV40 cards also deals with clock generation</li>
+<li>PTV: an on-chip TV encoder</li>
+</ul>
+</li>
+<li>misc engines:<ul>
+<li>PMEDIA: controls video capture input and the mediaport, acts as a DMA
+controller for them</li>
+</ul>
+</li>
+</ul>
+<p>Almost all units of the GPU are controlled through MMIO registers accessible
+by a common bus and visible through PCI BAR0 [see <a class="reference internal" href="bus/bars.html#bars"><em>PCI BARs and other means of accessing the GPU</em></a>]. This bus is
+not shown above.</p>
+</div>
+<div class="section" id="gpu-schematic-nv50-nvc0">
+<h2><a class="toc-backref" href="#id8">GPU schematic - NV50:NVC0</a><a class="headerlink" href="#gpu-schematic-nv50-nvc0" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>                              +---------------+
+ PCIE bus  +----------+    +--|--+   +------+ |
+-----------| PMC+PBUS |----| PFB |---| VRAM | |
+           +----------+    +--|--+   +------+ |
+                     |      | | |             |
+          +--------+ ++-----+ | |   memory    |
+          | PTHERM |  |       | |   partition |
+          +--------+  |  +----|---+           |
+              |       +--| PGRAPH |           |
+         +---------+  |  +----|---+           |
+         | PDAEMON |--+    |  +---------------+
+         +---------+  |    |
+                      |  +-------+       +----------+
+          +-------+   +--| PFIFO |----+  | PCOUNTER |
+          | PNVIO |   |  +-------+    |  +----------+
+          +-------+   |      |        |
+              |       |  +-------+    |  +-------+
+              |       +--| PCOPY |    |  | PFUSE |
+         +----------+ |  +-------+    |  +-------+
+         | PDISPLAY |-+               |
+         +----------+ |  +--------+   |  +--------+
+              |       +--| PVCOMP |---+  | PKFUSE |
+          +--------+  |  +--------+   |  +--------+
+          | PCODEC |  |               |
+          +--------+  |  +-----------------------+
+                      +--| video decoding, crypt |
+          +--------+  |  +-----------------------+
+          | PMEDIA |--+
+          +--------+</pre>
+</div>
+<p>The GPU is made of:</p>
+<ul class="simple">
+<li>control circuitry:<ul>
+<li><a class="reference internal" href="bus/pmc.html#pmc"><em>PMC</em></a>: master control area</li>
+<li>PBUS: bus control and an area where &#8220;misc&#8221; registers are thrown in. Known
+to contain at least:<ul>
+<li><a class="reference internal" href="bus/hwsq.html#hwsq"><em>HWSQ</em></a>, a simple script engine, can poke card registers and
+sleep in a given sequence</li>
+<li>clock gating control</li>
+<li>indirect VRAM access from host circuitry</li>
+</ul>
+</li>
+<li><a class="reference internal" href="bus/ptimer.html#ptimer"><em>PTIMER</em></a>: measures wall time and delivers alarm interrupts</li>
+<li>PCLOCK+PCONTROL: clock generation and distribution</li>
+<li>PTHERM: thermal sensor and clock throttling circuitry [<a class="reference external" href="pm/ptherm.txt">pm/ptherm.txt</a>]</li>
+<li>PDAEMON: card management microcontroller [<a class="reference external" href="pm/pdaemon.txt">pm/pdaemon.txt</a>]</li>
+<li>PFB: memory controller and arbiter</li>
+</ul>
+</li>
+<li>processing engines:<ul>
+<li>PFIFO: gathers processing commands from the command buffers prepared by
+the host and delivers them to PGRAPH and PVPE engines in orderly manner
+[<a class="reference external" href="fifo/intro.txt">fifo/intro.txt</a>]</li>
+<li>PGRAPH: memory copying, 2d and 3d rendering engine</li>
+<li>video decoding engines, see below</li>
+<li>PCOPY: asynchronous copy engine [<a class="reference external" href="fifo/pcopy.txt">fifo/pcopy.txt</a>]</li>
+<li>PVCOMP: video compositing engine [<a class="reference external" href="vdec/pvcomp.txt">vdec/pvcomp.txt</a>]</li>
+<li>PCOUNTER: performance monitoring counters for the processing engines and
+memory controller [<a class="reference external" href="pcounter/intro.txt">pcounter/intro.txt</a>]</li>
+</ul>
+</li>
+<li>display and IO port units:<ul>
+<li>PNVIO: deals with misc external devices<ul>
+<li>GPIOs</li>
+<li>fan PWM controllers</li>
+<li>I2C bus controllers</li>
+<li>videolink controls</li>
+<li>ROM interface</li>
+<li>straps interface</li>
+<li>PNVIO/PDISPLAY clock generation</li>
+</ul>
+</li>
+<li>PDISPLAY: a unified display engine</li>
+<li>PCODEC: audio codec for HDMI audio</li>
+</ul>
+</li>
+<li>misc engines:<ul>
+<li>PMEDIA: controls video capture input and the mediaport, acts as a DMA
+controller for them</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="gpu-schematic-nvc0">
+<h2><a class="toc-backref" href="#id9">GPU schematic - NVC0-</a><a class="headerlink" href="#gpu-schematic-nvc0" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">nVidia GPU introduction</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#card-schmatic">Card schmatic</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nv03-nv50">GPU schematic - NV03:NV50</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nv50-nvc0">GPU schematic - NV50:NVC0</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nvc0">GPU schematic - NVC0-</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">nVidia hardware documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="chipsets.html"
+                        title="next chapter">Chipsets</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="chipsets.html" title="Chipsets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="nVidia hardware documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

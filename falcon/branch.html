@@ -1,0 +1,604 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Branch instructions &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Processor control" href="proc.html" />
+    <link rel="prev" title="Data space" href="data.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="proc.html" title="Processor control"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="Data space"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="branch-instructions">
+<span id="falcon-branch"></span><h1><a class="toc-backref" href="#id1">Branch instructions</a><a class="headerlink" href="#branch-instructions" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#branch-instructions" id="id1">Branch instructions</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#pc-register" id="id3">$pc register</a></li>
+<li><a class="reference internal" href="#pseudocode-conventions" id="id4">Pseudocode conventions</a></li>
+<li><a class="reference internal" href="#conditional-branch-bra" id="id5">Conditional branch: bra</a></li>
+<li><a class="reference internal" href="#unconditional-branch-jmp" id="id6">Unconditional branch: jmp</a></li>
+<li><a class="reference internal" href="#subroutine-call-call" id="id7">Subroutine call: call</a></li>
+<li><a class="reference internal" href="#subroutine-return-ret" id="id8">Subroutine return: ret</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The flow control instructions on falcon include conditional relative branches,
+unconditional absolute branches, absolute calls, and returns. Calls use the
+stack in data segment for storage for return addresses [see <a class="reference internal" href="data.html#falcon-stack"><em>The stack</em></a>].
+The conditions available for branching are based on the low 12 bits of $flags
+register:</p>
+<ul class="simple">
+<li>bits 0-7: p0-p7, general-purpose predicates</li>
+<li>bit 8: c, carry flag</li>
+<li>bit 9: o, signed overflow flag</li>
+<li>bit a: s, sign flag</li>
+<li>bit b: z, zero flag</li>
+</ul>
+<p>c, o, s, z flags are automatically set by many ALU instructions, p0-p7 have
+to be explicitely manipulated. See <a class="reference internal" href="arith.html#falcon-flags-arith"><em>$flags result bits</em></a> for more details.</p>
+<p>When a branching instruction is taken, the execution time is either 4 or
+5 cycles. The execution time depends on the address of the next instruction to
+be executed. If this instruction can be loaded in one cycle (the instruction
+is contained in a single aligned 32-bit memory block in the code section),
+4 cycles will be necessary. If the instruction is split in two blocks,
+5 cycles will then be necessary.</p>
+</div>
+<div class="section" id="pc-register">
+<span id="falcon-sr-pc"></span><h2><a class="toc-backref" href="#id3">$pc register</a><a class="headerlink" href="#pc-register" title="Permalink to this headline">¶</a></h2>
+<p>Address of the current instruction is always available through the read-only
+$pc special register.</p>
+</div>
+<div class="section" id="pseudocode-conventions">
+<span id="falcon-branch-conventions"></span><h2><a class="toc-backref" href="#id4">Pseudocode conventions</a><a class="headerlink" href="#pseudocode-conventions" title="Permalink to this headline">¶</a></h2>
+<p>$pc is usually automatically incremented by opcode length after each
+instruction - documentation for other kinds of instructions doesn&#8217;t mention
+it explicitely for each insn. However, due to the nature of this category
+of instructions, all effects on $pc are mentioned explicitely in this file.</p>
+<p>oplen is the length of the currently executed instruction in bytes.</p>
+<p>See also conventions for <a class="reference internal" href="arith.html#falcon-arith-conventions"><em>arithmetic</em></a> and
+<a class="reference internal" href="data.html#falcon-data-conventions"><em>&lt;data</em></a> instructions.</p>
+</div>
+<div class="section" id="conditional-branch-bra">
+<span id="falcon-isa-bra"></span><h2><a class="toc-backref" href="#id5">Conditional branch: bra</a><a class="headerlink" href="#conditional-branch-bra" title="Permalink to this headline">¶</a></h2>
+<p>Branches to a given location if the condition evaluates to true. Target is
+$pc-relative.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="13%" />
+<col width="50%" />
+<col width="19%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>bra pX</td>
+<td>if predicate true</td>
+<td>all units</td>
+<td>00+X</td>
+</tr>
+<tr class="row-odd"><td>bra c</td>
+<td>if carry</td>
+<td>all units</td>
+<td>08</td>
+</tr>
+<tr class="row-even"><td>bra b</td>
+<td>if unsigned below</td>
+<td>all units</td>
+<td>08</td>
+</tr>
+<tr class="row-odd"><td>bra o</td>
+<td>if overflow</td>
+<td>all units</td>
+<td>09</td>
+</tr>
+<tr class="row-even"><td>bra s</td>
+<td>if sign set / negative</td>
+<td>all units</td>
+<td>0a</td>
+</tr>
+<tr class="row-odd"><td>bra z</td>
+<td>if zero</td>
+<td>all units</td>
+<td>0b</td>
+</tr>
+<tr class="row-even"><td>bra e</td>
+<td>if equal</td>
+<td>all units</td>
+<td>0b</td>
+</tr>
+<tr class="row-odd"><td>bra a</td>
+<td>if unsigned above</td>
+<td>all units</td>
+<td>0c</td>
+</tr>
+<tr class="row-even"><td>bra na</td>
+<td>if not unsigned above</td>
+<td>all units</td>
+<td>0d</td>
+</tr>
+<tr class="row-odd"><td>bra be</td>
+<td>if unsigned below or equal</td>
+<td>all units</td>
+<td>0d</td>
+</tr>
+<tr class="row-even"><td>bra</td>
+<td>always</td>
+<td>all units</td>
+<td>0e</td>
+</tr>
+<tr class="row-odd"><td>bra npX</td>
+<td>if predicate false</td>
+<td>all units</td>
+<td>10+X</td>
+</tr>
+<tr class="row-even"><td>bra nc</td>
+<td>if not carry</td>
+<td>all units</td>
+<td>18</td>
+</tr>
+<tr class="row-odd"><td>bra nb</td>
+<td>if not unsigned below</td>
+<td>all units</td>
+<td>18</td>
+</tr>
+<tr class="row-even"><td>bra ae</td>
+<td>if unsigned above or equal</td>
+<td>all units</td>
+<td>18</td>
+</tr>
+<tr class="row-odd"><td>bra no</td>
+<td>if not overflow</td>
+<td>all units</td>
+<td>19</td>
+</tr>
+<tr class="row-even"><td>bra ns</td>
+<td>if sign unset / positive</td>
+<td>all units</td>
+<td>1a</td>
+</tr>
+<tr class="row-odd"><td>bra nz</td>
+<td>if not zero</td>
+<td>all units</td>
+<td>1b</td>
+</tr>
+<tr class="row-even"><td>bra ne</td>
+<td>if not equal</td>
+<td>all units</td>
+<td>1b</td>
+</tr>
+<tr class="row-odd"><td>bra g</td>
+<td>if signed greater</td>
+<td>v3+ units</td>
+<td>1c</td>
+</tr>
+<tr class="row-even"><td>bra le</td>
+<td>if signed less or equal</td>
+<td>v3+ units</td>
+<td>1d</td>
+</tr>
+<tr class="row-odd"><td>bra l</td>
+<td>if signed less</td>
+<td>v3+ units</td>
+<td>1e</td>
+</tr>
+<tr class="row-even"><td>bra ge</td>
+<td>if signed greater or equal</td>
+<td>v3+ units</td>
+<td>1f</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle if not taken, 4-5 cycles if taken</dd>
+<dt>Operands:</dt>
+<dd>DIFF</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>I8</td>
+<td>f4</td>
+</tr>
+<tr class="row-odd"><td>I16</td>
+<td>f5</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>sign-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>switch (cc) {
+        case $pX: // $p0..$p7
+                cond = $flags.$pX;
+                break;
+        case c:
+                cond = $flags.c;
+                break;
+        case o:
+                cond = $flags.o;
+                break;
+        case s:
+                cond = $flags.s;
+                break;
+        case z:
+                cond = $flags.z;
+                break;
+        case a:
+                cond = !$flags.c &amp;&amp; !$flags.z;
+                break;
+        case na:
+                cond = $flags.c || $flags.z;
+                break;
+        case (none):
+                cond = 1;
+                break;
+        case not $pX: // $p0..$p7
+                cond = !$flags.$pX;
+                break;
+        case nc:
+                cond = !$flags.c;
+                break;
+        case no:
+                cond = !$flags.o;
+                break;
+        case ns:
+                cond = !$flags.s;
+                break;
+        case nz:
+                cond = !$flags.z;
+                break;
+        case g:
+                cond = !($flags.o ^ $flags.s) &amp;&amp; !$flags.z;
+                break;
+        case le:
+                cond = ($flags.o ^ $flags.s) || $flags.z;
+                break;
+        case l:
+                cond = $flags.o ^ $flags.s;
+                break;
+        case ge:
+                cond = !($flags.o ^ $flags.s);
+                break;
+}
+if (cond)
+        $pc = $pc + DIFF;
+else
+        $pc = $pc + oplen;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="unconditional-branch-jmp">
+<span id="falcon-isa-jmp"></span><h2><a class="toc-backref" href="#id6">Unconditional branch: jmp</a><a class="headerlink" href="#unconditional-branch-jmp" title="Permalink to this headline">¶</a></h2>
+<p>Branches to the target. Target is specified as absolute address. Yes, the
+immediate forms are pretty much redundant with the relative branch form.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="5%" />
+<col width="39%" />
+<col width="31%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - opcodes f4, f5</th>
+<th class="head">Subopcode - opcode f9</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>jmp</td>
+<td>Unconditional jump</td>
+<td>20</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>4-5 cycles</dd>
+<dt>Operands:</dt>
+<dd>TRG</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>I8</td>
+<td>f4</td>
+</tr>
+<tr class="row-odd"><td>I16</td>
+<td>f5</td>
+</tr>
+<tr class="row-even"><td>R2</td>
+<td>f9</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$pc = TRG;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="subroutine-call-call">
+<span id="falcon-isa-call"></span><h2><a class="toc-backref" href="#id7">Subroutine call: call</a><a class="headerlink" href="#subroutine-call-call" title="Permalink to this headline">¶</a></h2>
+<p>Pushes return address onto stack and branches to the target. Target is
+specified as absolute address.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="5%" />
+<col width="39%" />
+<col width="31%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - opcodes f4, f5</th>
+<th class="head">Subopcode - opcode f9</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>call</td>
+<td>Call a subroutine</td>
+<td>21</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>4-5 cycles</dd>
+<dt>Operands:</dt>
+<dd>TRG</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>I8</td>
+<td>f4</td>
+</tr>
+<tr class="row-odd"><td>I16</td>
+<td>f5</td>
+</tr>
+<tr class="row-even"><td>R2</td>
+<td>f9</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$sp -= 4;
+ST(32, $sp, $pc + oplen);
+$pc = TRG;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="subroutine-return-ret">
+<span id="falcon-isa-ret"></span><h2><a class="toc-backref" href="#id8">Subroutine return: ret</a><a class="headerlink" href="#subroutine-return-ret" title="Permalink to this headline">¶</a></h2>
+<p>Returns from a previous call.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="65%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>ret</td>
+<td>Return from a subroutine</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>5-6 cycles</dd>
+<dt>Operands:</dt>
+<dd>[none]</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="68%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>[no operands]</td>
+<td>f8</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$pc = LD(32, $sp);
+$sp += 4;</pre>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Branch instructions</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#pc-register">$pc register</a></li>
+<li><a class="reference internal" href="#pseudocode-conventions">Pseudocode conventions</a></li>
+<li><a class="reference internal" href="#conditional-branch-bra">Conditional branch: bra</a></li>
+<li><a class="reference internal" href="#unconditional-branch-jmp">Unconditional branch: jmp</a></li>
+<li><a class="reference internal" href="#subroutine-call-call">Subroutine call: call</a></li>
+<li><a class="reference internal" href="#subroutine-return-ret">Subroutine return: ret</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="data.html"
+                        title="previous chapter">Data space</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="proc.html"
+                        title="next chapter">Processor control</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/branch.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="proc.html" title="Processor control"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="data.html" title="Data space"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

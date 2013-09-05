@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>falcon microprocessor &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="next" title="Introduction" href="intro.html" />
+    <link rel="prev" title="GPU external device I/O units" href="../io/index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../io/index.html" title="GPU external device I/O units"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="falcon-microprocessor">
+<h1>falcon microprocessor<a class="headerlink" href="#falcon-microprocessor" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="isa.html">ISA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="isa.html#registers">Registers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="isa.html#flags-register">$flags register</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="isa.html#p-predicates">$p predicates</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="isa.html#instructions">Instructions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="isa.html#sized">Sized</a></li>
+<li class="toctree-l3"><a class="reference internal" href="isa.html#unsized">Unsized</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="isa.html#code-segment">Code segment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="isa.html#invalid-opcode-handling">Invalid opcode handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="arith.html">Arithmetic instructions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#flags-result-bits">$flags result bits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#pseudocode-conventions">Pseudocode conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#comparison-cmpu-cmps-cmp">Comparison: cmpu, cmps, cmp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#addition-substraction-add-adc-sub-sbb">Addition/substraction: add, adc, sub, sbb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#shifts-shl-shr-sar-shlc-shrc">Shifts: shl, shr, sar, shlc, shrc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#unary-operations-not-neg-mov-movf-hswap">Unary operations: not, neg, mov, movf, hswap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#loading-immediates-mov-sethi">Loading immediates: mov, sethi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#clearing-registers-clear">Clearing registers: clear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#setting-flags-from-a-value-setf">Setting flags from a value: setf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#multiplication-mulu-muls">Multiplication: mulu, muls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#sign-extension-sext">Sign extension: sext</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#bitfield-extraction-extr-extrs">Bitfield extraction: extr, extrs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#bitfield-insertion-ins">Bitfield insertion: ins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#bitwise-operations-and-or-xor">Bitwise operations: and, or, xor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#bit-extraction-xbit">Bit extraction: xbit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#bit-manipulation-bset-bclr-btgl">Bit manipulation: bset, bclr, btgl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#division-and-remainder-div-mod">Division and remainder: div, mod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arith.html#setting-predicates-setp">Setting predicates: setp</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data space</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#the-stack">The stack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#pseudocode-conventions">Pseudocode conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#load-ld">Load: ld</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#store-st">Store: st</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#push-onto-stack-push">Push onto stack: push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#pop-from-stack-pop">Pop from stack: pop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#adjust-stack-pointer-add">Adjust stack pointer: add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#accessing-data-segment-through-io">Accessing data segment through IO</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="branch.html">Branch instructions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#pc-register">$pc register</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#pseudocode-conventions">Pseudocode conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#conditional-branch-bra">Conditional branch: bra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#unconditional-branch-jmp">Unconditional branch: jmp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#subroutine-call-call">Subroutine call: call</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html#subroutine-return-ret">Subroutine return: ret</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="proc.html">Processor control</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proc.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proc.html#execution-state">Execution state</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="proc.html#the-exit-interrupt">The EXIT interrupt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proc.html#halting-microcode-execution-exit">Halting microcode execution: exit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proc.html#waiting-for-interrupts-sleep">Waiting for interrupts: sleep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proc.html#processor-execution-control-registers">Processor execution control registers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="proc.html#accessing-special-registers-mov">Accessing special registers: mov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="proc.html#processor-capability-readout">Processor capability readout</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vm.html">Code virtual memory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vm.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vm.html#tlb-operations-ptlb-vtlb-itlb">TLB operations: PTLB, VTLB, ITLB</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vm.html#executing-tlb-operations-through-io">Executing TLB operations through IO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vm.html#tlb-readout-instructions-ptlb-vtlb">TLB readout instructions: ptlb, vtlb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vm.html#tlb-invalidation-instruction-itlb">TLB invalidation instruction: itlb</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vm.html#vm-usage-on-code-execution">VM usage on code execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vm.html#code-upload-and-peeking">Code upload and peeking</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="intr.html">Interrupts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#interrupt-status-and-enable-registers">Interrupt status and enable registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#interrupt-mode-setup">Interrupt mode setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#interrupt-routing">Interrupt routing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#interrupt-delivery">Interrupt delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#trap-delivery">Trap delivery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#returning-form-an-interrupt-iret">Returning form an interrupt: iret</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intr.html#software-trap-trigger-trap">Software trap trigger: trap</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="xfer.html">Code/data xfers to/from external memory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="xfer.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xfer.html#xfer-special-registers">xfer special registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xfer.html#submitting-xfer-requests-xcld-xdld-xdst">Submitting xfer requests: xcld, xdld, xdst</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xfer.html#waiting-for-xfer-completion-xcwait-xdwait">Waiting for xfer completion: xcwait, xdwait</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xfer.html#submitting-xfer-requests-via-io-space">Submitting xfer requests via IO space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xfer.html#xfer-queue-status-registers">xfer queue status registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">IO space</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#common-io-register-list">Common IO register list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#scratch-registers">Scratch registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#engine-status-and-control-registers">Engine status and control registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#v0-code-data-upload-registers">v0 code/data upload registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#io-space-writes-iowr-iowrs">IO space writes: iowr, iowrs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io.html#io-space-reads-iord">IO space reads: iord</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">Timers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="timer.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html#periodic-timer">Periodic timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html#watchdog-timer">Watchdog timer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="perf.html">Performance monitoring signals</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="perf.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="perf.html#user-signals">User signals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debug.html">Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="debug.html#breakpoints">Breakpoints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fifo.html">FIFO interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fifo.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fifo.html#pfifo-access-control">PFIFO access control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fifo.html#method-fifo">Method FIFO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fifo.html#channel-switching">Channel switching</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="memif.html">Memory interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="memif.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="crypt.html">Cryptographic coprocessor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="crypt.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crypt.html#submitting-crypto-commands-ccmd">Submitting crypto commands: ccmd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crypt.html#code-authentication-control">Code authentication control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crypt.html#crypto-xfer-control">Crypto xfer control</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../io/index.html"
+                        title="previous chapter">GPU external device I/O units</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="next chapter">Introduction</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../io/index.html" title="GPU external device I/O units"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

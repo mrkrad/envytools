@@ -1,0 +1,1507 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Arithmetic instructions &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Data space" href="data.html" />
+    <link rel="prev" title="ISA" href="isa.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="data.html" title="Data space"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="isa.html" title="ISA"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="arithmetic-instructions">
+<span id="falcon-arith"></span><h1><a class="toc-backref" href="#id1">Arithmetic instructions</a><a class="headerlink" href="#arithmetic-instructions" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#arithmetic-instructions" id="id1">Arithmetic instructions</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#flags-result-bits" id="id3">$flags result bits</a></li>
+<li><a class="reference internal" href="#pseudocode-conventions" id="id4">Pseudocode conventions</a></li>
+<li><a class="reference internal" href="#comparison-cmpu-cmps-cmp" id="id5">Comparison: cmpu, cmps, cmp</a></li>
+<li><a class="reference internal" href="#addition-substraction-add-adc-sub-sbb" id="id6">Addition/substraction: add, adc, sub, sbb</a></li>
+<li><a class="reference internal" href="#shifts-shl-shr-sar-shlc-shrc" id="id7">Shifts: shl, shr, sar, shlc, shrc</a></li>
+<li><a class="reference internal" href="#unary-operations-not-neg-mov-movf-hswap" id="id8">Unary operations: not, neg, mov, movf, hswap</a></li>
+<li><a class="reference internal" href="#loading-immediates-mov-sethi" id="id9">Loading immediates: mov, sethi</a></li>
+<li><a class="reference internal" href="#clearing-registers-clear" id="id10">Clearing registers: clear</a></li>
+<li><a class="reference internal" href="#setting-flags-from-a-value-setf" id="id11">Setting flags from a value: setf</a></li>
+<li><a class="reference internal" href="#multiplication-mulu-muls" id="id12">Multiplication: mulu, muls</a></li>
+<li><a class="reference internal" href="#sign-extension-sext" id="id13">Sign extension: sext</a></li>
+<li><a class="reference internal" href="#bitfield-extraction-extr-extrs" id="id14">Bitfield extraction: extr, extrs</a></li>
+<li><a class="reference internal" href="#bitfield-insertion-ins" id="id15">Bitfield insertion: ins</a></li>
+<li><a class="reference internal" href="#bitwise-operations-and-or-xor" id="id16">Bitwise operations: and, or, xor</a></li>
+<li><a class="reference internal" href="#bit-extraction-xbit" id="id17">Bit extraction: xbit</a></li>
+<li><a class="reference internal" href="#bit-manipulation-bset-bclr-btgl" id="id18">Bit manipulation: bset, bclr, btgl</a></li>
+<li><a class="reference internal" href="#division-and-remainder-div-mod" id="id19">Division and remainder: div, mod</a></li>
+<li><a class="reference internal" href="#setting-predicates-setp" id="id20">Setting predicates: setp</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The arithmetic/logical instructions do operations on $r0-$r15 GPRs, sometimes
+setting bits in $flags register according to the result. The instructions
+can be &#8220;sized&#8221; or &#8220;unsized&#8221;. Sized instructions have 8-bit, 16-bit, and 32-bit
+variants. Unsized instructions don&#8217;t have variants, and always operate on
+full 32-bit registers. For 8-bit and 16-bit sized instructions, high 24 or 16
+bits of destination registers are unmodified.</p>
+</div>
+<div class="section" id="flags-result-bits">
+<span id="falcon-flags-arith"></span><h2><a class="toc-backref" href="#id3">$flags result bits</a><a class="headerlink" href="#flags-result-bits" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="isa.html#falcon-sr-flags"><em>$flags</em></a> bits often affected by ALU instructions are:</p>
+<ul class="simple">
+<li>bit 8: c, carry flag</li>
+<li>bit 9: o, signed overflow flag</li>
+<li>bit 10: s, sign flag</li>
+<li>bit 11: z, zero flag</li>
+</ul>
+<p>Also, a few ALU instructions operate on $flags register as a whole.</p>
+</div>
+<div class="section" id="pseudocode-conventions">
+<span id="falcon-arith-conventions"></span><h2><a class="toc-backref" href="#id4">Pseudocode conventions</a><a class="headerlink" href="#pseudocode-conventions" title="Permalink to this headline">¶</a></h2>
+<p>All operations are done in infinite-precision arithmetic, all temporaries
+are infinite-precision too.</p>
+<p>sz, for sized instructions, is the selected size of operation: 8, 16, or 32.</p>
+<p>S(x) evaluates to (x &gt;&gt; (sz - 1) &amp; 1), ie. the sign bit of x. If insn
+is unsized, assume sz = 32.</p>
+</div>
+<div class="section" id="comparison-cmpu-cmps-cmp">
+<span id="falcon-isa-cmp"></span><h2><a class="toc-backref" href="#id5">Comparison: cmpu, cmps, cmp</a><a class="headerlink" href="#comparison-cmpu-cmps-cmp" title="Permalink to this headline">¶</a></h2>
+<p>Compare two values, setting flags according to results of comparison. cmp
+sets the usual set of 4 flags. cmpu sets only c and z. cmps sets z normally,
+and sets c if SRC1 is less then SRC2 when treated as signed number.</p>
+<p>cmpu/cmps are the only comparison instructions available on falcon v0. Both of
+them set only the c and z flags, with cmps setting c flag in an unusual way
+to enable signed comparisons while using unsigned flags and condition codes.
+To do an unsigned comparison, use cmpu and the unsigned branch conditions
+[b/a/e]. To do a signed comparison, use cmps, also with unsigned branch
+conditions.</p>
+<p>The falcon v3+ new cmp instruction sets the full set of flags. To do an unsigned
+comparison on v3+, use cmp and the unsigned branch conditions. To do a signed
+comparison, use cmp and the signed branch conditions [l/g/e].</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="10%" />
+<col width="41%" />
+<col width="26%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>cmpu</td>
+<td>compare unsigned</td>
+<td>all units</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>cmps</td>
+<td>compare signed</td>
+<td>all units</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>cmp</td>
+<td>compare</td>
+<td>v3+ units</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="63%" />
+<col width="38%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, I8</td>
+<td>30</td>
+</tr>
+<tr class="row-odd"><td>R2, I16</td>
+<td>31</td>
+</tr>
+<tr class="row-even"><td>R2, R1</td>
+<td>38</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd><dl class="first last docutils">
+<dt>cmpu:</dt>
+<dd>zero-extended</dd>
+<dt>cmps:</dt>
+<dd>sign-extended</dd>
+<dt>cmp:</dt>
+<dd>sign-extended</dd>
+</dl>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>diff = SRC1 - SRC2; // infinite precision
+S = S(diff);
+O = S(SRC1) != S(SRC2) &amp;&amp; S(SRC1) != S(diff);
+$flags.z = (diff == 0);
+if (op == cmps)
+        $flags.c = S ^ O;
+else if (op == cmpu)
+        $flags.c = diff &gt;&gt; sz &amp; 1;
+else if (op == cmp) {
+        $flags.c = diff &gt;&gt; sz &amp; 1;
+        $flags.o = O;
+        $flags.s = S;
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="addition-substraction-add-adc-sub-sbb">
+<span id="falcon-isa-add"></span><h2><a class="toc-backref" href="#id6">Addition/substraction: add, adc, sub, sbb</a><a class="headerlink" href="#addition-substraction-add-adc-sub-sbb" title="Permalink to this headline">¶</a></h2>
+<p>Add or substract two values, possibly with carry/borrow.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="66%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>add</td>
+<td>add</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>adc</td>
+<td>add with carry</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>sub</td>
+<td>substract</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>sbb</td>
+<td>substrace with borrow</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>10</td>
+</tr>
+<tr class="row-odd"><td>R1, R2, I16</td>
+<td>20</td>
+</tr>
+<tr class="row-even"><td>R2, R2, I8</td>
+<td>36</td>
+</tr>
+<tr class="row-odd"><td>R2, R2, I16</td>
+<td>37</td>
+</tr>
+<tr class="row-even"><td>R2, R2, R1</td>
+<td>3b</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>3c</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>s2 = SRC2;
+if (op == adc || op == sbb)
+        s2 += $flags.c;
+if (op == sub || op == sbb)
+        s2 = -s2;
+res = SRC1 + s2;
+DST = res;
+$flags.c = (res &gt;&gt; sz) &amp; 1;
+if (op == add || op == adc) {
+        $flags.o = S(SRC1) == S(SRC2) &amp;&amp; S(SRC1) != S(res);
+} else {
+        $flags.o = S(SRC1) != S(SRC2) &amp;&amp; S(SRC1) != S(res);
+}
+$flags.s = S(DST);
+$flags.z = (DST == 0);</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="shifts-shl-shr-sar-shlc-shrc">
+<span id="falcon-isa-shift"></span><h2><a class="toc-backref" href="#id7">Shifts: shl, shr, sar, shlc, shrc</a><a class="headerlink" href="#shifts-shl-shr-sar-shlc-shrc" title="Permalink to this headline">¶</a></h2>
+<p>Shift a value. For shl/shr, the extra bits &#8220;shifted in&#8221; are 0. For sar,
+they&#8217;re equal to sign bit of source. For shlc/shrc, the first such bit
+is taken from carry flag, the rest are 0.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="66%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>shl</td>
+<td>shift left</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>shr</td>
+<td>shift right</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>sar</td>
+<td>shift right with sign bit</td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td>shlc</td>
+<td>shift left with carry in</td>
+<td>c</td>
+</tr>
+<tr class="row-even"><td>shrc</td>
+<td>shift right with carry in</td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="63%" />
+<col width="38%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>10</td>
+</tr>
+<tr class="row-odd"><td>R2, R2, I8</td>
+<td>36</td>
+</tr>
+<tr class="row-even"><td>R2, R2, R1</td>
+<td>3b</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>3c</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>truncated</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (sz == 8)
+        shcnt = SRC2 &amp; 7;
+else if (sz == 16)
+        shcnt = SRC2 &amp; 0xf;
+else // sz == 32
+        shcnt = SRC2 &amp; 0x1f;
+if (op == shl || op == shlc) {
+        res = SRC1 &lt;&lt; shcnt;
+        if (op == shlc &amp;&amp; shcnt != 0)
+                res |= $flags.c &lt;&lt; (shcnt - 1);
+        $flags.c = res &gt;&gt; sz &amp; 1;
+        DST = res;
+} else { // shr, sar, shrc
+        res = SRC1 &gt;&gt; shcnt;
+        if (op == shrc &amp;&amp; shcnt != 0)
+                res |= $flags.c &lt;&lt; (sz - shcnt);
+        if (op == sar &amp;&amp; S(SRC1))
+                res |= ~0 &lt;&lt; (sz - shcnt);
+        if (shcnt == 0)
+                $flags.c = 0;
+        else
+                $flags.c = SRC1 &gt;&gt; (shcnt - 1) &amp; 1;
+        DST = res;
+}
+if (falcon_version != 0) {
+        $flags.o = 0;
+        $flags.s = S(DST);
+        $flags.z = (DST == 0);
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="unary-operations-not-neg-mov-movf-hswap">
+<span id="falcon-isa-unary"></span><h2><a class="toc-backref" href="#id8">Unary operations: not, neg, mov, movf, hswap</a><a class="headerlink" href="#unary-operations-not-neg-mov-movf-hswap" title="Permalink to this headline">¶</a></h2>
+<p>not flips all bits in a value. neg negates a value. mov and movf move a value
+from one register to another. mov is the v3+ variant, which just does the
+move. movf is the v0 variant, which additionally sets flags according to the
+moved value. hswap rotates a value by half its size.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="10%" />
+<col width="53%" />
+<col width="20%" />
+<col width="18%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>not</td>
+<td>bitwise complement</td>
+<td>all units</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>neg</td>
+<td>negate a value</td>
+<td>all units</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>movf</td>
+<td>move a value and set flags</td>
+<td>v0 units</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>mov</td>
+<td>move a value</td>
+<td>v3+ units</td>
+<td>2</td>
+</tr>
+<tr class="row-even"><td>hswap</td>
+<td>Swap halves</td>
+<td>all units</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2</td>
+<td>39</td>
+</tr>
+<tr class="row-odd"><td>R2, R2</td>
+<td>3d</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == not) {
+        DST = ~SRC;
+        $flags.o = 0;
+} else if (op == neg) {
+        DST = -SRC;
+        $flags.o = (DST == 1 &lt;&lt; (sz - 1));
+} else if (op == movf) {
+        DST = SRC;
+        $flags.o = 0;
+} else if (op == mov) {
+        DST = SRC;
+} else if (op == hswap) {
+        DST = SRC &gt;&gt; (sz / 2) | SRC &lt;&lt; (sz / 2);
+        $flags.o = 0;
+}
+if (op != mov) {
+        $flags.s = S(DST);
+        $flags.z = (DST == 0);
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="loading-immediates-mov-sethi">
+<span id="falcon-isa-loadimm"></span><h2><a class="toc-backref" href="#id9">Loading immediates: mov, sethi</a><a class="headerlink" href="#loading-immediates-mov-sethi" title="Permalink to this headline">¶</a></h2>
+<p>mov sets a register to an immediate. sethi sets high 16 bits of a register to
+an immediate, leaving low bits untouched. mov can be thus used to load small
+[16-bit signed] immediates, while mov+sethi can be used to load any 32-bit
+immediate.</p>
+<dl class="docutils">
+<dt>Instructions</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="16%" />
+<col width="55%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>mov</td>
+<td>Load an immediate</td>
+<td>7</td>
+</tr>
+<tr class="row-odd"><td>sethi</td>
+<td>Set high bits</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="54%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, I8</td>
+<td>f0</td>
+</tr>
+<tr class="row-odd"><td>R2, I16</td>
+<td>f1</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd><dl class="first last docutils">
+<dt>mov:</dt>
+<dd>sign-extended</dd>
+<dt>sethi:</dt>
+<dd>zero-extended</dd>
+</dl>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == mov)
+        DST = SRC;
+else if (op == sethi)
+        DST = DST &amp; 0xffff | SRC &lt;&lt; 16;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="clearing-registers-clear">
+<span id="falcon-isa-clear"></span><h2><a class="toc-backref" href="#id10">Clearing registers: clear</a><a class="headerlink" href="#clearing-registers-clear" title="Permalink to this headline">¶</a></h2>
+<p>Sets a register to 0.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="17%" />
+<col width="53%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>clear</td>
+<td>Clear a register</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Operands:</dt>
+<dd>DST</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2</td>
+<td>3d</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">DST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="setting-flags-from-a-value-setf">
+<span id="falcon-isa-setf"></span><h2><a class="toc-backref" href="#id11">Setting flags from a value: setf</a><a class="headerlink" href="#setting-flags-from-a-value-setf" title="Permalink to this headline">¶</a></h2>
+<p>Sets flags according to a value.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="9%" />
+<col width="56%" />
+<col width="19%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>setf</td>
+<td>Set flags according to a value</td>
+<td>v3+ units</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2</td>
+<td>3d</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$flags.o = 0;
+$flags.s = S(SRC);
+$flags.z = (SRC == 0);</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="multiplication-mulu-muls">
+<span id="falcon-isa-mul"></span><h2><a class="toc-backref" href="#id12">Multiplication: mulu, muls</a><a class="headerlink" href="#multiplication-mulu-muls" title="Permalink to this headline">¶</a></h2>
+<p>Does a 16x16 -&gt; 32 multiplication.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="16%" />
+<col width="55%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>mulu</td>
+<td>Multiply unsigned</td>
+<td>0</td>
+</tr>
+<tr class="row-odd"><td>muls</td>
+<td>Multiply signed</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R1, R2, I16</td>
+<td>e0</td>
+</tr>
+<tr class="row-even"><td>R2, R2, I8</td>
+<td>f0</td>
+</tr>
+<tr class="row-odd"><td>R2, R2, I16</td>
+<td>f1</td>
+</tr>
+<tr class="row-even"><td>R2, R2, R1</td>
+<td>fd</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd><dl class="first last docutils">
+<dt>mulu:</dt>
+<dd>zero-extended</dd>
+<dt>muls:</dt>
+<dd>sign-extended</dd>
+</dl>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>s1 = SRC1 &amp; 0xffff;
+s2 = SRC2 &amp; 0xffff;
+if (op == muls) {
+        if (s1 &amp; 0x8000)
+                s1 |= 0xffff0000;
+        if (s2 &amp; 0x8000)
+                s2 |= 0xffff0000;
+}
+DST = s1 * s2;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="sign-extension-sext">
+<span id="falcon-isa-sext"></span><h2><a class="toc-backref" href="#id13">Sign extension: sext</a><a class="headerlink" href="#sign-extension-sext" title="Permalink to this headline">¶</a></h2>
+<p>Does a sign-extension of low X bits of a value.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="20%" />
+<col width="44%" />
+<col width="36%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>sext</td>
+<td>Sign-extend</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="63%" />
+<col width="38%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R2, R2, I8</td>
+<td>f0</td>
+</tr>
+<tr class="row-even"><td>R2, R2, R1</td>
+<td>fd</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>truncated</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>bit = SRC2 &amp; 0x1f;
+if (SRC1 &amp; 1 &lt;&lt; bit) {
+        DST = SRC1 &amp; ((1 &lt;&lt; bit) - 1) | -(1 &lt;&lt; bit);
+} else {
+        DST = SRC1 &amp; ((1 &lt;&lt; bit) - 1);
+}
+$flags.s = S(DST);
+$flags.z = (DST == 0);</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="bitfield-extraction-extr-extrs">
+<span id="falcon-isa-extr"></span><h2><a class="toc-backref" href="#id14">Bitfield extraction: extr, extrs</a><a class="headerlink" href="#bitfield-extraction-extr-extrs" title="Permalink to this headline">¶</a></h2>
+<p>Extracts a bitfield.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="9%" />
+<col width="56%" />
+<col width="19%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>extrs</td>
+<td>Extract signed bitfield</td>
+<td>v3+ units</td>
+<td>3</td>
+</tr>
+<tr class="row-odd"><td>extr</td>
+<td>Extract unsigned bitfield</td>
+<td>v3+ units</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R1, R2, I16</td>
+<td>e0</td>
+</tr>
+<tr class="row-even"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>low = SRC2 &amp; 0x1f;
+size = (SRC2 &gt;&gt; 5 &amp; 0x1f) + 1;
+bf = (SRC1 &gt;&gt; low) &amp; ((1 &lt;&lt; size) - 1);
+if (op == extrs) {
+        signbit = (low + size - 1) &amp; 0x1f; // depending on the mask is probably a bad idea.
+        if (SRC1 &amp; 1 &lt;&lt; signbit)
+                bf |= -(1 &lt;&lt; size);
+}
+DST = bf;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="bitfield-insertion-ins">
+<span id="falcon-isa-ins"></span><h2><a class="toc-backref" href="#id15">Bitfield insertion: ins</a><a class="headerlink" href="#bitfield-insertion-ins" title="Permalink to this headline">¶</a></h2>
+<p>Inserts a bitfield.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="9%" />
+<col width="56%" />
+<col width="19%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>ins</td>
+<td>Insert a bitfield</td>
+<td>v3+ units</td>
+<td>b</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R1, R2, I16</td>
+<td>e0</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended.</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>low = SRC2 &amp; 0x1f;
+size = (SRC2 &gt;&gt; 5 &amp; 0x1f) + 1;
+if (low + size &lt;= 32) { // nop if bitfield out of bounds - I wouldn&#x27;t depend on it, though...
+        DST &amp;= ~(((1 &lt;&lt; size) - 1) &lt;&lt; low); // clear the current contents of the bitfield
+        bf = SRC1 &amp; ((1 &lt;&lt; size) - 1);
+        DST |= bf &lt;&lt; low;
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="bitwise-operations-and-or-xor">
+<span id="falcon-isa-logop"></span><h2><a class="toc-backref" href="#id16">Bitwise operations: and, or, xor</a><a class="headerlink" href="#bitwise-operations-and-or-xor" title="Permalink to this headline">¶</a></h2>
+<p>Ands, ors, or xors two operands.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="20%" />
+<col width="44%" />
+<col width="36%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>and</td>
+<td>Bitwise and</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>or</td>
+<td>Bitwise or</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>xor</td>
+<td>Bitwise xor</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R1, R2, I16</td>
+<td>e0</td>
+</tr>
+<tr class="row-even"><td>R2, R2, I8</td>
+<td>f0</td>
+</tr>
+<tr class="row-odd"><td>R2, R2, I16</td>
+<td>f1</td>
+</tr>
+<tr class="row-even"><td>R2, R2, R1</td>
+<td>fd</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == and)
+        DST = SRC1 &amp; SRC2;
+if (op == or)
+        DST = SRC1 | SRC2;
+if (op == xor)
+        DST = SRC1 ^ SRC2;
+if (falcon_version != 0) {
+        $flags.c = 0;
+        $flags.o = 0;
+        $flags.s = S(DST);
+        $flags.z = (DST == 0);
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="bit-extraction-xbit">
+<span id="falcon-isa-xbit"></span><h2><a class="toc-backref" href="#id17">Bit extraction: xbit</a><a class="headerlink" href="#bit-extraction-xbit" title="Permalink to this headline">¶</a></h2>
+<p>Extracts a single bit of a specified register. On v0, the bit is stored to bit
+0 of DST, other bits are unmodified. On v3+, the bit is stored to bit 0 of
+DST, and all other bits of DST are set to 0.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="6%" />
+<col width="20%" />
+<col width="37%" />
+<col width="37%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - opcodes c0, ff</th>
+<th class="head">Subopcode - opcodes f0, fe</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>xbit</td>
+<td>Extract a bit</td>
+<td>8</td>
+<td>c</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="70%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+<tr class="row-even"><td>R2, $flags, I8</td>
+<td>f0</td>
+</tr>
+<tr class="row-odd"><td>R1, $flags, R2</td>
+<td>fe</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>truncated</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (falcon_version == 0) {
+        DST = DST &amp; ~1 | (SRC1 &gt;&gt; bit &amp; 1);
+} else {
+        DST = SRC1 &gt;&gt; bit &amp; 1;
+        $flags.s = S(DST); // always works out to 0.
+        $flags.z = (DST == 0);
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="bit-manipulation-bset-bclr-btgl">
+<span id="falcon-isa-bit"></span><h2><a class="toc-backref" href="#id18">Bit manipulation: bset, bclr, btgl</a><a class="headerlink" href="#bit-manipulation-bset-bclr-btgl" title="Permalink to this headline">¶</a></h2>
+<p>Set, clear, or flip a specified bit of a register.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="6%" />
+<col width="17%" />
+<col width="45%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - opcodes f0, fd, f9</th>
+<th class="head">Subopcode - opcode f4</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>bset</td>
+<td>Set a bit</td>
+<td>9</td>
+<td>31</td>
+</tr>
+<tr class="row-odd"><td>bclr</td>
+<td>Clear a bit</td>
+<td>a</td>
+<td>32</td>
+</tr>
+<tr class="row-even"><td>btgl</td>
+<td>Flip a bit</td>
+<td>b</td>
+<td>33</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="63%" />
+<col width="38%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, I8</td>
+<td>f0</td>
+</tr>
+<tr class="row-odd"><td>R2, R1</td>
+<td>fd</td>
+</tr>
+<tr class="row-even"><td>$flags, I8</td>
+<td>f4</td>
+</tr>
+<tr class="row-odd"><td>$flags, R2</td>
+<td>f9</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>truncated</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>bit = SRC &amp; 0x1f;
+if (op == bset)
+        DST |= 1 &lt;&lt; bit;
+else if (op == bclr)
+        DST &amp;= ~(1 &lt;&lt; bit);
+else // op == btgl
+        DST ^= 1 &lt;&lt; bit;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="division-and-remainder-div-mod">
+<span id="falcon-isa-div"></span><h2><a class="toc-backref" href="#id19">Division and remainder: div, mod</a><a class="headerlink" href="#division-and-remainder-div-mod" title="Permalink to this headline">¶</a></h2>
+<p>Does unsigned 32-bit division / modulus.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="14%" />
+<col width="33%" />
+<col width="28%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>div</td>
+<td>Divide</td>
+<td>v3+ units</td>
+<td>c</td>
+</tr>
+<tr class="row-odd"><td>mod</td>
+<td>Take modulus</td>
+<td>v3+ units</td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>30-33 cycles</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>c0</td>
+</tr>
+<tr class="row-odd"><td>R1, R2, I16</td>
+<td>e0</td>
+</tr>
+<tr class="row-even"><td>R3, R2, R1</td>
+<td>ff</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (SRC2 == 0) {
+        dres = 0xffffffff;
+} else {
+        dres = SRC1 / SRC2;
+}
+if (op == div)
+        DST = dres;
+else // op == mod
+        DST = SRC1 - dres * SRC2;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="setting-predicates-setp">
+<span id="falcon-isa-setp"></span><h2><a class="toc-backref" href="#id20">Setting predicates: setp</a><a class="headerlink" href="#setting-predicates-setp" title="Permalink to this headline">¶</a></h2>
+<p>Sets bit #SRC2 in $flags to bit 0 of SRC1.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="19%" />
+<col width="48%" />
+<col width="33%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>setp</td>
+<td>Set predicate</td>
+<td>8</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Execution time:</dt>
+<dd>1 cycle</dd>
+<dt>Operands:</dt>
+<dd>SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, I8</td>
+<td>f2</td>
+</tr>
+<tr class="row-odd"><td>R2, R1</td>
+<td>fa</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>truncated</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>bit = SRC2 &amp; 0x1f;
+$flags = ($flags &amp; ~(1 &lt;&lt; bit)) | (SRC1 &amp; 1) &lt;&lt; bit;</pre>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Arithmetic instructions</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#flags-result-bits">$flags result bits</a></li>
+<li><a class="reference internal" href="#pseudocode-conventions">Pseudocode conventions</a></li>
+<li><a class="reference internal" href="#comparison-cmpu-cmps-cmp">Comparison: cmpu, cmps, cmp</a></li>
+<li><a class="reference internal" href="#addition-substraction-add-adc-sub-sbb">Addition/substraction: add, adc, sub, sbb</a></li>
+<li><a class="reference internal" href="#shifts-shl-shr-sar-shlc-shrc">Shifts: shl, shr, sar, shlc, shrc</a></li>
+<li><a class="reference internal" href="#unary-operations-not-neg-mov-movf-hswap">Unary operations: not, neg, mov, movf, hswap</a></li>
+<li><a class="reference internal" href="#loading-immediates-mov-sethi">Loading immediates: mov, sethi</a></li>
+<li><a class="reference internal" href="#clearing-registers-clear">Clearing registers: clear</a></li>
+<li><a class="reference internal" href="#setting-flags-from-a-value-setf">Setting flags from a value: setf</a></li>
+<li><a class="reference internal" href="#multiplication-mulu-muls">Multiplication: mulu, muls</a></li>
+<li><a class="reference internal" href="#sign-extension-sext">Sign extension: sext</a></li>
+<li><a class="reference internal" href="#bitfield-extraction-extr-extrs">Bitfield extraction: extr, extrs</a></li>
+<li><a class="reference internal" href="#bitfield-insertion-ins">Bitfield insertion: ins</a></li>
+<li><a class="reference internal" href="#bitwise-operations-and-or-xor">Bitwise operations: and, or, xor</a></li>
+<li><a class="reference internal" href="#bit-extraction-xbit">Bit extraction: xbit</a></li>
+<li><a class="reference internal" href="#bit-manipulation-bset-bclr-btgl">Bit manipulation: bset, bclr, btgl</a></li>
+<li><a class="reference internal" href="#division-and-remainder-div-mod">Division and remainder: div, mod</a></li>
+<li><a class="reference internal" href="#setting-predicates-setp">Setting predicates: setp</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="isa.html"
+                        title="previous chapter">ISA</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="data.html"
+                        title="next chapter">Data space</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/arith.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="data.html" title="Data space"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="isa.html" title="ISA"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

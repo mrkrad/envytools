@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Interrupts &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Code/data xfers to/from external memory" href="xfer.html" />
+    <link rel="prev" title="Code virtual memory" href="vm.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="xfer.html" title="Code/data xfers to/from external memory"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="vm.html" title="Code virtual memory"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="interrupts">
+<h1><a class="toc-backref" href="#id1">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#interrupts" id="id1">Interrupts</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#interrupt-status-and-enable-registers" id="id3">Interrupt status and enable registers</a></li>
+<li><a class="reference internal" href="#interrupt-mode-setup" id="id4">Interrupt mode setup</a></li>
+<li><a class="reference internal" href="#interrupt-routing" id="id5">Interrupt routing</a></li>
+<li><a class="reference internal" href="#interrupt-delivery" id="id6">Interrupt delivery</a></li>
+<li><a class="reference internal" href="#trap-delivery" id="id7">Trap delivery</a></li>
+<li><a class="reference internal" href="#returning-form-an-interrupt-iret" id="id8">Returning form an interrupt: iret</a></li>
+<li><a class="reference internal" href="#software-trap-trigger-trap" id="id9">Software trap trigger: trap</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>falcon has interrupt support. There are 16 interrupt lines on each engine, and
+two interrupt vectors on the microprocessor. Each of the interrupt lines can
+be independently routed to one of the microprocessor vectors, or to the PMC
+interrupt line, if the engine has one. The lines can be individually masked
+as well. They can be triggered by hw events, or by the user.</p>
+<p>The lines are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="20%" />
+<col width="10%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Line</th>
+<th class="head">v3+ type</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>edge</td>
+<td>PERIODIC</td>
+<td><a class="reference internal" href="timer.html#falcon-intr-periodic"><em>periodic timer</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>edge</td>
+<td>WATCHDOG</td>
+<td><a class="reference internal" href="timer.html#falcon-intr-watchdog"><em>watchdog timer</em></a></td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>level</td>
+<td>FIFO</td>
+<td><a class="reference internal" href="fifo.html#falcon-intr-fifo"><em>FIFO data available</em></a></td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>edge</td>
+<td>CHSW</td>
+<td><a class="reference internal" href="fifo.html#falcon-intr-chsw"><em>PFIFO channel switch</em></a></td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>edge</td>
+<td>EXIT</td>
+<td><a class="reference internal" href="proc.html#falcon-intr-exit"><em>processor stopped</em></a></td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>edge</td>
+<td>???</td>
+<td>[related to falcon+0x0a4]</td>
+</tr>
+<tr class="row-even"><td>6-7</td>
+<td>edge</td>
+<td>SCRATCH</td>
+<td>scratch [unused by hw, user-defined]</td>
+</tr>
+<tr class="row-odd"><td>8-9</td>
+<td>edge by default</td>
+<td>-</td>
+<td>engine-specific</td>
+</tr>
+<tr class="row-even"><td>10-15</td>
+<td>level by default</td>
+<td>-</td>
+<td>engine-specific</td>
+</tr>
+</tbody>
+</table>
+<p>Each interrupt line has a physical wire assigned to it. For edge-triggered
+interrupts, there&#8217;s a flip-flop that&#8217;s set by 0-to-1 edge on the wire or
+a write to INTR_SET register, and cleared by writing to INTR_CLEAR register.
+For level-triggered interrupts, interrupt status is wired straight to the
+input.</p>
+</div>
+<div class="section" id="interrupt-status-and-enable-registers">
+<span id="falcon-io-intr-enable"></span><span id="falcon-io-intr"></span><h2><a class="toc-backref" href="#id3">Interrupt status and enable registers</a><a class="headerlink" href="#interrupt-status-and-enable-registers" title="Permalink to this headline">¶</a></h2>
+<p>The interrupt and interrupt enable registers are actually visible as
+set/clear/status register triples: writing to the set register sets all bits
+that are 1 in the written value to 1. Writing to clear register sets them
+to 0. The status register shows the current value when read, but cannot be
+written.</p>
+<p>MMIO 0x000 / I[0x00000]: INTR_SET
+MMIO 0x004 / I[0x00100]: INTR_CLEAR
+MMIO 0x008 / I[0x00200]: INTR [status]</p>
+<blockquote>
+<div>A mask of currently pending interrupts. Write to SET to manually trigger
+an interrupt. Write to CLEAR to ack an interrupt. Attempts to SET or CLEAR
+level-triggered interrupts are ignored.</div></blockquote>
+<p>MMIO 0x010 / I[0x00400]: INTR_EN_SET
+MMIO 0x014 / I[0x00500]: INTR_EN_CLEAR
+MMIO 0x018 / I[0x00600]: INTR_EN [status]</p>
+<blockquote>
+<div>A mask of enabled interrupts. If a bit is set to 0 here, the interrupt
+handler isn&#8217;t run if a given interrupt happens [but the INTR bit is still
+set and it&#8217;ll run once INTR_EN bit is set again].</div></blockquote>
+</div>
+<div class="section" id="interrupt-mode-setup">
+<span id="falcon-io-intr-mode"></span><h2><a class="toc-backref" href="#id4">Interrupt mode setup</a><a class="headerlink" href="#interrupt-mode-setup" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>MMIO 0x00c / I[0x00300]: INTR_MODE [v3+ only]</dt>
+<dd><p class="first">Bits 0-15 are modes for the corresponding interrupt lines. 0 is edge
+trigered, 1 is level triggered.</p>
+<p>Setting a sw interrupt to level-triggered, or a hw interrupt to mode it
+wasn&#8217;t meant to be set is likely a bad idea.</p>
+<p class="last">This register is set to 0xfc04 on reset.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="interrupt-routing">
+<span id="falcon-io-intr-route"></span><h2><a class="toc-backref" href="#id5">Interrupt routing</a><a class="headerlink" href="#interrupt-routing" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>MMIO 0x01c / I[0x00700]: INTR_ROUTING</dt>
+<dd><ul class="first simple">
+<li>bits 0-15: bit 0 of interrupt routing selector, one for each interrupt line</li>
+<li>bits 16-31: bit 1 of interrupt routing selector, one for each interrupt line</li>
+</ul>
+<p>For each interrupt line, the two bits from respective bitfields are put
+together to find its routing destination:</p>
+<ul class="last simple">
+<li>0: falcon vector 0</li>
+<li>1: PMC HOST/DAEMON line</li>
+<li>2: falcon vector 1</li>
+<li>3: PMC NRHOST line [NVC0+ selected engines only]</li>
+</ul>
+</dd>
+</dl>
+<p>If the engine has a PMC interrupt line and any interrupt set for PMC irq
+delivery is active and unmasked, the corresponding PMC interrupt input line
+is active.</p>
+</div>
+<div class="section" id="interrupt-delivery">
+<span id="falcon-intr"></span><span id="falcon-flags-is"></span><span id="falcon-flags-ie"></span><span id="falcon-sr-iv"></span><h2><a class="toc-backref" href="#id6">Interrupt delivery</a><a class="headerlink" href="#interrupt-delivery" title="Permalink to this headline">¶</a></h2>
+<p>falcon interrupt delivery is controlled by $iv0, $iv1 registers and ie0, ie1,
+is0, is1 $flags bits. $iv0 is address of interrupt vector 0. $iv1 is address
+of interrupt vector 1.  ieX are interrupt enable bits for corresponding
+vectors. isX are interrupt enable save bits - they store previous status of
+ieX bits during interrupt handler execution. Both ieX bits are always cleared
+to 0 when entering an interrupt handler.</p>
+<p>Whenever there&#8217;s an active and enabled interrupt set for vector X delivery,
+and ieX flag is set, vector X is called:</p>
+<div class="highlight-python"><pre>$sp -= 4;
+ST(32, $sp, $pc);
+$flags.is0 = $flags.ie0;
+$flags.is1 = $flags.ie1;
+$flags.ie0 = 0;
+$flags.ie1 = 0;
+if (falcon_version &gt;= 4) {
+        $flags.unk16 = $flags.unk12;
+        $flags.unk1d = $flags.unk1a;
+        $flags.unk12 = 0;
+}
+if (vector 0)
+        $pc = $iv0;
+else
+        $pc = $iv1;</pre>
+</div>
+</div>
+<div class="section" id="trap-delivery">
+<span id="falcon-trap"></span><span id="falcon-flags-ta"></span><span id="falcon-sr-tstatus"></span><span id="falcon-sr-tv"></span><h2><a class="toc-backref" href="#id7">Trap delivery</a><a class="headerlink" href="#trap-delivery" title="Permalink to this headline">¶</a></h2>
+<p>falcon trap delivery is controlled by $tv, $tstatus registers and ta $flags
+bit. Traps behave like interrupts, but are triggered by events inside the UC.</p>
+<p>$tv is address of trap vector. ta is trap active flag. $tstatus is present on
+v3+ only and contains information about last trap. The bitfields of $tstatus
+are:</p>
+<ul class="simple">
+<li>bits 0-19 [or as many bits as required]: faulting $pc</li>
+<li>bits 20-23: trap reason</li>
+</ul>
+<p>The known trap reasons are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="20%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Reason</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0-3</td>
+<td>SOFTWARE</td>
+<td><a class="reference internal" href="#falcon-trap-software"><em>software trap</em></a></td>
+</tr>
+<tr class="row-odd"><td>8</td>
+<td>INVALID_OPCODE</td>
+<td><a class="reference internal" href="isa.html#falcon-trap-invalid-opcode"><em>invalid opcode</em></a></td>
+</tr>
+<tr class="row-even"><td>0xa</td>
+<td>VM_NO_HIT</td>
+<td><a class="reference internal" href="vm.html#falcon-trap-vm"><em>page fault - no hit</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xb</td>
+<td>VM_MULTI_HIT</td>
+<td><a class="reference internal" href="vm.html#falcon-trap-vm"><em>page fault - multi hit</em></a></td>
+</tr>
+<tr class="row-even"><td>0xf</td>
+<td>BREAKPOINT</td>
+<td><a class="reference internal" href="debug.html#falcon-trap-breakpoint"><em>breakpoint hit</em></a></td>
+</tr>
+</tbody>
+</table>
+<p>Whenever a trapworthy event happens on the uc, a trap is delivered:</p>
+<div class="highlight-python"><pre>if ($flags.ta) { // double trap?
+        EXIT;
+}
+$flags.ta = 1;
+if (falcon_version != 0) // on v0, there&#x27;s only one possible trap reason anyway [8]
+        $tstatus = $pc | reason &lt;&lt; 20;
+if (falcon_version &gt;= 4) {
+        $flags.is0 = $flags.ie0;
+        $flags.is1 = $flags.ie1;
+        $flags.unk16 = $flags.unk12;
+        $flags.unk1d = $flags.unk1a;
+        $flags.ie0 = 0;
+        $flags.ie1 = 0;
+        $flags.unk12 = 0;
+}
+$sp -= 4;
+ST(32, $sp, $pc);
+$pc = $tv;</pre>
+</div>
+</div>
+<div class="section" id="returning-form-an-interrupt-iret">
+<span id="falcon-isa-iret"></span><h2><a class="toc-backref" href="#id8">Returning form an interrupt: iret</a><a class="headerlink" href="#returning-form-an-interrupt-iret" title="Permalink to this headline">¶</a></h2>
+<p>Returns from an interrupt handler.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="65%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>iret</td>
+<td>Return from an interrupt</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>[none]</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="68%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>[no operands]</td>
+<td>f8</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$pc = LD(32, $sp);
+$sp += 4;
+$flags.ie0 = $flags.is0;
+$flags.ie1 = $flags.is1;
+if (falcon_version &gt;= 4) {
+        $flags.unk12 = $flags.unk16;
+        $flags.unk1a = $flags.unk1d;
+}</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="software-trap-trigger-trap">
+<span id="falcon-trap-software"></span><span id="falcon-isa-trap"></span><h2><a class="toc-backref" href="#id9">Software trap trigger: trap</a><a class="headerlink" href="#software-trap-trigger-trap" title="Permalink to this headline">¶</a></h2>
+<p>Triggers a software trap.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="12%" />
+<col width="49%" />
+<col width="20%" />
+<col width="18%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Present on</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>trap 0</td>
+<td>software trap #0</td>
+<td>v3+ units</td>
+<td>8</td>
+</tr>
+<tr class="row-odd"><td>trap 1</td>
+<td>software trap #1</td>
+<td>v3+ units</td>
+<td>9</td>
+</tr>
+<tr class="row-even"><td>trap 2</td>
+<td>software trap #2</td>
+<td>v3+ units</td>
+<td>a</td>
+</tr>
+<tr class="row-odd"><td>trap 3</td>
+<td>software trap #3</td>
+<td>v3+ units</td>
+<td>b</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>[none]</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="68%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>[no operands]</td>
+<td>f8</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$pc += oplen; // return will be to the insn after this one
+TRAP(arg);</pre>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Interrupts</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#interrupt-status-and-enable-registers">Interrupt status and enable registers</a></li>
+<li><a class="reference internal" href="#interrupt-mode-setup">Interrupt mode setup</a></li>
+<li><a class="reference internal" href="#interrupt-routing">Interrupt routing</a></li>
+<li><a class="reference internal" href="#interrupt-delivery">Interrupt delivery</a></li>
+<li><a class="reference internal" href="#trap-delivery">Trap delivery</a></li>
+<li><a class="reference internal" href="#returning-form-an-interrupt-iret">Returning form an interrupt: iret</a></li>
+<li><a class="reference internal" href="#software-trap-trigger-trap">Software trap trigger: trap</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="vm.html"
+                        title="previous chapter">Code virtual memory</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="xfer.html"
+                        title="next chapter">Code/data xfers to/from external memory</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/intr.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="xfer.html" title="Code/data xfers to/from external memory"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="vm.html" title="Code virtual memory"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

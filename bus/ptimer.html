@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PTIMER: Timer engine &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="PCI/PCIE/AGP bus interface and card management logic" href="index.html" />
+    <link rel="next" title="PCI BARs and other means of accessing the GPU" href="bars.html" />
+    <link rel="prev" title="PMC: Master control unit" href="pmc.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="bars.html" title="PCI BARs and other means of accessing the GPU"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pmc.html" title="PMC: Master control unit"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ptimer-timer-engine">
+<span id="ptimer"></span><h1><a class="toc-backref" href="#id1">PTIMER: Timer engine</a><a class="headerlink" href="#ptimer-timer-engine" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#ptimer-timer-engine" id="id1">PTIMER: Timer engine</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-register-list-nv01" id="id3">MMIO register list - NV01</a></li>
+<li><a class="reference internal" href="#mmio-register-list-nv03" id="id4">MMIO register list - NV03-</a></li>
+<li><a class="reference internal" href="#the-clock-source" id="id5">The clock source</a></li>
+<li><a class="reference internal" href="#the-clock-ratio" id="id6">The clock ratio</a></li>
+<li><a class="reference internal" href="#the-time-counter" id="id7">The time counter</a><ul>
+<li><a class="reference internal" href="#reading-the-clock" id="id8">Reading the clock</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-alarm-and-interrupts" id="id9">The alarm and interrupts</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>PTIMER is a small functional unit used to measure time by the card. It has
+a 56-bit tick counter connected to a programmable clock source. The current
+value of this counter is used for timestamping by many other units on the GPU.
+Two such timestamps can be substracted to get the wall time elapsed between
+their creation and measure eg. command execution time. Also, it&#8217;s possible to
+set up an interrupt that will be triggered when the low 27 bits of the counter
+reach a specified value.</p>
+<p>The PTIMER&#8217;s MMIO range is 0x101000:0x102000 on NV01, 0x9000:0xa000 on NV03
+and later cards. It is enabled by PMC.ENABLE bit 4 [NV01 - shared with PDMA]
+or 16 [NV03-], and its interrupt line is connected to PMC.INTR line 20. It&#8217;s
+available on all cards.</p>
+<p>Curiously, on NV41+ the PTIMER is also used to report MMIO faults, ie. MMIO
+space accesses from host that failed for some reason.</p>
+</div>
+<div class="section" id="mmio-register-list-nv01">
+<span id="ptimer-mmio-nv01"></span><h2><a class="toc-backref" href="#id3">MMIO register list - NV01</a><a class="headerlink" href="#mmio-register-list-nv01" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="12%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x101100</td>
+<td>INTR</td>
+<td><a class="reference internal" href="#ptimer-mmio-intr"><em>interrupt status / acknowledge</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x101140</td>
+<td>INTR_EN</td>
+<td><a class="reference internal" href="#ptimer-mmio-intr"><em>interrupt enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101200</td>
+<td>CLOCK_DIV</td>
+<td><a class="reference internal" href="#ptimer-mmio-clock-ratio"><em>clock divider</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x101210</td>
+<td>CLOCK_MUL</td>
+<td><a class="reference internal" href="#ptimer-mmio-clock-ratio"><em>clock multiplier</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101400</td>
+<td>TIME_LOW</td>
+<td><a class="reference internal" href="#ptimer-mmio-time"><em>low part of the time counter</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x101404</td>
+<td>TIME_HIGH</td>
+<td><a class="reference internal" href="#ptimer-mmio-time"><em>high part of the time counter</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101410</td>
+<td>ALARM</td>
+<td><a class="reference internal" href="#ptimer-mmio-alarm"><em>the TIME_LOW value to interrupt on</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="mmio-register-list-nv03">
+<span id="ptimer-mmio-nv03"></span><h2><a class="toc-backref" href="#id4">MMIO register list - NV03-</a><a class="headerlink" href="#mmio-register-list-nv03" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="10%" />
+<col width="16%" />
+<col width="66%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Variants</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x009060</td>
+<td>NV50-</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x009064</td>
+<td>NV50-</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x009080</td>
+<td>NV17:NV20
+NV25:NV50</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x009080</td>
+<td>NVC0-</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x009084</td>
+<td>NV41-</td>
+<td>MMIO_FAULT_ADDR</td>
+<td>address and type of last MMIO fault</td>
+</tr>
+<tr class="row-odd"><td>0x009088</td>
+<td>NV41-</td>
+<td>MMIO_FAULT_DATA</td>
+<td>data written on last MMIO fault</td>
+</tr>
+<tr class="row-even"><td>0x009100</td>
+<td>all</td>
+<td>INTR</td>
+<td><a class="reference internal" href="#ptimer-mmio-intr"><em>interrupt status / acknowledge</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x009140</td>
+<td>all</td>
+<td>INTR_EN</td>
+<td><a class="reference internal" href="#ptimer-mmio-intr"><em>interrupt enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x009200</td>
+<td>all</td>
+<td>CLOCK_DIV</td>
+<td><a class="reference internal" href="#ptimer-mmio-clock-ratio"><em>clock divider</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x009210</td>
+<td>all</td>
+<td>CLOCK_MUL</td>
+<td><a class="reference internal" href="#ptimer-mmio-clock-ratio"><em>clock multiplier</em></a></td>
+</tr>
+<tr class="row-even"><td>0x009220</td>
+<td>NV41-</td>
+<td>CLOCK_SOURCE</td>
+<td><a class="reference internal" href="#ptimer-mmio-clock-source"><em>clock source selection</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x009400</td>
+<td>all</td>
+<td>TIME_LOW</td>
+<td><a class="reference internal" href="#ptimer-mmio-time"><em>low part of the time counter</em></a></td>
+</tr>
+<tr class="row-even"><td>0x009410</td>
+<td>all</td>
+<td>TIME_HIGH</td>
+<td><a class="reference internal" href="#ptimer-mmio-time"><em>high part of the time counter</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x009420</td>
+<td>all</td>
+<td>ALARM</td>
+<td><a class="reference internal" href="#ptimer-mmio-alarm"><em>the TIME_LOW value to interrupt on</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="the-clock-source">
+<span id="ptimer-mmio-clock-source"></span><h2><a class="toc-backref" href="#id5">The clock source</a><a class="headerlink" href="#the-clock-source" title="Permalink to this headline">¶</a></h2>
+<p>The clock that PTIMER counts is generated by applying a selectable ratio to
+a clock source. The clock source depends on the card:</p>
+<ul class="simple">
+<li>NV01:NV04: the clock source is the MPLL output [see display/nv03/pramdac.txt]</li>
+<li>NV04:NV40: the clock source is the NVPLL output [see display/nv03/pramdac.txt]</li>
+<li>NV40:NV41: the clock source is HCLK, the host clock [see pm/nv40-pclock.txt]</li>
+<li>NV41:NV84: the clock source can be bound to either the internal clock source
+or external clock source. Internal clock source is the crystal
+[see io/pstraps.txt] frequency multiplied by a small ratio, while external
+clock source is HCLK, the host clock [see pm/nv40-pclock.txt, pm/nv50-pclock.txt].</li>
+<li>NV84 and up: like NV41, but external clock source is TCLK, the PTIMER clock
+[see pm/nv50-pclock.txt, pm/nva3-pclock.txt, pm/nvc0-pclock.txt]</li>
+</ul>
+<p>On NV41+ cards, which have both internal and external clock generators, the
+internal clock generator and the switch is configured by the CLOCK_SOURCE
+register:</p>
+<dl class="docutils">
+<dt>MMIO 0x009220: CLOCK_SOURCE [NV41-]</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: INTERNAL_MUL - specifies the multiplier of internal clock
+generator minus 1</li>
+<li>bits 8-11: INTERNAL_DIV - specifies the divisor of internal clock
+generator minus 1</li>
+<li>bit 16: SELECT - if 0, internal clock source used, if 1 external source
+used</li>
+</ul>
+</dd>
+</dl>
+<p>The internal clock generator will generate a clock with frequency given by
+crystal_frequency * (MUL + 1) / (DIV + 1). However, it is not
+a PLL, but a simple counter - it cannot generate a clock of a higher frequency
+than what PTIMER logic itself is clocked at, which is equal to the external
+clock.</p>
+</div>
+<div class="section" id="the-clock-ratio">
+<span id="ptimer-mmio-clock-ratio"></span><h2><a class="toc-backref" href="#id6">The clock ratio</a><a class="headerlink" href="#the-clock-ratio" title="Permalink to this headline">¶</a></h2>
+<p>The clock source is frequency-converted by a simple counter-based converter
+before being used for counting. The converter multiplies the frequency by
+the specified ratio. The registers are:</p>
+<p>MMIO 0x101200: CLOCK_DIV [NV01:NV03]
+MMIO 0x009200: CLOCK_DIV [NV03-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 0-15: clock divider - should not be 0</li>
+</ul>
+</div></blockquote>
+<p>MMIO 0x101210: CLOCK_MUL [NV01:NV03]
+MMIO 0x009210: CLOCK_MUL [NV03-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 0-15: clock multiplier - has to be between 0 and the clock divider,
+0 stops the counter entirely</li>
+</ul>
+</div></blockquote>
+<p>The clock used for the counter is clock_source * CLOCK_MUL / CLOCK_DIV. It&#8217;s
+not possible to get a higher frequency than the clock source - the converter
+will misbehave.</p>
+</div>
+<div class="section" id="the-time-counter">
+<span id="ptimer-perf-time-b12"></span><span id="ptimer-mmio-time"></span><h2><a class="toc-backref" href="#id7">The time counter</a><a class="headerlink" href="#the-time-counter" title="Permalink to this headline">¶</a></h2>
+<p>PTIMER&#8217;s clock is a 56-bit value that is spread across two 32-bit registers:</p>
+<p>MMIO 0x101400: TIME_LOW [NV01:NV03]
+MMIO 0x009400: TIME_LOW [NV03-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 5-31: low 27 bits of the counter</li>
+<li>bits 0-4: always 0</li>
+</ul>
+</div></blockquote>
+<p>MMIO 0x101404: TIME_HIGH [NV01:NV03]
+MMIO 0x009410: TIME_HIGH [NV03-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 0-28: high 29 bits of the counter</li>
+<li>bits 29-31: always 0</li>
+</ul>
+</div></blockquote>
+<p>The counter is thus embedded in bits 5-60 of a 64-bit number split across the
+two 32-bit words. Whenever the PTIMER clock is requested by other parts of the
+card, the returned timestamp will be this 64-bit number. Because of the 5-bit
+shift, the timestamps are actually counted in units of 1/32 of PTIMER tick,
+with resolution of 32 ticks.</p>
+<p>Also, TIME_LOW bit 17 [ie. bit 12 of the actual counter] is connected to
+a PCOUNTER signal on NV10:NVC0, called PTIMER_TIME_B12.</p>
+<div class="section" id="reading-the-clock">
+<h3><a class="toc-backref" href="#id8">Reading the clock</a><a class="headerlink" href="#reading-the-clock" title="Permalink to this headline">¶</a></h3>
+<p>In order to accurately read the clock, the following code should be used:</p>
+<div class="highlight-python"><pre>uint32 high1, high2, low;
+
+do
+{
+        high1 = mmio_rd32(TIME_HIGH);
+        low = mmio_rd32(TIME_LOW);
+        high2 = mmio_rd32(TIME_HIGH);
+} while (high1 != high2);</pre>
+</div>
+<p>This code works around the &#8220;mutual dependency&#8221;. No matter in what order the
+registers are read, an issue may arise and lead to an error of 2^32 as show by
+the following examples:</p>
+<ul class="simple">
+<li>TIME_LOW is read, overflows and then TIME_HIGH is read</li>
+<li>TIME_HIGH is read, TIME_LOW overflows, TIME_LOW is read</li>
+</ul>
+<p>The proposed code checks no overflow on TIME_LOW happened between the moment we
+read TIME_HIGH and the moment we read TIME_HIGH again. If it happened, we start
+again until it succeeds.</p>
+</div>
+</div>
+<div class="section" id="the-alarm-and-interrupts">
+<span id="ptimer-mmio-alarm"></span><span id="ptimer-mmio-intr"></span><span id="ptimer-intr"></span><h2><a class="toc-backref" href="#id9">The alarm and interrupts</a><a class="headerlink" href="#the-alarm-and-interrupts" title="Permalink to this headline">¶</a></h2>
+<p>PTIMER can also be used to trigger an interrupt when TIME_LOW matches
+a specified value. The registers dealing with interrupts are:</p>
+<p>MMIO 0x101100: INTR [NV01:NV03]
+MMIO 0x009100: INTR [NV03-]</p>
+<blockquote>
+<div>Status of interrupts generated by PTIMER. On read, returns 1 for bits
+corresponding to pending interrupts. On write, if 1 is written to a bit,
+its interrupt gets cleared, if 0 is written nothing happens.</div></blockquote>
+<p>MMIO 0x101140: INTR_EN [NV01:NV03]
+MMIO 0x009140: INTR_EN [NV03-]</p>
+<blockquote>
+<div>Interrupt enable bitmask. Set to enable, clear to disable. Interrupts that
+are masked will still show up in INTR when they&#8217;re triggered, but won&#8217;t
+cause the PTIMER interrupt line to go active.</div></blockquote>
+<p>The bitfields common to these registers are:</p>
+<ul class="simple">
+<li>bit 0: ALARM - triggered whenever value of ALARM register is equal to value
+of TIME_LOW register</li>
+</ul>
+<p>The alarm time is set in:</p>
+<p>MMIO 0x101410: ALARM [NV01:NV03]
+MMIO 0x009420: ALARM [NV03-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 5-31: alarm time - when this equals the value of bits 5-31 of TIME_LOW,
+the ALARM interrupt will be triggered</li>
+<li>bits 0-4: always 0</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PTIMER: Timer engine</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-register-list-nv01">MMIO register list - NV01</a></li>
+<li><a class="reference internal" href="#mmio-register-list-nv03">MMIO register list - NV03-</a></li>
+<li><a class="reference internal" href="#the-clock-source">The clock source</a></li>
+<li><a class="reference internal" href="#the-clock-ratio">The clock ratio</a></li>
+<li><a class="reference internal" href="#the-time-counter">The time counter</a><ul>
+<li><a class="reference internal" href="#reading-the-clock">Reading the clock</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-alarm-and-interrupts">The alarm and interrupts</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pmc.html"
+                        title="previous chapter">PMC: Master control unit</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bars.html"
+                        title="next chapter">PCI BARs and other means of accessing the GPU</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/bus/ptimer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="bars.html" title="PCI BARs and other means of accessing the GPU"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pmc.html" title="PMC: Master control unit"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

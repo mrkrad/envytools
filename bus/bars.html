@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PCI BARs and other means of accessing the GPU &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="PCI/PCIE/AGP bus interface and card management logic" href="index.html" />
+    <link rel="next" title="PBUS area" href="pbus.html" />
+    <link rel="prev" title="PTIMER: Timer engine" href="ptimer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pbus.html" title="PBUS area"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ptimer.html" title="PTIMER: Timer engine"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pci-bars-and-other-means-of-accessing-the-gpu">
+<span id="bars"></span><h1><a class="toc-backref" href="#id4">PCI BARs and other means of accessing the GPU</a><a class="headerlink" href="#pci-bars-and-other-means-of-accessing-the-gpu" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pci-bars-and-other-means-of-accessing-the-gpu" id="id4">PCI BARs and other means of accessing the GPU</a><ul>
+<li><a class="reference internal" href="#nvidia-gpu-bars-io-ports-and-memory-areas" id="id5">Nvidia GPU BARs, IO ports, and memory areas</a></li>
+<li><a class="reference internal" href="#pci-pcie-configuration-space" id="id6">PCI/PCIE configuration space</a></li>
+<li><a class="reference internal" href="#bar0-mmio-registers" id="id7">BAR0: MMIO registers</a></li>
+<li><a class="reference internal" href="#bar1-vram-aperture" id="id8">BAR1: VRAM aperture</a></li>
+<li><a class="reference internal" href="#bar2-bar3-ramin-aperture" id="id9">BAR2/BAR3: RAMIN aperture</a></li>
+<li><a class="reference internal" href="#bar2-nv03-indirect-memory-access" id="id10">BAR2: NV03 indirect memory access</a></li>
+<li><a class="reference internal" href="#bar5-nv50-indirect-memory-access" id="id11">BAR5: NV50 indirect memory access</a></li>
+<li><a class="reference internal" href="#bar6-pci-rom-aperture" id="id12">BAR6: PCI ROM aperture</a></li>
+<li><a class="reference internal" href="#inta-the-card-interrupt" id="id13">INTA: the card interrupt</a></li>
+<li><a class="reference internal" href="#legacy-vga-io-ports-and-memory" id="id14">Legacy VGA IO ports and memory</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="nvidia-gpu-bars-io-ports-and-memory-areas">
+<h2><a class="toc-backref" href="#id5">Nvidia GPU BARs, IO ports, and memory areas</a><a class="headerlink" href="#nvidia-gpu-bars-io-ports-and-memory-areas" title="Permalink to this headline">¶</a></h2>
+<p>The nvidia GPUs expose the following areas to the outside world through PCI:</p>
+<ul class="simple">
+<li>PCI configuration space / PCIE extended configuration space</li>
+<li>MMIO registers: BAR0 - memory, 0x1000000 bytes or more depending on card type</li>
+<li>VRAM aperture: BAR1 - memory, 0x1000000 bytes or more depending on card type [NV03+ only]</li>
+<li>indirect memory access IO ports: BAR2 - 0x100 bytes of IO port space [NV03 only]</li>
+<li>???: BAR2 [only NV1x IGPs?]</li>
+<li>RAMIN aperture: BAR2 or BAR3 - memory, 0x1000000 bytes or more depending on card type [NV40+]</li>
+<li>indirect memory access IO ports: BAR5 - 0x80 bytes of IO port space [NV50+]</li>
+<li>PCI ROM aperture</li>
+<li>PCI INTA interrupt line</li>
+<li>legacy VGA IO ports: 0x3b0-0x3bb and 0x3c0-0x3df [can be disabled in PCI config]</li>
+<li>legacy VGA memory: 0xa0000-0xbffff [can be disabled in PCI config]</li>
+</ul>
+</div>
+<div class="section" id="pci-pcie-configuration-space">
+<h2><a class="toc-backref" href="#id6">PCI/PCIE configuration space</a><a class="headerlink" href="#pci-pcie-configuration-space" title="Permalink to this headline">¶</a></h2>
+<p>Nvidia GPUs, like all PCI devices, have PCI configuration space. Its contents are
+described in <a class="reference external" href="pci.txt">pci.txt</a>.</p>
+</div>
+<div class="section" id="bar0-mmio-registers">
+<h2><a class="toc-backref" href="#id7">BAR0: MMIO registers</a><a class="headerlink" href="#bar0-mmio-registers" title="Permalink to this headline">¶</a></h2>
+<p>This is the main control space of the card - all engines are controlled
+through it, and it contains alternate means to access most of the other
+spaces. This, along with the VRAM / RAMIN apertures, is everything that&#8217;s
+needed to fully control the cards.</p>
+<p>This space is a 16MB area of memory sparsely populated with areas representing
+individual engines, which in turn are sparsely populated with registers. The
+list of engines depends on card type. While there are no known registers
+outside 16MB range, the BAR itself can have a larger size on NV40+ cards if
+configured so by straps [see <a class="reference external" href="../io/pstraps.txt">../io/pstraps.txt</a>].</p>
+<p>Its address is set up through PCI BAR 0. The BAR uses 32-bit addressing and
+is non-prefetchable memory.</p>
+<p>The registers inside this BAR are 32-bit, with the exception of areas that are
+aliases of the byte-oriented VGA legacy IO ports. They should be accessed
+through aligned 32-bit memory reads/writes. On pre-NV11 cards, the registers
+are always little endian, on NV11+ cards endianness of the whole area can be
+selected by a switch in PMC. The endianness switch, however, only affects
+BAR0 accesses to the MMIO space - accesses from inside the card are always
+little-endian.</p>
+<p>A particularly important subarea of MMIO space is PMC, the card&#8217;s master
+control. This subarea is present on all nvidia GPUs at addresses 0x000000
+through 0x000fff. It contains the card chipset information, Big Red Switches
+for engines that can be turned off, and master interrupt control. It&#8217;s
+described in more detail in <a class="reference internal" href="pmc.html#pmc"><em>PMC: Master control unit</em></a>.</p>
+<p>For full list of MMIO areas, see <a class="reference internal" href="../mmio.html#mmio"><em>MMIO register ranges</em></a>.</p>
+</div>
+<div class="section" id="bar1-vram-aperture">
+<h2><a class="toc-backref" href="#id8">BAR1: VRAM aperture</a><a class="headerlink" href="#bar1-vram-aperture" title="Permalink to this headline">¶</a></h2>
+<p>This is an area of prefetchable memory that maps to the card&#8217;s VRAM. On native
+PCIE cards, it uses 64-bit addressing, on native PCI/AGP ones it uses 32-bit
+addressing.</p>
+<p>On non-TURBOCACHE pre-NV50 cards and on NV50+ cards with BAR1 VM disabled, BAR
+addresses map directly to VRAM addresses. On TURBOCACHE cards, BAR1 is made of
+controllable VRAM and GART windows [see <a class="reference external" href="../memory/nv44-host-mem.txt">../memory/nv44-host-mem.txt</a>].
+NV50+ cards have a mode where all BAR references go through the card&#8217;s VM
+subsystem, see <a class="reference external" href="../memory/nv50-host-mem.txt">../memory/nv50-host-mem.txt</a> and
+<a class="reference external" href="../memory/nvc0-host-mem.txt">../memory/nvc0-host-mem.txt</a>.</p>
+<p>On NV03 cards, this BAR also contains RAMIN access aperture at address
+0xc00000 [see <a class="reference external" href="../memory/nv03-vram.txt">../memory/nv03-vram.txt</a>]</p>
+<p>the BAR size depends on card type:</p>
+<ul class="simple">
+<li>NV03: 16MB [with RAMIN]</li>
+<li>NV04: 16MB</li>
+<li>NV05: 32MB</li>
+<li>NV10:NV17: 128MB</li>
+<li>NV17:NV50: 64MB-512MB, set via straps [see <a class="reference external" href="../io/pstraps.txt">../io/pstraps.txt</a>]</li>
+<li>NV50-: 64MB-64GB, set via straps</li>
+</ul>
+<p>Note that BAR size is independent from actual VRAM size, although on pre-NV30
+cards the BAR is guaranteed not to be smaller than VRAM. This means it may
+be impossible to map all of the card&#8217;s memory through the BAR on NV30+ cards.</p>
+</div>
+<div class="section" id="bar2-bar3-ramin-aperture">
+<h2><a class="toc-backref" href="#id9">BAR2/BAR3: RAMIN aperture</a><a class="headerlink" href="#bar2-bar3-ramin-aperture" title="Permalink to this headline">¶</a></h2>
+<p>RAMIN is, on pre-NV50 cards, a special area at the end of VRAM that contains
+various control structures. RAMIN starts from end of VRAM and the addresses
+go in reverse direction, thus it needs a special mapping to access it the way
+it&#8217;ll be used. While pre-NV40 cards limitted its size to 1MB and could fit the
+mapping in BAR0, or BAR1 for NV03, NV40+ allow much bigger RAMIN addresses.
+RAMIN BAR provides such RAMIN mapping on NV40 family cards.</p>
+<p>NV50 did away with a special RAMIN area, but it kept the BAR around. It works
+like BAR1, but is independent on it and can use a distinct VM DMA object. As
+opposed to BAR1, all accesses done to BAR3 will be automatically byte-swapped
+in 32-bit chunks like BAR0 if the big-endian switch is on. It&#8217;s commonly
+used to map control structures for kernel use, while BAR1 is used to map
+user-accessible memory.</p>
+<p>The BAR uses 64-bit addressing on native PCIE cards, 32-bit addressing on
+native PCI/AGP. It uses BAR2 slot on native PCIE, BAR3 on native PCI/AGP.
+It is non-prefetchable memory on cards up to and including NVA0, prefetchable
+memory on NVAA+. The size is at least 16MB and is set via straps
+[see <a class="reference external" href="../io/pstraps.txt">../io/pstraps.txt</a>].</p>
+</div>
+<div class="section" id="bar2-nv03-indirect-memory-access">
+<h2><a class="toc-backref" href="#id10">BAR2: NV03 indirect memory access</a><a class="headerlink" href="#bar2-nv03-indirect-memory-access" title="Permalink to this headline">¶</a></h2>
+<p>An area of IO ports used to access BAR0 or BAR1 indirectly by real mode code
+that cannot map high memory addresses. Present only on NV03.</p>
+</div>
+<div class="section" id="bar5-nv50-indirect-memory-access">
+<h2><a class="toc-backref" href="#id11">BAR5: NV50 indirect memory access</a><a class="headerlink" href="#bar5-nv50-indirect-memory-access" title="Permalink to this headline">¶</a></h2>
+<p>An area of IO ports used to access BAR0, BAR1, and BAR3 indirectly by real
+mode code that cannot map high memory addresses. Present on NV50+ cards.
+On earlier cards, the indirect access feature of VGA IO ports can be used
+instead. This BAR can also be disabled via straps [see <a class="reference external" href="../io/pstraps.txt">../io/pstraps.txt</a>].</p>
+<p>This area is 0x80 bytes of IO ports, but only first 0x20 bytes are actually
+used; the rest are empty. The ports are all treated as 32-bit ports. They
+are:</p>
+<dl class="docutils">
+<dt>BAR5+0x00:</dt>
+<dd>when read, signature: 0x2469fdb9. When written, master enable:
+write 1 to enable remaining ports, 0 to disable. Only bit 0 of
+the written value is taken into account. When remaining ports
+are disabled, they read as 0xffffffff.</dd>
+<dt>BAR5+0x04:</dt>
+<dd>enable. if bit 0 is 1, the &#8220;data&#8221; ports are active, otherwise
+they&#8217;re inactive and merely store the last written value.</dd>
+<dt>BAR5+0x08:</dt>
+<dd>BAR0 address port. bits 0-1 and 24-31 are ignored.</dd>
+<dt>BAR5+0x0c:</dt>
+<dd>BAR0 data port. Reads and writes are translated to BAR0 reads
+and writes at address specified by BAR0 address port.</dd>
+<dt>BAR5+0x10:</dt>
+<dd>BAR1 address port. bits 0-1 are ignored.</dd>
+<dt>BAR5+0x14:</dt>
+<dd>BAR1 data port. Reads and writes are translated to BAR1 reads
+and writes at address specified by BAR1 address port.</dd>
+<dt>BAR5+0x18:</dt>
+<dd>BAR3 address port. bits 0-1 and 24-31  are ignored.</dd>
+<dt>BAR5+0x1c:</dt>
+<dd>BAR3 data port. Reads and writes are translated to BAR3 reads
+and writes at address specified by BAR3 address port.</dd>
+</dl>
+<p>BAR0 addresses are masked to low 24 bits, allowing access to exactly 16MB
+of MMIO space. The BAR1 addresses aren&#8217;t masked, and the window actually
+allows access to more BAR space than the BAR1 itself - up to 4GB of VRAM
+or VM space can be accessed this way. BAR3 addresses, on the other hand,
+are masked to low 24 bits even though the real BAR3 is larger.</p>
+</div>
+<div class="section" id="bar6-pci-rom-aperture">
+<h2><a class="toc-backref" href="#id12">BAR6: PCI ROM aperture</a><a class="headerlink" href="#bar6-pci-rom-aperture" title="Permalink to this headline">¶</a></h2>
+<p>The nvidia GPUs expose their BIOS as standard PCI ROM. The exposed ROM aliases
+either the actual BIOS EEPROM, or the shadow BIOS in VRAM. This setting is
+exposed in PCI config space. If the &#8220;shadow enabled&#8221; PCI config register is
+0, the PROM MMIO area is enabled, and both PROM and the PCI ROM aperture will
+access the EEPROM. Disabling the shadowing has a side effect of disabling
+video output on pre-NV50 cards. If shadow is enabled, EEPROM is disabled,
+PROM reads will return garbage, and PCI ROM aperture will access the VRAM
+shadow copy of BIOS. On pre-NV50 cards, the shadow BIOS is located at address
+0 of RAMIN, on NV50+ cards the shadow bios is pointed to by
+PDISPLAY.VGA.ROM_WINDOW register - see <a class="reference external" href="../display/nv50/pdisplay.txt">../display/nv50/pdisplay.txt</a> for
+details.</p>
+</div>
+<div class="section" id="inta-the-card-interrupt">
+<h2><a class="toc-backref" href="#id13">INTA: the card interrupt</a><a class="headerlink" href="#inta-the-card-interrupt" title="Permalink to this headline">¶</a></h2>
+<p>The GPU reports all interrupts through the PCI INTA line. The interrupt enable
+and status registers are located in PMC area - see <a class="reference internal" href="pmc.html#pmc-intr"><em>Interrupts</em></a>.</p>
+</div>
+<div class="section" id="legacy-vga-io-ports-and-memory">
+<h2><a class="toc-backref" href="#id14">Legacy VGA IO ports and memory</a><a class="headerlink" href="#legacy-vga-io-ports-and-memory" title="Permalink to this headline">¶</a></h2>
+<p>The nvidia GPU cards are backwards compatible with VGA and expose the usual
+VGA ranges: IO ports 0x3b0-0x3bb and 0x3c0-0x3df, memory at 0xa0000-0xbffff.
+The VGA ranges can however be disabled in PCI config space. The VGA registers
+and memory are still accessible through their aliases in BAR0, and disabling
+the legacy ranges has no effect on the operation of the card. The IO range
+contains an extra top-level register that allows indirect access to the MMIO
+area for use by real mode code, as well as many nvidia-specific extra
+registers in the VGA subunits. For details, see <a class="reference external" href="../display/nv03/vga.txt">../display/nv03/vga.txt</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PCI BARs and other means of accessing the GPU</a><ul>
+<li><a class="reference internal" href="#nvidia-gpu-bars-io-ports-and-memory-areas">Nvidia GPU BARs, IO ports, and memory areas</a></li>
+<li><a class="reference internal" href="#pci-pcie-configuration-space">PCI/PCIE configuration space</a></li>
+<li><a class="reference internal" href="#bar0-mmio-registers">BAR0: MMIO registers</a></li>
+<li><a class="reference internal" href="#bar1-vram-aperture">BAR1: VRAM aperture</a></li>
+<li><a class="reference internal" href="#bar2-bar3-ramin-aperture">BAR2/BAR3: RAMIN aperture</a></li>
+<li><a class="reference internal" href="#bar2-nv03-indirect-memory-access">BAR2: NV03 indirect memory access</a></li>
+<li><a class="reference internal" href="#bar5-nv50-indirect-memory-access">BAR5: NV50 indirect memory access</a></li>
+<li><a class="reference internal" href="#bar6-pci-rom-aperture">BAR6: PCI ROM aperture</a></li>
+<li><a class="reference internal" href="#inta-the-card-interrupt">INTA: the card interrupt</a></li>
+<li><a class="reference internal" href="#legacy-vga-io-ports-and-memory">Legacy VGA IO ports and memory</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ptimer.html"
+                        title="previous chapter">PTIMER: Timer engine</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pbus.html"
+                        title="next chapter">PBUS area</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/bus/bars.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pbus.html" title="PBUS area"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ptimer.html" title="PTIMER: Timer engine"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

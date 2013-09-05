@@ -1,0 +1,1422 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MMIO register ranges &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="index.html" />
+    <link rel="next" title="PCI/PCIE/AGP bus interface and card management logic" href="bus/index.html" />
+    <link rel="prev" title="Chipsets" href="chipsets.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="bus/index.html" title="PCI/PCIE/AGP bus interface and card management logic"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="chipsets.html" title="Chipsets"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mmio-register-ranges">
+<span id="mmio"></span><h1><a class="toc-backref" href="#id71">MMIO register ranges</a><a class="headerlink" href="#mmio-register-ranges" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#mmio-register-ranges" id="id71">MMIO register ranges</a><ul>
+<li><a class="reference internal" href="#introduction" id="id72">Introduction</a></li>
+<li><a class="reference internal" href="#nv01-mmio-map" id="id73">NV01 MMIO map</a></li>
+<li><a class="reference internal" href="#nv03-nv50-mmio-map" id="id74">NV03:NV50 MMIO map</a></li>
+<li><a class="reference internal" href="#nv50-nvc0-mmio-map" id="id75">NV50:NVC0 MMIO map</a></li>
+<li><a class="reference internal" href="#nvc0-mmio-map" id="id76">NVC0+ MMIO map</a></li>
+<li><a class="reference internal" href="#nvd9-mmio-errors" id="id77">NVD9 MMIO errors</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id72">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="nv01-mmio-map">
+<h2><a class="toc-backref" href="#id73">NV01 MMIO map</a><a class="headerlink" href="#nv01-mmio-map" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="8%" />
+<col width="29%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address range</th>
+<th class="head">Name</th>
+<th class="head">Reference</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>000000:001000</td>
+<td>PMC</td>
+<td><a class="reference internal" href="bus/pmc.html#pmc-mmio"><em>MMIO register list</em></a></td>
+<td>card master control</td>
+</tr>
+<tr class="row-odd"><td>001000:002000</td>
+<td>PBUS</td>
+<td><a class="reference internal" href="bus/pbus.html#pbus-mmio"><em>MMIO registers</em></a></td>
+<td>bus control</td>
+</tr>
+<tr class="row-even"><td>002000:004000</td>
+<td>PFIFO</td>
+<td><a class="reference external" href="fifo/nv01-pfifo.txt">fifo/nv01-pfifo.txt</a></td>
+<td>MMIO-mapped FIFO submission to PGRAPH</td>
+</tr>
+<tr class="row-odd"><td>100000:101000</td>
+<td>PDMA</td>
+<td><a class="reference external" href="memory/nv01-pdma.txt">memory/nv01-pdma.txt</a></td>
+<td>system memory DMA engine</td>
+</tr>
+<tr class="row-even"><td>101000:102000</td>
+<td>PTIMER</td>
+<td><a class="reference internal" href="bus/ptimer.html#ptimer-mmio-nv01"><em>MMIO register list - NV01</em></a></td>
+<td>time measurement and time-based alarms</td>
+</tr>
+<tr class="row-odd"><td>300000:301000</td>
+<td>PAUDIO</td>
+<td><a class="reference internal" href="nv01-paudio.html#nv01-paudio-mmio"><em>MMIO registers</em></a></td>
+<td>audio capture and playback device</td>
+</tr>
+<tr class="row-even"><td>400000:401000</td>
+<td>PGRAPH</td>
+<td><a class="reference external" href="graph/nv01-pgraph.txt">graph/nv01-pgraph.txt</a></td>
+<td>accelerated drawing engine</td>
+</tr>
+<tr class="row-odd"><td>600000:601000</td>
+<td>PFB</td>
+<td><a class="reference external" href="display/nv01/pfb.txt">display/nv01/pfb.txt</a></td>
+<td>VRAM and video output control</td>
+</tr>
+<tr class="row-even"><td>602000:603000</td>
+<td>PRAM</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a></td>
+<td>RAMIN layout control</td>
+</tr>
+<tr class="row-odd"><td>604000:605000</td>
+<td>???</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a></td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>605000:606000</td>
+<td>PCHIPID</td>
+<td><a class="reference external" href="io/nv01-peeprom.txt">io/nv01-peeprom.txt</a></td>
+<td>chip ID readout</td>
+</tr>
+<tr class="row-odd"><td>606000:607000</td>
+<td>???</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a></td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>608000:609000</td>
+<td>PSTRAPS</td>
+<td><a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a></td>
+<td>straps readout / override</td>
+</tr>
+<tr class="row-odd"><td>609000:60a000</td>
+<td>PDAC</td>
+<td><a class="reference external" href="display/nv01/pdac.txt">display/nv01/pdac.txt</a></td>
+<td>DAC control</td>
+</tr>
+<tr class="row-even"><td>60a000:60b000</td>
+<td>PEEPROM</td>
+<td><a class="reference external" href="io/nv01-peeprom.txt">io/nv01-peeprom.txt</a></td>
+<td>configuration EEPROM access</td>
+</tr>
+<tr class="row-odd"><td>610000:618000</td>
+<td>PROM</td>
+<td><a class="reference external" href="io/prom.txt">io/prom.txt</a></td>
+<td>ROM access window</td>
+</tr>
+<tr class="row-even"><td>618000:620000</td>
+<td>PALT</td>
+<td><a class="reference external" href="io/prom.txt">io/prom.txt</a></td>
+<td>external memory access window</td>
+</tr>
+<tr class="row-odd"><td>640000:648000</td>
+<td>PRAMHT</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a>
+<a class="reference external" href="fifo/nv01-pfifo.txt">fifo/nv01-pfifo.txt</a></td>
+<td>RAMHT access</td>
+</tr>
+<tr class="row-even"><td>648000:64c000</td>
+<td>PRAMFC</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a>
+<a class="reference external" href="fifo/nv01-pfifo.txt">fifo/nv01-pfifo.txt</a></td>
+<td>RAMFC access</td>
+</tr>
+<tr class="row-odd"><td>650000:654000</td>
+<td>PRAMRO</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a>
+<a class="reference external" href="fifo/nv01-pfifo.txt">fifo/nv01-pfifo.txt</a></td>
+<td>RAMRO access</td>
+</tr>
+<tr class="row-even"><td>6c0000:6c8000</td>
+<td>PRM</td>
+<td><a class="reference internal" href="bus/nv01-prm.html#nv01-prm-mmio"><em>The MMIO registers</em></a></td>
+<td>VGA compatibility control - NV01 specific</td>
+</tr>
+<tr class="row-odd"><td>6d0000:6d1000</td>
+<td>PRMIO</td>
+<td><a class="reference internal" href="bus/nv01-prm.html#nv01-prmio-mmio"><em>The IO ports</em></a></td>
+<td>VGA and ISA sound compat IO port access</td>
+</tr>
+<tr class="row-even"><td>6e0000:700000</td>
+<td>PRMFB</td>
+<td><a class="reference internal" href="bus/nv01-prm.html#nv01-prmfb-mmio"><em>The VGA memory window</em></a></td>
+<td>aliases VGA memory window</td>
+</tr>
+<tr class="row-odd"><td>700000:800000</td>
+<td>PRAMIN</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a></td>
+<td>RAMIN access</td>
+</tr>
+<tr class="row-even"><td>800000:1000000</td>
+<td>USER</td>
+<td><a class="reference external" href="fifo/pio.txt">fifo/pio.txt</a></td>
+<td>PFIFO MMIO submission area</td>
+</tr>
+<tr class="row-odd"><td>1000000:2000000</td>
+<td>FB</td>
+<td><a class="reference external" href="memory/nv01-vram.txt">memory/nv01-vram.txt</a></td>
+<td>VRAM access area</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="nv03-nv50-mmio-map">
+<h2><a class="toc-backref" href="#id74">NV03:NV50 MMIO map</a><a class="headerlink" href="#nv03-nv50-mmio-map" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="7%" />
+<col width="8%" />
+<col width="26%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address range</th>
+<th class="head">Name</th>
+<th class="head">Variants</th>
+<th class="head">Reference</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>000000:001000</td>
+<td>PMC</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pmc.html#pmc-mmio"><em>MMIO register list</em></a></td>
+<td>card master control</td>
+</tr>
+<tr class="row-odd"><td>001000:002000</td>
+<td>PBUS</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pbus.html#pbus-mmio"><em>MMIO registers</em></a></td>
+<td>bus control</td>
+</tr>
+<tr class="row-even"><td>002000:004000</td>
+<td>PFIFO</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/nv01-pfifo.txt">fifo/nv01-pfifo.txt</a>
+<a class="reference external" href="fifo/nv04-pfifo.txt">fifo/nv04-pfifo.txt</a></td>
+<td>MMIO and DMA FIFO submission to PGRAPH and VPE</td>
+</tr>
+<tr class="row-odd"><td>004000:005000</td>
+<td>???</td>
+<td>NV03:NV10</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>004000:005000</td>
+<td>PCLOCK</td>
+<td>NV40:NV50</td>
+<td><a class="reference external" href="pm/nv40-pclock.txt">pm/nv40-pclock.txt</a></td>
+<td>PLL control</td>
+</tr>
+<tr class="row-odd"><td>005000:006000</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>007000:008000</td>
+<td>PRMA</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/prma.html#prma-mmio"><em>The MMIO registers</em></a></td>
+<td>access to BAR0/BAR1 from real mode</td>
+</tr>
+<tr class="row-odd"><td>008000:009000</td>
+<td>PVIDEO</td>
+<td>NV10:NV50</td>
+<td><a class="reference external" href="display/nv03/pvideo.txt">display/nv03/pvideo.txt</a></td>
+<td>video overlay</td>
+</tr>
+<tr class="row-even"><td>009000:00a000</td>
+<td>PTIMER</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/ptimer.html#ptimer-mmio-nv03"><em>MMIO register list - NV03-</em></a></td>
+<td>time measurement and time-based alarms</td>
+</tr>
+<tr class="row-odd"><td>00a000:00b000</td>
+<td>PCOUNTER</td>
+<td>NV10:NV50</td>
+<td><a class="reference external" href="pcounter/intro.txt">pcounter/intro.txt</a></td>
+<td>performance monitoring counters</td>
+</tr>
+<tr class="row-even"><td>00b000:00c000</td>
+<td>PVPE</td>
+<td>NV17:NV20
+NV30:NV50</td>
+<td><a class="reference external" href="vdec/vpe/intro.txt">vdec/vpe/intro.txt</a></td>
+<td>MPEG2 decoding engine</td>
+</tr>
+<tr class="row-odd"><td>00c000:00d000</td>
+<td>PCONTROL</td>
+<td>NV40:NV50</td>
+<td><a class="reference external" href="pm/nv40-pclock.txt">pm/nv40-pclock.txt</a></td>
+<td>control of misc stuff</td>
+</tr>
+<tr class="row-even"><td>00d000:00e000</td>
+<td>PTV</td>
+<td>NV17:NV20
+NV30:NV50</td>
+<td><a class="reference external" href="display/nv03/ptv.txt">display/nv03/ptv.txt</a></td>
+<td>TV encoder</td>
+</tr>
+<tr class="row-odd"><td>00f000:010000</td>
+<td>PVP1</td>
+<td>NV41:NV50</td>
+<td><a class="reference external" href="vdec/vpe/vp1.txt">vdec/vpe/vp1.txt</a></td>
+<td>VP1 video processing engine</td>
+</tr>
+<tr class="row-even"><td>088000:089000</td>
+<td>PPCI</td>
+<td>NV40:NV50</td>
+<td><a class="reference internal" href="bus/pci.html#ppci-mmio"><em>MMIO registers</em></a></td>
+<td>PCI config space access</td>
+</tr>
+<tr class="row-odd"><td>090000:0a0000</td>
+<td>PFIFO
+cache</td>
+<td>NV40:NV50</td>
+<td><a class="reference external" href="fifo/nv04-pfifo.txt">fifo/nv04-pfifo.txt</a></td>
+<td>part of PFIFO</td>
+</tr>
+<tr class="row-even"><td>0a0000:0c0000</td>
+<td>PRMFB</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>aliases VGA memory window</td>
+</tr>
+<tr class="row-odd"><td>0c0000:0c1000</td>
+<td>PRMVIO</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>aliases VGA sequencer and graphics controller registers</td>
+</tr>
+<tr class="row-even"><td>0c2000:0c3000</td>
+<td>PRMVIO2</td>
+<td>NV40:NV50</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>like PRMVIO, but for second head</td>
+</tr>
+<tr class="row-odd"><td>100000:101000</td>
+<td>PFB</td>
+<td>all
+except
+IGPs</td>
+<td><a class="reference external" href="memory/nv03-pfb.txt">memory/nv03-pfb.txt</a>
+<a class="reference external" href="memory/nv10-pfb.txt">memory/nv10-pfb.txt</a>
+<a class="reference external" href="memory/nv40-pfb.txt">memory/nv40-pfb.txt</a>
+<a class="reference external" href="memory/nv44-pfb.txt">memory/nv44-pfb.txt</a></td>
+<td>memory interface and PCIE GART</td>
+</tr>
+<tr class="row-even"><td>101000:102000</td>
+<td>PSTRAPS</td>
+<td>all
+except
+IGPs</td>
+<td><a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a></td>
+<td>straps readout / override</td>
+</tr>
+<tr class="row-odd"><td>102000:103000</td>
+<td>???</td>
+<td>NV40+
+IGPs only</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>110000:120000</td>
+<td>PROM</td>
+<td>NV03:NV04</td>
+<td><a class="reference external" href="io/prom.txt">io/prom.txt</a></td>
+<td>ROM access window</td>
+</tr>
+<tr class="row-odd"><td>200000:201000</td>
+<td>PMEDIA</td>
+<td>all
+except
+IGPs</td>
+<td><a class="reference external" href="io/pmedia.txt">io/pmedia.txt</a></td>
+<td>mediaport</td>
+</tr>
+<tr class="row-even"><td>300000:400000</td>
+<td>PROM</td>
+<td>NV04:NV50
+except
+IGPs</td>
+<td><a class="reference external" href="io/prom.txt">io/prom.txt</a></td>
+<td>ROM access window</td>
+</tr>
+<tr class="row-odd"><td>400000:401000</td>
+<td>PGRAPH</td>
+<td>NV03:NV04</td>
+<td><a class="reference external" href="graph/nv03-pgraph.txt">graph/nv03-pgraph.txt</a></td>
+<td>accelerated 2d/3d drawing engine</td>
+</tr>
+<tr class="row-even"><td>401000:402000</td>
+<td>PDMA</td>
+<td>NV03:NV04</td>
+<td><a class="reference external" href="graph/nv03-pdma.txt">graph/nv03-pdma.txt</a></td>
+<td>system memory DMA engine</td>
+</tr>
+<tr class="row-odd"><td>400000:402000</td>
+<td>PGRAPH</td>
+<td>NV04:NV40</td>
+<td><a class="reference external" href="graph/nv04-pgraph.txt">graph/nv04-pgraph.txt</a>
+<a class="reference external" href="graph/nv10-pgraph.txt">graph/nv10-pgraph.txt</a>
+<a class="reference external" href="graph/nv20-pgraph.txt">graph/nv20-pgraph.txt</a></td>
+<td>accelerated 2d/3d drawing engine</td>
+</tr>
+<tr class="row-even"><td>400000:410000</td>
+<td>PGRAPH</td>
+<td>NV40:NV50</td>
+<td><a class="reference external" href="graph/nv40-pgraph.txt">graph/nv40-pgraph.txt</a></td>
+<td>accelerated 2d/3d drawing engine</td>
+</tr>
+<tr class="row-odd"><td>600000:601000</td>
+<td>PCRTC</td>
+<td>NV04:NV50</td>
+<td><a class="reference external" href="display/nv03/pcrtc.txt">display/nv03/pcrtc.txt</a></td>
+<td>more CRTC controls</td>
+</tr>
+<tr class="row-even"><td>601000:602000</td>
+<td>PRMCIO</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>aliases VGA CRTC and attribute controller registers</td>
+</tr>
+<tr class="row-odd"><td>602000:603000</td>
+<td>PCRTC2</td>
+<td>NV11:NV20
+NV25:NV50</td>
+<td><a class="reference external" href="display/nv03/pcrtc.txt">display/nv03/pcrtc.txt</a></td>
+<td>like PCRTC, but for second head</td>
+</tr>
+<tr class="row-even"><td>603000:604000</td>
+<td>PRMCIO2</td>
+<td>NV11:NV20
+NV25:NV50</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>like PRMCIO, but for second head</td>
+</tr>
+<tr class="row-odd"><td>680000:681000</td>
+<td>PRAMDAC</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv03/pramdac.txt">display/nv03/pramdac.txt</a></td>
+<td>RAMDAC, video overlay, cursor, and PLL control</td>
+</tr>
+<tr class="row-even"><td>681000:682000</td>
+<td>PRMDIO</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>aliases VGA palette registers</td>
+</tr>
+<tr class="row-odd"><td>682000:683000</td>
+<td>PRAMDAC2</td>
+<td>NV11:NV20
+NV25:NV50</td>
+<td><a class="reference external" href="display/nv03/pramdac.txt">display/nv03/pramdac.txt</a></td>
+<td>like PRAMDAC, but for second head</td>
+</tr>
+<tr class="row-even"><td>683000:684000</td>
+<td>PRMDIO2</td>
+<td>NV11:NV20
+NV25:NV50</td>
+<td><a class="reference external" href="display/nv03/vga.txt">display/nv03/vga.txt</a></td>
+<td>like PRMDIO, but for second head</td>
+</tr>
+<tr class="row-odd"><td>700000:800000</td>
+<td>PRAMIN</td>
+<td>NV04:NV50</td>
+<td><a class="reference external" href="memory/nv04-vram.txt">memory/nv04-vram.txt</a></td>
+<td>RAMIN access</td>
+</tr>
+<tr class="row-even"><td>800000:1000000</td>
+<td>USER</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/pio.txt">fifo/pio.txt</a>
+<a class="reference external" href="fifo/dma-pusher.txt">fifo/dma-pusher.txt</a></td>
+<td>PFIFO MMIO and DMA submission area</td>
+</tr>
+<tr class="row-odd"><td>c00000:1000000</td>
+<td>NEW_USER</td>
+<td>NV40:NV50</td>
+<td><a class="reference external" href="fifo/dma-pusher.txt">fifo/dma-pusher.txt</a></td>
+<td>PFIFO DMA submission area</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="nv50-nvc0-mmio-map">
+<h2><a class="toc-backref" href="#id75">NV50:NVC0 MMIO map</a><a class="headerlink" href="#nv50-nvc0-mmio-map" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="4%" />
+<col width="9%" />
+<col width="7%" />
+<col width="23%" />
+<col width="47%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address range</th>
+<th class="head">Port</th>
+<th class="head">Name</th>
+<th class="head">Variants</th>
+<th class="head">Reference</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>000000:001000</td>
+<td>ROOT</td>
+<td>PMC</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pmc.html#pmc-mmio"><em>MMIO register list</em></a></td>
+<td>card master control</td>
+</tr>
+<tr class="row-odd"><td>001000:002000</td>
+<td>ROOT</td>
+<td>PBUS</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pbus.html#pbus-mmio"><em>MMIO registers</em></a></td>
+<td>bus control</td>
+</tr>
+<tr class="row-even"><td>002000:004000</td>
+<td>ROOT</td>
+<td>PFIFO</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/nv50-pfifo.txt">fifo/nv50-pfifo.txt</a></td>
+<td>DMA FIFO submission to execution engines</td>
+</tr>
+<tr class="row-odd"><td>004000:005000</td>
+<td>IBUS</td>
+<td>PCLOCK</td>
+<td>all</td>
+<td><a class="reference external" href="pm/nv50-pclock.txt">pm/nv50-pclock.txt</a>
+<a class="reference external" href="pm/nva3-pclock.txt">pm/nva3-pclock.txt</a></td>
+<td>PLL control</td>
+</tr>
+<tr class="row-even"><td>007000:008000</td>
+<td>ROOT</td>
+<td>PRMA</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/prma.html#prma-mmio"><em>The MMIO registers</em></a></td>
+<td>access to BAR0 from real mode</td>
+</tr>
+<tr class="row-odd"><td>009000:00a000</td>
+<td>ROOT</td>
+<td>PTIMER</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/ptimer.html#ptimer-mmio-nv03"><em>MMIO register list - NV03-</em></a></td>
+<td>time measurement and time-based alarms</td>
+</tr>
+<tr class="row-even"><td>00a000:00b000</td>
+<td>IBUS</td>
+<td>PCOUNTER</td>
+<td>all</td>
+<td><a class="reference external" href="pcounter/intro.txt">pcounter/intro.txt</a></td>
+<td>performance monitoring counters</td>
+</tr>
+<tr class="row-odd"><td>00b000:00c000</td>
+<td>IBUS</td>
+<td>PVPE</td>
+<td>all</td>
+<td><a class="reference external" href="vdec/vpe/intro.txt">vdec/vpe/intro.txt</a></td>
+<td>MPEG2 decoding engine</td>
+</tr>
+<tr class="row-even"><td>00c000:00d000</td>
+<td>IBUS</td>
+<td>PCONTROL</td>
+<td>all</td>
+<td><a class="reference external" href="pm/nv50-pclock.txt">pm/nv50-pclock.txt</a>
+<a class="reference external" href="pm/nva3-pclock.txt">pm/nva3-pclock.txt</a></td>
+<td>control of misc stuff</td>
+</tr>
+<tr class="row-odd"><td>00e000:00e800</td>
+<td>IBUS</td>
+<td>PNVIO</td>
+<td>all</td>
+<td><a class="reference external" href="io/pnvio.txt">io/pnvio.txt</a></td>
+<td>GPIOs, I2C buses, PWM fan control, and other external devices</td>
+</tr>
+<tr class="row-even"><td>00e800:00f000</td>
+<td>IBUS</td>
+<td>PIOCLOCK</td>
+<td>all</td>
+<td><a class="reference external" href="pm/nv50-pclock.txt">pm/nv50-pclock.txt</a></td>
+<td>PNVIO&#8217;s clock setup</td>
+</tr>
+<tr class="row-odd"><td>00f000:010000</td>
+<td>IBUS</td>
+<td>PVP1</td>
+<td>VP1</td>
+<td><a class="reference external" href="vdec/vpe/vp1.txt">vdec/vpe/vp1.txt</a></td>
+<td>VP1 video processing engine</td>
+</tr>
+<tr class="row-even"><td>00f000:010000</td>
+<td>IBUS</td>
+<td>PVP2</td>
+<td>VP2</td>
+<td><a class="reference external" href="vdec/vp2/pvp2.txt">vdec/vp2/pvp2.txt</a></td>
+<td>VP2 xtensa video processing engine</td>
+</tr>
+<tr class="row-odd"><td>010000:020000</td>
+<td>ROOT</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>has something to do with PCI config spaces of other devices?</td>
+</tr>
+<tr class="row-even"><td>020000:021000</td>
+<td>IBUS</td>
+<td>PTHERM</td>
+<td>all</td>
+<td><a class="reference external" href="pm/ptherm.txt">pm/ptherm.txt</a></td>
+<td>thermal sensor</td>
+</tr>
+<tr class="row-odd"><td>021000:022000</td>
+<td>IBUS</td>
+<td>PFUSE</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pfuse.html#pfuse-mmio"><em>MMIO registers</em></a></td>
+<td>efuses storing not so secret stuff</td>
+</tr>
+<tr class="row-even"><td>022000:022400</td>
+<td>IBUS</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>060000:061000</td>
+<td>ROOT</td>
+<td>PEEPHOLE</td>
+<td>NV84:NVC0</td>
+<td><a class="reference external" href="memory/peephole.txt">memory/peephole.txt</a></td>
+<td>indirect VM access</td>
+</tr>
+<tr class="row-even"><td>070000:071000</td>
+<td>ROOT</td>
+<td>PFIFO
+BAR_FLUSH</td>
+<td>NV84:NVC0</td>
+<td><a class="reference external" href="memory/nv50-host-mem.txt">memory/nv50-host-mem.txt</a></td>
+<td>used to flush BAR writes</td>
+</tr>
+<tr class="row-odd"><td>080000:081000</td>
+<td>ROOT</td>
+<td>PBUS HWSQ
+NEW_CODE</td>
+<td>NV92:NVC0</td>
+<td><a class="reference internal" href="bus/hwsq.html#hwsq-mmio"><em>MMIO registers</em></a></td>
+<td>extended HWSQ code space</td>
+</tr>
+<tr class="row-even"><td>084000:085000</td>
+<td>IBUS</td>
+<td>PVLD</td>
+<td>VP3, VP4</td>
+<td><a class="reference external" href="vdec/vp3/pvld.txt">vdec/vp3/pvld.txt</a></td>
+<td>VP3 variable length decoding engine</td>
+</tr>
+<tr class="row-odd"><td>085000:086000</td>
+<td>IBUS</td>
+<td>PVDEC</td>
+<td>VP3, VP4</td>
+<td><a class="reference external" href="vdec/vp3/pvdec.txt">vdec/vp3/pvdec.txt</a></td>
+<td>VP3 video decoding engine</td>
+</tr>
+<tr class="row-even"><td>086000:087000</td>
+<td>IBUS</td>
+<td>PPPP</td>
+<td>VP3, VP4</td>
+<td><a class="reference external" href="vdec/vp3/pppp.txt">vdec/vp3/pppp.txt</a></td>
+<td>VP3 video postprocessing engine</td>
+</tr>
+<tr class="row-odd"><td>087000:088000</td>
+<td>IBUS</td>
+<td>PCRYPT3</td>
+<td>VP3</td>
+<td><a class="reference external" href="vdec/vp3/pcrypt3.txt">vdec/vp3/pcrypt3.txt</a></td>
+<td>VP3 cryptographic engine</td>
+</tr>
+<tr class="row-even"><td>088000:089000</td>
+<td>IBUS</td>
+<td>PPCI</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pci.html#ppci-mmio"><em>MMIO registers</em></a></td>
+<td>PCI config space access</td>
+</tr>
+<tr class="row-odd"><td>089000:08a000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>NV84:NVC0</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>08a000:08b000</td>
+<td>IBUS</td>
+<td>PPCI_HDA</td>
+<td>NVA3:NVC0</td>
+<td><a class="reference internal" href="bus/pci.html#ppci-hda-mmio"><em>MMIO registers</em></a></td>
+<td>PCI config space access for the HDA codec function</td>
+</tr>
+<tr class="row-odd"><td>090000:0a0000</td>
+<td>ROOT</td>
+<td>PFIFO cache</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/nv50-pfifo.txt">fifo/nv50-pfifo.txt</a></td>
+<td>part of PFIFO</td>
+</tr>
+<tr class="row-even"><td>0a0000:0c0000</td>
+<td>ROOT</td>
+<td>PRMFB</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/vga.txt">display/nv50/vga.txt</a></td>
+<td>aliases VGA memory window</td>
+</tr>
+<tr class="row-odd"><td>100000:101000</td>
+<td>IBUS</td>
+<td>PFB</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nv50-pfb.txt">memory/nv50-pfb.txt</a></td>
+<td>memory interface and VM control</td>
+</tr>
+<tr class="row-even"><td>101000:102000</td>
+<td>IBUS</td>
+<td>PSTRAPS</td>
+<td>all</td>
+<td><a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a></td>
+<td>straps readout / override</td>
+</tr>
+<tr class="row-odd"><td>102000:103000</td>
+<td>IBUS</td>
+<td>PCRYPT2</td>
+<td>VP2</td>
+<td><a class="reference external" href="vdec/vp2/pcrypt2.txt">vdec/vp2/pcrypt2.txt</a></td>
+<td>VP2 cryptographic engine</td>
+</tr>
+<tr class="row-even"><td>102000:103000</td>
+<td>ROOT</td>
+<td>???</td>
+<td>IGPs only</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>103000:104000</td>
+<td>IBUS</td>
+<td>PBSP</td>
+<td>VP2</td>
+<td><a class="reference external" href="vdec/vp2/pbsp.txt">vdec/vp2/pbsp.txt</a></td>
+<td>VP2 BSP engine</td>
+</tr>
+<tr class="row-even"><td>104000:105000</td>
+<td>IBUS</td>
+<td>PCOPY</td>
+<td>NVA3:NVC0</td>
+<td><a class="reference external" href="fifo/pcopy.txt">fifo/pcopy.txt</a></td>
+<td>memory copy engine</td>
+</tr>
+<tr class="row-odd"><td>108000:109000</td>
+<td>IBUS</td>
+<td>PCODEC</td>
+<td>NVA3:NVC0</td>
+<td><a class="reference external" href="display/nv50/pcodec.txt">display/nv50/pcodec.txt</a></td>
+<td>the HDA codec doing HDMI audio</td>
+</tr>
+<tr class="row-even"><td>109000:10a000</td>
+<td>IBUS</td>
+<td>PKFUSE</td>
+<td>NVA3:NVC0</td>
+<td><a class="reference external" href="display/nv50/pkfuse.txt">display/nv50/pkfuse.txt</a></td>
+<td>efuses storing secret key stuff</td>
+</tr>
+<tr class="row-odd"><td>10a000:10b000</td>
+<td>IBUS</td>
+<td>PDAEMON</td>
+<td>NVA3:NVC0</td>
+<td><a class="reference external" href="pm/pdaemon.txt">pm/pdaemon.txt</a></td>
+<td>a falcon engine used to run management code in background</td>
+</tr>
+<tr class="row-even"><td>1c1000:1c2000</td>
+<td>IBUS</td>
+<td>PVCOMP</td>
+<td>NVAF:NVC0</td>
+<td><a class="reference external" href="vdec/pvcomp.txt">vdec/pvcomp.txt</a></td>
+<td>video compositor engine</td>
+</tr>
+<tr class="row-odd"><td>200000:201000</td>
+<td>IBUS</td>
+<td>PMEDIA</td>
+<td>all</td>
+<td><a class="reference external" href="io/pmedia.txt">io/pmedia.txt</a></td>
+<td>mediaport</td>
+</tr>
+<tr class="row-even"><td>280000:2a0000</td>
+<td>ROOT</td>
+<td>???</td>
+<td>NVAF</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>2ff000:300000</td>
+<td>IBUS</td>
+<td>PBRIDGE_PCI</td>
+<td>IGPs</td>
+<td><a class="reference internal" href="bus/pbus.html#pbus-mmio"><em>MMIO registers</em></a></td>
+<td>access to PCI config registers of the GPU&#8217;s upstream PCIE bridge</td>
+</tr>
+<tr class="row-even"><td>300000:400000</td>
+<td>IBUS</td>
+<td>PROM</td>
+<td>all</td>
+<td><a class="reference external" href="io/prom.txt">io/prom.txt</a></td>
+<td>ROM access window</td>
+</tr>
+<tr class="row-odd"><td>400000:410000</td>
+<td>IBUS</td>
+<td>PGRAPH</td>
+<td>all</td>
+<td><a class="reference external" href="graph/nv50-pgraph.txt">graph/nv50-pgraph.txt</a></td>
+<td>accelerated 2d/3d drawing and CUDA engine</td>
+</tr>
+<tr class="row-even"><td>601000:602000</td>
+<td>IBUS</td>
+<td>PRMIO</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/vga.txt">display/nv50/vga.txt</a></td>
+<td>aliases VGA registers</td>
+</tr>
+<tr class="row-odd"><td>610000:640000</td>
+<td>IBUS</td>
+<td>PDISPLAY</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/pdisplay.txt">display/nv50/pdisplay.txt</a></td>
+<td>the DMA FIFO controlled unified display engine</td>
+</tr>
+<tr class="row-even"><td>640000:650000</td>
+<td>IBUS</td>
+<td>DISPLAY_USER</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/pdisplay.txt">display/nv50/pdisplay.txt</a></td>
+<td>DMA submission to PDISPLAY</td>
+</tr>
+<tr class="row-odd"><td>700000:800000</td>
+<td>ROOT</td>
+<td>PMEM</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nv50-host-mem.txt">memory/nv50-host-mem.txt</a></td>
+<td>indirect VRAM/host memory access</td>
+</tr>
+<tr class="row-even"><td>800000:810000</td>
+<td>ROOT</td>
+<td>USER_PIO</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/pio.txt">fifo/pio.txt</a></td>
+<td>PFIFO PIO submission area</td>
+</tr>
+<tr class="row-odd"><td>c00000:1000000</td>
+<td>ROOT</td>
+<td>USER_DMA</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/dma-pusher.txt">fifo/dma-pusher.txt</a></td>
+<td>PFIFO DMA submission area</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>VP1 is NV50:NV84</p>
+<p>VP2 is NV84:NV98 and NVA0:NVAA</p>
+<p>VP3 is NV98:NVA0 and NVAA:NVA3</p>
+<p class="last">VP4 is NVA3:NVC0</p>
+</div>
+</div>
+<div class="section" id="nvc0-mmio-map">
+<h2><a class="toc-backref" href="#id76">NVC0+ MMIO map</a><a class="headerlink" href="#nvc0-mmio-map" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="4%" />
+<col width="10%" />
+<col width="7%" />
+<col width="24%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address range</th>
+<th class="head">Port</th>
+<th class="head">Name</th>
+<th class="head">Variants</th>
+<th class="head">Reference</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>000000:001000</td>
+<td>ROOT</td>
+<td>PMC</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pmc.html#pmc-mmio"><em>MMIO register list</em></a></td>
+<td>card master control</td>
+</tr>
+<tr class="row-odd"><td>001000:002000</td>
+<td>ROOT</td>
+<td>PBUS</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pbus.html#pbus-mmio"><em>MMIO registers</em></a></td>
+<td>bus control</td>
+</tr>
+<tr class="row-even"><td>002000:004000</td>
+<td>ROOT</td>
+<td>PFIFO</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/nvc0-pfifo.txt">fifo/nvc0-pfifo.txt</a></td>
+<td>DMA FIFO submission to execution engines</td>
+</tr>
+<tr class="row-odd"><td>005000:006000</td>
+<td>ROOT</td>
+<td>PFIFO_BYPASS</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/nvc0-pfifo.txt">fifo/nvc0-pfifo.txt</a></td>
+<td>PFIFO bypass interface</td>
+</tr>
+<tr class="row-even"><td>007000:008000</td>
+<td>ROOT</td>
+<td>PRMA</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/prma.html#prma-mmio"><em>The MMIO registers</em></a></td>
+<td>access to BAR0 from real mode</td>
+</tr>
+<tr class="row-odd"><td>009000:00a000</td>
+<td>ROOT</td>
+<td>PTIMER</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/ptimer.html#ptimer-mmio-nv03"><em>MMIO register list - NV03-</em></a></td>
+<td>time measurement and time-based alarms</td>
+</tr>
+<tr class="row-even"><td>00c800:00cc00</td>
+<td>IBUS</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>00cc00:00d000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>00d000:00e000</td>
+<td>IBUS</td>
+<td>PGPIO</td>
+<td>NVD9-</td>
+<td><a class="reference external" href="io/pnvio.txt">io/pnvio.txt</a></td>
+<td>GPIOs, I2C buses</td>
+</tr>
+<tr class="row-odd"><td>00e000:00e800</td>
+<td>IBUS</td>
+<td>PNVIO</td>
+<td>all</td>
+<td><a class="reference external" href="io/pnvio.txt">io/pnvio.txt</a></td>
+<td>GPIOs, I2C buses, PWM fan control, and other external devices</td>
+</tr>
+<tr class="row-even"><td>00e800:00f000</td>
+<td>IBUS</td>
+<td>PIOCLOCK</td>
+<td>all</td>
+<td><a class="reference external" href="pm/nvc0-pclock.txt">pm/nvc0-pclock.txt</a></td>
+<td>PNVIO&#8217;s clock setup</td>
+</tr>
+<tr class="row-odd"><td>010000:020000</td>
+<td>ROOT</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>has something to do with PCI config spaces of other devices?</td>
+</tr>
+<tr class="row-even"><td>020000:021000</td>
+<td>IBUS</td>
+<td>PTHERM</td>
+<td>all</td>
+<td><a class="reference external" href="pm/ptherm.txt">pm/ptherm.txt</a></td>
+<td>thermal sensor</td>
+</tr>
+<tr class="row-odd"><td>021000:022000</td>
+<td>IBUS</td>
+<td>PFUSE</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pfuse.html#pfuse-mmio"><em>MMIO registers</em></a></td>
+<td>efuses storing not so secret stuff</td>
+</tr>
+<tr class="row-even"><td>022400:022800</td>
+<td>IBUS</td>
+<td>PUNITS</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/punits.html#punits-mmio"><em>MMIO registers</em></a></td>
+<td>control over enabled card units</td>
+</tr>
+<tr class="row-odd"><td>040000:060000</td>
+<td>ROOT</td>
+<td>PSUBFIFOs</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/nvc0-pfifo.txt">fifo/nvc0-pfifo.txt</a></td>
+<td>individual SUBFIFOs of PFIFO</td>
+</tr>
+<tr class="row-even"><td>060000:061000</td>
+<td>ROOT</td>
+<td>PEEPHOLE</td>
+<td>all</td>
+<td><a class="reference external" href="memory/peephole.txt">memory/peephole.txt</a></td>
+<td>indirect VM access</td>
+</tr>
+<tr class="row-odd"><td>070000:071000</td>
+<td>ROOT</td>
+<td>PFIFO
+BAR_FLUSH</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-host-mem.txt">memory/nvc0-host-mem.txt</a></td>
+<td>used to flush BAR writes</td>
+</tr>
+<tr class="row-even"><td>082000:082400</td>
+<td>IBUS</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>082800:083000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>NVC0:NVE4</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>084000:085000</td>
+<td>IBUS</td>
+<td>PVLD</td>
+<td>all</td>
+<td><a class="reference external" href="vdec/vp3/pvld.txt">vdec/vp3/pvld.txt</a></td>
+<td>VP3 VLD engine</td>
+</tr>
+<tr class="row-odd"><td>085000:086000</td>
+<td>IBUS</td>
+<td>PVDEC</td>
+<td>all</td>
+<td><a class="reference external" href="vdec/vp3/pvdec.txt">vdec/vp3/pvdec.txt</a></td>
+<td>VP3 video decoding engine</td>
+</tr>
+<tr class="row-even"><td>086000:087000</td>
+<td>IBUS</td>
+<td>PPPP</td>
+<td>all</td>
+<td><a class="reference external" href="vdec/vp3/pppp.txt">vdec/vp3/pppp.txt</a></td>
+<td>VP3 video postprocessing engine</td>
+</tr>
+<tr class="row-odd"><td>088000:089000</td>
+<td>IBUS</td>
+<td>PPCI</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pci.html#ppci-mmio"><em>MMIO registers</em></a></td>
+<td>PCI config space access</td>
+</tr>
+<tr class="row-even"><td>089000:08a000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>NVC0:NVE4</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>08a000:08b000</td>
+<td>IBUS</td>
+<td>PPCI_HDA</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pci.html#ppci-hda-mmio"><em>MMIO registers</em></a></td>
+<td>PCI config space access for the HDA codec function</td>
+</tr>
+<tr class="row-even"><td>08b000:08f000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>NVE4-</td>
+<td>???</td>
+<td>seems to be a new version of former 89000 area</td>
+</tr>
+<tr class="row-odd"><td>0a0000:0c0000</td>
+<td>both</td>
+<td>PRMFB</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/vga.txt">display/nv50/vga.txt</a></td>
+<td>aliases VGA memory window</td>
+</tr>
+<tr class="row-even"><td>100700:100800</td>
+<td>IBUS</td>
+<td>PBFB_COMMON</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-pbfb.txt">memory/nvc0-pbfb.txt</a></td>
+<td>some regs shared between PBFBs???</td>
+</tr>
+<tr class="row-odd"><td>100800:100e00</td>
+<td>IBUS</td>
+<td>PFFB</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-pffb.txt">memory/nvc0-pffb.txt</a></td>
+<td>front memory interface and VM control</td>
+</tr>
+<tr class="row-even"><td>100f00:101000</td>
+<td>IBUS</td>
+<td>PFFB</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-pffb.txt">memory/nvc0-pffb.txt</a></td>
+<td>front memory interface and VM control</td>
+</tr>
+<tr class="row-odd"><td>101000:102000</td>
+<td>IBUS</td>
+<td>PSTRAPS</td>
+<td>all</td>
+<td><a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a></td>
+<td>straps readout / override</td>
+</tr>
+<tr class="row-even"><td>104000:105000</td>
+<td>IBUS</td>
+<td>PCOPY0</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/pcopy.txt">fifo/pcopy.txt</a></td>
+<td>memory copy engine #1</td>
+</tr>
+<tr class="row-odd"><td>105000:106000</td>
+<td>IBUS</td>
+<td>PCOPY1</td>
+<td>all</td>
+<td><a class="reference external" href="fifo/pcopy.txt">fifo/pcopy.txt</a></td>
+<td>memory copy engine #2</td>
+</tr>
+<tr class="row-even"><td>106000:107000</td>
+<td>IBUS</td>
+<td>PCOPY2</td>
+<td>NVE4-</td>
+<td><a class="reference external" href="fifo/pcopy.txt">fifo/pcopy.txt</a></td>
+<td>memory copy engine #3</td>
+</tr>
+<tr class="row-odd"><td>108000:108800</td>
+<td>IBUS</td>
+<td>PCODEC</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/pcodec.txt">display/nv50/pcodec.txt</a></td>
+<td>the HDA codec doing HDMI audio</td>
+</tr>
+<tr class="row-even"><td>109000:10a000</td>
+<td>IBUS</td>
+<td>PKFUSE</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/pkfuse.txt">display/nv50/pkfuse.txt</a></td>
+<td>efuses storing secret key stuff</td>
+</tr>
+<tr class="row-odd"><td>10a000:10b000</td>
+<td>IBUS</td>
+<td>PDAEMON</td>
+<td>all</td>
+<td><a class="reference external" href="pm/pdaemon.txt">pm/pdaemon.txt</a></td>
+<td>a falcon engine used to run management code in background</td>
+</tr>
+<tr class="row-even"><td>10c000:10f000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>10f000:120000</td>
+<td>IBUS</td>
+<td>PBFBs</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-pbfb.txt">memory/nvc0-pbfb.txt</a></td>
+<td>memory controller backends</td>
+</tr>
+<tr class="row-even"><td>120000:130000</td>
+<td>IBUS</td>
+<td>PIBUS</td>
+<td>all</td>
+<td><a class="reference internal" href="bus/pibus.html#pibus-mmio"><em>MMIO registers</em></a></td>
+<td>deals with internal bus used to reach most other areas of MMIO</td>
+</tr>
+<tr class="row-odd"><td>130000:135000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>137000:138000</td>
+<td>IBUS</td>
+<td>PCLOCK</td>
+<td>all</td>
+<td><a class="reference external" href="pm/nvc0-pclock.txt">pm/nvc0-pclock.txt</a></td>
+<td>clock setting</td>
+</tr>
+<tr class="row-odd"><td>138000:139000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>139000:13b000</td>
+<td>IBUS</td>
+<td>PP2P</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-p2p.txt">memory/nvc0-p2p.txt</a></td>
+<td>peer to peer memory access</td>
+</tr>
+<tr class="row-odd"><td>13b000:13f000</td>
+<td>IBUS</td>
+<td>PXBAR</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-pxbar.txt">memory/nvc0-pxbar.txt</a></td>
+<td>crossbar between memory controllers and GPCs</td>
+</tr>
+<tr class="row-even"><td>140000:180000</td>
+<td>IBUS</td>
+<td>PMFBs</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-pmfb.txt">memory/nvc0-pmfb.txt</a></td>
+<td>middle memory controllers: compression and L2 cache</td>
+</tr>
+<tr class="row-odd"><td>180000:1c0000</td>
+<td>IBUS</td>
+<td>PCOUNTER</td>
+<td>all</td>
+<td><a class="reference external" href="pcounter/intro.txt">pcounter/intro.txt</a></td>
+<td>performance monitoring counters</td>
+</tr>
+<tr class="row-even"><td>1c0000:1c1000</td>
+<td>ROOT</td>
+<td>???</td>
+<td>all</td>
+<td>???</td>
+<td>related to PFIFO and playlist?</td>
+</tr>
+<tr class="row-odd"><td>1c2000:1c3000</td>
+<td>IBUS</td>
+<td>PVENC</td>
+<td>NVE4-</td>
+<td><a class="reference external" href="vdec/pvenc.txt">vdec/pvenc.txt</a></td>
+<td>H.264 video encoding engine</td>
+</tr>
+<tr class="row-even"><td>1c3000:1c4000</td>
+<td>IBUS</td>
+<td>???</td>
+<td>NVD9-</td>
+<td><a class="reference external" href="display/nv50/punk1c1.txt">display/nv50/punk1c1.txt</a></td>
+<td>some falcon engine</td>
+</tr>
+<tr class="row-odd"><td>200000:201000</td>
+<td>???</td>
+<td>PMEDIA</td>
+<td>all</td>
+<td><a class="reference external" href="io/pmedia.txt">io/pmedia.txt</a></td>
+<td>mediaport</td>
+</tr>
+<tr class="row-even"><td>300000:380000</td>
+<td>IBUS</td>
+<td>PROM</td>
+<td>all</td>
+<td><a class="reference external" href="io/prom.txt">io/prom.txt</a></td>
+<td>ROM access window</td>
+</tr>
+<tr class="row-odd"><td>400000:600000</td>
+<td>IBUS</td>
+<td>PGRAPH</td>
+<td>all</td>
+<td><a class="reference external" href="graph/nvc0-pgraph.txt">graph/nvc0-pgraph.txt</a></td>
+<td>accelerated 2d/3d drawing and CUDA engine</td>
+</tr>
+<tr class="row-even"><td>601000:602000</td>
+<td>IBUS</td>
+<td>PRMIO</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/vga.txt">display/nv50/vga.txt</a></td>
+<td>aliases VGA registers</td>
+</tr>
+<tr class="row-odd"><td>610000:6c0000</td>
+<td>IBUS</td>
+<td>PDISPLAY</td>
+<td>all</td>
+<td><a class="reference external" href="display/nv50/pdisplay.txt">display/nv50/pdisplay.txt</a></td>
+<td>the DMA FIFO controlled unified display engine</td>
+</tr>
+<tr class="row-even"><td>700000:800000</td>
+<td>ROOT</td>
+<td>PMEM</td>
+<td>all</td>
+<td><a class="reference external" href="memory/nvc0-host-mem.txt">memory/nvc0-host-mem.txt</a></td>
+<td>indirect VRAM/host memory access</td>
+</tr>
+<tr class="row-odd"><td>800000:810000</td>
+<td>ROOT</td>
+<td>PFIFO_CHAN</td>
+<td>NVE4-</td>
+<td><a class="reference external" href="fifo/nvc0-pfifo.txt">fifo/nvc0-pfifo.txt</a></td>
+<td>PFIFO channel table</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="nvd9-mmio-errors">
+<h2><a class="toc-backref" href="#id77">NVD9 MMIO errors</a><a class="headerlink" href="#nvd9-mmio-errors" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">ROOT errors:</p>
+<ul class="simple">
+<li>bad001XX: nonexistent register [gives PBUS intr 3]</li>
+<li>bad0acXX: VM fault when accessing memory</li>
+<li>bad0daXX: disabled in PMC.ENABLE or PMC.SUBFIFO_ENABLE [gives PBUS intr 1]</li>
+<li>bad0fbXX: problem accessing memory [gives PBUS intr 7 or maybe 5]</li>
+</ul>
+<p>The low 8 bits appear to be some sort of request id.</p>
+</li>
+<li><p class="first">IBUS errors [all give PBUS intr 2 if accessed via ROOT]:</p>
+<ul class="simple">
+<li>badf1000: target refused transaction</li>
+<li>badf1100: no target for given address</li>
+<li>badf1200: target disabled in PMC.ENABLE</li>
+<li>badf1300: target disabled in PIBUS</li>
+</ul>
+</li>
+<li><p class="first">badf3000: access to GPC/PART targets before initialising them?</p>
+</li>
+<li><p class="first">badf5000: ??? seen on accesses to PIBUS own areas and some PCOUNTER regs</p>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MMIO register ranges</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#nv01-mmio-map">NV01 MMIO map</a></li>
+<li><a class="reference internal" href="#nv03-nv50-mmio-map">NV03:NV50 MMIO map</a></li>
+<li><a class="reference internal" href="#nv50-nvc0-mmio-map">NV50:NVC0 MMIO map</a></li>
+<li><a class="reference internal" href="#nvc0-mmio-map">NVC0+ MMIO map</a></li>
+<li><a class="reference internal" href="#nvd9-mmio-errors">NVD9 MMIO errors</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="chipsets.html"
+                        title="previous chapter">Chipsets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bus/index.html"
+                        title="next chapter">PCI/PCIE/AGP bus interface and card management logic</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/mmio.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="bus/index.html" title="PCI/PCIE/AGP bus interface and card management logic"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="chipsets.html" title="Chipsets"
+             >previous</a> |</li>
+        <li><a href="index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1459 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Chipsets &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="index.html" />
+    <link rel="next" title="MMIO register ranges" href="mmio.html" />
+    <link rel="prev" title="nVidia GPU introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="mmio.html" title="MMIO register ranges"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="nVidia GPU introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="chipsets">
+<span id="id1"></span><h1><a class="toc-backref" href="#id2">Chipsets</a><a class="headerlink" href="#chipsets" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#chipsets" id="id2">Chipsets</a><ul>
+<li><a class="reference internal" href="#introduction" id="id3">Introduction</a></li>
+<li><a class="reference internal" href="#the-chipset-families" id="id4">The chipset families</a><ul>
+<li><a class="reference internal" href="#nv01-family-nv01" id="id5">NV01 family: NV01</a></li>
+<li><a class="reference internal" href="#nv03-family-nv03-nv03t" id="id6">NV03 family: NV03, NV03T</a></li>
+<li><a class="reference internal" href="#nv04-family-nv04-nv05" id="id7">NV04 family: NV04, NV05</a></li>
+<li><a class="reference internal" href="#nv10-family-nv10-nv15-nv1a-nv11-nv17-nv1f-nv18" id="id8">NV10 family: NV10, NV15, NV1A, NV11, NV17, NV1F, NV18</a></li>
+<li><a class="reference internal" href="#nv20-family-nv20-nv2a-nv25-nv28" id="id9">NV20 family: NV20, NV2A, NV25, NV28</a></li>
+<li><a class="reference internal" href="#nv30-family-nv30-nv35-nv31-nv36-nv34" id="id10">NV30 family: NV30, NV35, NV31, NV36, NV34</a></li>
+<li><a class="reference internal" href="#nv40-family" id="id11">NV40 family</a></li>
+<li><a class="reference internal" href="#nv50-family" id="id12">NV50 family</a></li>
+<li><a class="reference internal" href="#nvc0-family" id="id13">NVC0 family</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id3">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Each nvidia GPU has several identifying numbers that can be used to determine
+supported features, the engines it contains, and the register set. The most
+important of these numbers is an 8-bit number known as the &#8220;chipset id&#8221;.
+If two cards have the same chipset id, their GPUs support identical features,
+engines, and registers, with very minor exceptions. Such cards can however
+still differ in the external devices they contain: output connectors,
+encoders, capture chips, temperature sensors, fan controllers, installed
+memory, supported clocks, etc. You can get the chipset id of a card by reading
+from its <a class="reference internal" href="bus/pmc.html#pmc-mmio-id"><em>PMC area</em></a>.</p>
+<p>The chipset id is usually written as NVxx, where xx is the id written as
+uppercase hexadecimal number. Note that, while cards before NV10 used another
+format for their ID register and don&#8217;t have the chipset id stored directly,
+they are usually considered as NV01-NV05 anyway.</p>
+<p>Nvidia uses &#8220;chipset code names&#8221; in their materials. They started out
+identical to the chipset id, but diverged midway through the NV40 series
+and started using a different numbering. However, for the most part nvidia
+code names correspond 1 to 1 with the chipset ids.</p>
+<p>The chipset id has a one-to-many relationship with pci device ids. Note that
+the last few bits [0-6 depending on chipset id] of PCI device id are
+changeable through straps [see <a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a>]. When pci ids of a chipset are
+listed in this file, the following shorthands are used:</p>
+<dl class="docutils">
+<dt>1234</dt>
+<dd>PCI device id 0x1234</dd>
+<dt>1234*</dt>
+<dd>PCI device ids 0x1234-0x1237, choosable by straps</dd>
+<dt>123X</dt>
+<dd>PCI device ids 0x1230-0x123X, choosable by straps</dd>
+<dt>124X+</dt>
+<dd>PCI device ids 0x1240-0x125X, choosable by straps</dd>
+<dt>124X*</dt>
+<dd>PCI device ids 0x1240-0x127X, choosable by straps</dd>
+</dl>
+</div>
+<div class="section" id="the-chipset-families">
+<h2><a class="toc-backref" href="#id4">The chipset families</a><a class="headerlink" href="#the-chipset-families" title="Permalink to this headline">¶</a></h2>
+<p>The chipsets can roughly be grouped into 9 families: NV01, NV03, NV04, NV10,
+NV20, NV30, NV40, NV50, NVC0. This aligns with big revisions of PGRAPH, the
+drawing engine of the card. While most functionality was introduced in sync
+with PGRAPH revisions, some other functionality [notably video decoding
+hardware] gets added in chipsets late in a chipset family and sometimes
+doesn&#8217;t even get to the first chipset in the next chipset family. For example,
+NV11 expanded upon the previous NV15 chipswt by adding dual-head support, while
+NV20 added new PGRAPH revision with shaders, but didn&#8217;t have dual-head - the
+first chipset to feature both was NV25.</p>
+<p>Also note that a bigger chipset id doesn&#8217;t always mean a newer card / card
+with more features: there were quite a few places where the numbering actually
+went backwards. For example, NV11 came out later than NV15 and added several
+features.</p>
+<p>Nvidia&#8217;s card release cycle always has the most powerful high-end chipsets
+first, subsequently filling in the lower-end positions with new cut-down
+chipsets. This means that newer cards in a single sub-family get progressively
+smaller, but also more featureful - the first chipsets to introduce minor
+changes like DX10.1 support or new video decoding are usually the low-end
+ones.</p>
+<p>The full known chipset list, sorted roughly according to introduced features,
+is:</p>
+<ul class="simple">
+<li>NV01 family: NV01</li>
+<li>NV03 family: NV03</li>
+<li>NV04 family: NV04, NV05</li>
+<li>NV10 family: NV10, NV15, NV1A, NV11, NV17, NV1F, NV18</li>
+<li>NV20 family: NV20, NV2A, NV25, NV28</li>
+<li>NV30 family: NV30, NV35, NV31, NV36, NV34</li>
+<li>NV40 family:<ul>
+<li>NV40 subfamily: NV40, NV45, NV41, NV42, NV43, NV44, NV4A</li>
+<li>NV47 subfamily: NV47, NV49, NV4B, NV46</li>
+<li>the IGPs: NV4E, NV4C, NV67, NV68, NV63</li>
+</ul>
+</li>
+<li>NV50 family:<ul>
+<li>NV50 subfamily: NV50</li>
+<li>NV84 subfamily: NV84, NV86, NV92, NV94, NV96, NV98</li>
+<li>NVA0 subfamily: NVA0, NVAA, NVAC</li>
+<li>NVA3 subfamily: NVA3, NVA5, NVA8, NVAF</li>
+</ul>
+</li>
+<li>NVC0 family:<ul>
+<li>NVC0 subfamily: NVC0, NVC4, NVC3, NVCE, NVCF, NVC1, NVC8</li>
+<li>NVD9 subfamily: NVD9, NVD7</li>
+<li>NVE4 subfamily: NVE4, NVE7, NVE6, NVF0, GK208</li>
+</ul>
+</li>
+</ul>
+<p>Whenever a range of chipsets is mentioned in the documentation, it&#8217;s written as
+&#8220;NVxx:NVyy&#8221;. This is left-inclusive, right-noninclusive range of chipset ids
+as sorted in the preceding list. For example, NVA0:NVA8 means chipsets NVA0,
+NVAA, NVAC, NVA3, NVA5. NV20:NV30 effectively means all NV20 family cards.</p>
+<div class="section" id="nv01-family-nv01">
+<h3><a class="toc-backref" href="#id5">NV01 family: NV01</a><a class="headerlink" href="#nv01-family-nv01" title="Permalink to this headline">¶</a></h3>
+<p>The first nvidia GPU. It has semi-legendary status, as it&#8217;s very rare and hard
+to get. Information is mostly guesswork from ancient xfree86 driver. The GPU
+is also known by its SGS-Thomson code number, SGS-2000. The most popular card
+using this GPU is Diamond EDGE 3D.</p>
+<p>The GPU has integrated audio output, MIDI synthetiser and Sega Saturn game
+controller port. Its rendering pipeline, as opposed to all later families,
+deals with quadratic surfaces, as opposed to triangles. Its video output
+circuitry is also totally different from NV03+, and replaces the VGA part as
+opposed to extending it like NV03:NV50 do.</p>
+<p>There&#8217;s also NV02, which has even more legendary status. It was supposed to be
+another card based on quadratic surfaces, but it got stuck in development hell
+and never got released. Apparently it never got to the stage of functioning
+silicon.</p>
+<p>The chipset was jointly manufactured by SGS-Thomson and NVidia, earning it
+pci vendor id of 0x12d2. The pci device ids are 0x0008 and 0x0009. The device
+id of NV02 was supposed to be 0x0010.</p>
+</div>
+<div class="section" id="nv03-family-nv03-nv03t">
+<h3><a class="toc-backref" href="#id6">NV03 family: NV03, NV03T</a><a class="headerlink" href="#nv03-family-nv03-nv03t" title="Permalink to this headline">¶</a></h3>
+<p>The first [moderately] sane GPUs from nvidia, and also the first to use AGP
+bus. There are two chips in this family, and confusingly both use chipset id
+NV03, but can be told apart by revision. The original NV03 is used in RIVA 128
+cards, while the revised NV03, known as NV03T, is used in RIVA 128 ZX. NV03
+supports AGP 1x and a maximum of 4MB of VRAM, while NV03T supports AGP 2x and
+8MB of VRAM. NV03T also increased number of slots in PFIFO cache. These GPUs
+were also manufactured by SFS-Thomson and bear the code name of STG-3000.</p>
+<p>The pci vendor id is 0x12d2. The pci device ids are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="76%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">id</th>
+<th class="head">chipset</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0018</td>
+<td>original NV03</td>
+</tr>
+<tr class="row-odd"><td>0019</td>
+<td>NV03T</td>
+</tr>
+</tbody>
+</table>
+<p>The NV03 GPU is made of the following functional blocks:</p>
+<ul class="simple">
+<li>host interface, connected to the host machine via PCI or AGP</li>
+<li>two PLLs, to generate video pixel clock and memory clock</li>
+<li>memory interface, connected to 2MB-8MB of external VRAM via 64-bit or
+128-bit memory bus, shared with an 8-bit parallel flash ROM</li>
+<li>PFIFO, controlling command submission to PGRAPH and gathering commands
+through DMA to host memory or direct MMIO submission</li>
+<li>PGRAPH, the 2d/3d drawing engine, supporting windows GDI and Direct3D 5
+acceleration</li>
+<li>VGA-compatible CRTC, RAMDAC, and associated video output circuitry,
+enabling direct connection of VGA analog displays and TV connection via
+an external AD722 encoder chip</li>
+<li>i2c bus to handle DDC and control mediaport devices</li>
+<li>double-buffered video overlay and cursor circuitry in RAMDAC</li>
+<li>mediaport, a proprietary interface with ITU656 compatibility mode, allowing
+connection of external video capture or MPEG2 decoding chip</li>
+</ul>
+<p>NV03 introduced RAMIN, an area of memory at the end of VRAM used to hold
+various control structures for PFIFO and PGRAPH. On NV03, RAMIN can be
+accessed in BAR1 at addresses starting from 0xc00000, while later cards have
+it in BAR0. It also introduced DMA objects, a RAMIN structure used to define
+a VRAM or host memory area that PGRAPH is allowed to use when executing
+commands on behalf of an application. These early DMA objects are limitted to
+linear VRAM and paged host memory objects, and have to be switched manually
+by host. See <a class="reference external" href="memory/nv03-vram.txt">memory/nv03-vram.txt</a> for details.</p>
+</div>
+<div class="section" id="nv04-family-nv04-nv05">
+<h3><a class="toc-backref" href="#id7">NV04 family: NV04, NV05</a><a class="headerlink" href="#nv04-family-nv04-nv05" title="Permalink to this headline">¶</a></h3>
+<p>Improved and somewhat redesigned NV03. Notable changes:</p>
+<ul class="simple">
+<li>AGP x4 support</li>
+<li>redesigned and improved DMA command submission</li>
+<li>separated core and memory clocks</li>
+<li>DMA objects made more orthogonal, and switched automatically by card</li>
+<li>redesigned PGRAPH objects, introducing the concept of object class in hardware</li>
+<li>added BIOS ROM shadow in RAMIN</li>
+<li>Direct3D 6 / multitexturing support in PGRAPH</li>
+<li>bumped max supported VRAM to 16MB</li>
+<li>[NV05] bumped max supported VRAM to 32MB</li>
+<li>[NV05] PGRAPH 2d context object binding in hardware</li>
+</ul>
+<p>This family includes the original NV04, used in RIVA TNT cards, and NV05 used
+in RIVA TNT2 and Vanta cards.</p>
+<p>This is the first chip marked as solely nvidia chip, the pci vendor id is
+0x10de. The pci device ids are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">id</th>
+<th class="head">chipset</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0020</td>
+<td>NV04</td>
+</tr>
+<tr class="row-odd"><td>0028*</td>
+<td>NV05</td>
+</tr>
+<tr class="row-even"><td>002c*</td>
+<td>NV05</td>
+</tr>
+<tr class="row-odd"><td>00a0</td>
+<td>NV0A IGP</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="nv10-family-nv10-nv15-nv1a-nv11-nv17-nv1f-nv18">
+<h3><a class="toc-backref" href="#id8">NV10 family: NV10, NV15, NV1A, NV11, NV17, NV1F, NV18</a><a class="headerlink" href="#nv10-family-nv10-nv15-nv1a-nv11-nv17-nv1f-nv18" title="Permalink to this headline">¶</a></h3>
+<p>The notable changes in this generation are:</p>
+<ul class="simple">
+<li>NV10:<ul>
+<li>redesigned memory controller</li>
+<li>max VRAM bumped to 128MB</li>
+<li>redesigned VRAM tiling, with support for multiple tiled regions</li>
+<li>greatly expanded 3d engine: hardware T&amp;L, D3D7, and other features</li>
+<li>GPIO pins introduced for ???</li>
+<li>PFIFO: added REF_CNT and NONINC commands</li>
+<li>added PCOUNTER: the performance monitoring engine</li>
+<li>new and improved video overlay engine</li>
+<li>redesigned mediaport</li>
+</ul>
+</li>
+<li>NV15:<ul>
+<li>introduced vblank wait PGRAPH commands</li>
+<li>minor 3d engine additions [logic operation, ...]</li>
+</ul>
+</li>
+<li>NV11:<ul>
+<li>big endian mode</li>
+<li>PFIFO: semaphores and subroutines</li>
+<li>dual head support, meant for laptops with flat panel + external display</li>
+</ul>
+</li>
+<li>NV17:<ul>
+<li>builtin TV encoder</li>
+<li>ZCULL</li>
+<li>added VPE: MPEG2 decoding engine</li>
+</ul>
+</li>
+<li>NV18:<ul>
+<li>AGP x8 support</li>
+<li>second straps set</li>
+</ul>
+</li>
+</ul>
+<p>The chipsets are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="8%" />
+<col width="11%" />
+<col width="8%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">pciid</th>
+<th class="head">chipset</th>
+<th class="head">pixel
+pipelines
+and ROPs</th>
+<th class="head">texture
+units</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0100*</td>
+<td>NV10</td>
+<td>4</td>
+<td>4</td>
+<td>the first GeForce card [GeForce 256]</td>
+</tr>
+<tr class="row-odd"><td>0150*</td>
+<td>NV15</td>
+<td>4</td>
+<td>8</td>
+<td>the high-end card of GeForce 2 lineup [GeForce 2 Ti, ...]</td>
+</tr>
+<tr class="row-even"><td>01a0*</td>
+<td>NV1A</td>
+<td>2</td>
+<td>4</td>
+<td>the IGP of GeForce 2 lineup [nForce]</td>
+</tr>
+<tr class="row-odd"><td>0110*</td>
+<td>NV11</td>
+<td>2</td>
+<td>4</td>
+<td>the low-end card of GeForce 2 lineup [GeForce 2 MX]</td>
+</tr>
+<tr class="row-even"><td>017X</td>
+<td>NV17</td>
+<td>2</td>
+<td>4</td>
+<td>the low-end card of GeForce 4 lineup [GeForce 4 MX]</td>
+</tr>
+<tr class="row-odd"><td>01fX</td>
+<td>NV1F</td>
+<td>2</td>
+<td>4</td>
+<td>the IGP of GeForce 4 lineup [nForce 2]</td>
+</tr>
+<tr class="row-even"><td>018X</td>
+<td>NV18</td>
+<td>2</td>
+<td>4</td>
+<td>like NV17, but with added AGP x8 support</td>
+</tr>
+<tr class="row-odd"><td>00ff</td>
+<td>NV18</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+</tbody>
+</table>
+<p>The pci vendor id is 0x10de.</p>
+<p>NV1A and NV1F are IGPs and lack VRAM, memory controller, mediaport, and ROM
+interface. They use the internal interfaces of the northbridge to access
+an area of system memory set aside as fake VRAM and BIOS image.</p>
+</div>
+<div class="section" id="nv20-family-nv20-nv2a-nv25-nv28">
+<h3><a class="toc-backref" href="#id9">NV20 family: NV20, NV2A, NV25, NV28</a><a class="headerlink" href="#nv20-family-nv20-nv2a-nv25-nv28" title="Permalink to this headline">¶</a></h3>
+<p>The first cards of this family were actually developed before NV17, so they
+miss out on several features introduced in NV17. The first card to merge NV20
+and NV17 additions is NV25. Notable changes:</p>
+<ul class="simple">
+<li>NV20:<ul>
+<li>no dual head support again</li>
+<li>no PTV, VPE</li>
+<li>no ZCULL</li>
+<li>a new memory controller with Z compression</li>
+<li>RAMIN reversal unit bumped to 0x40 bytes</li>
+<li>3d engine extensions:<ul>
+<li>programmable vertex shader support</li>
+<li>D3D8, shader model 1.1</li>
+</ul>
+</li>
+<li>PGRAPH automatic context switching</li>
+</ul>
+</li>
+<li>NV25:<ul>
+<li>a merge of NV17 and NV20: has dual-head, ZCULL, ...</li>
+<li>still no VPE and PTV</li>
+</ul>
+</li>
+<li>NV28:<ul>
+<li>AGP x8 support</li>
+</ul>
+</li>
+</ul>
+<p>The chipsets are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="5%" />
+<col width="8%" />
+<col width="8%" />
+<col width="10%" />
+<col width="8%" />
+<col width="62%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">pciid</th>
+<th class="head">chipset</th>
+<th class="head">vertex
+shaders</th>
+<th class="head">pixel
+pipelines
+and ROPs</th>
+<th class="head">texture
+units</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0200*</td>
+<td>NV20</td>
+<td>1</td>
+<td>4</td>
+<td>8</td>
+<td>the only chipset of GeForce 3 lineup [GeForce 3 Ti, ...]</td>
+</tr>
+<tr class="row-odd"><td>02a0*</td>
+<td>NV2A</td>
+<td>2</td>
+<td>4</td>
+<td>8</td>
+<td>the XBOX IGP [XGPU]</td>
+</tr>
+<tr class="row-even"><td>025X</td>
+<td>NV25</td>
+<td>2</td>
+<td>4</td>
+<td>8</td>
+<td>the high-end card of GeForce 4 lineup [GeForce 4 Ti]</td>
+</tr>
+<tr class="row-odd"><td>028X</td>
+<td>NV28</td>
+<td>2</td>
+<td>4</td>
+<td>8</td>
+<td>like NV25, but with added AGP x8 support</td>
+</tr>
+</tbody>
+</table>
+<p>NV2A is a chipset designed exclusively for the original xbox, and can&#8217;t be
+found anywhere else. Like NV1A and NV1F, it&#8217;s an IGP.</p>
+<p>The pci vendor id is 0x10de.</p>
+</div>
+<div class="section" id="nv30-family-nv30-nv35-nv31-nv36-nv34">
+<h3><a class="toc-backref" href="#id10">NV30 family: NV30, NV35, NV31, NV36, NV34</a><a class="headerlink" href="#nv30-family-nv30-nv35-nv31-nv36-nv34" title="Permalink to this headline">¶</a></h3>
+<p>The infamous GeForce FX series. Notable changes:</p>
+<ul class="simple">
+<li>NV30:<ul>
+<li>2-stage PLLs introduced [still located in PRAMDAC]</li>
+<li>max VRAM size bumped to 256MB</li>
+<li>3d engine extensions:<ul>
+<li>programmable fragment shader support</li>
+<li>D3D9, shader model 2.0</li>
+</ul>
+</li>
+<li>added PEEPHOLE indirect memory access</li>
+<li>return of VPE and PTV</li>
+<li>new-style memory timings</li>
+</ul>
+</li>
+<li>NV35:<ul>
+<li>3d engine additions:<ul>
+<li>???</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>NV31:<ul>
+<li>no NV35 changes, this chipset is derived from NV30</li>
+<li>2-stage PLLs split into two registers</li>
+<li>VPE engine extended to work as a PFIFO engine</li>
+</ul>
+</li>
+<li>NV36:<ul>
+<li>a merge of NV31 and NV36 changes from NV30</li>
+</ul>
+</li>
+<li>NV34:<ul>
+<li>a comeback of NV10 memory controller!</li>
+<li>NV10-style mem timings again</li>
+<li>no Z compression again</li>
+<li>RAMIN reversal unit back at 16 bytes</li>
+<li>3d engine additions:<ul>
+<li>???</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>The chipsets are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="10%" />
+<col width="10%" />
+<col width="13%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">pciid</th>
+<th class="head">chipset</th>
+<th class="head">vertex
+shaders</th>
+<th class="head">pixel
+pipelines
+and ROPs</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>030X</td>
+<td>NV30</td>
+<td>2</td>
+<td>8</td>
+<td>high-end chipset [GeForce FX 5800]</td>
+</tr>
+<tr class="row-odd"><td>033X</td>
+<td>NV35</td>
+<td>3</td>
+<td>8</td>
+<td>very high-end chipset [GeForce FX 59X0]</td>
+</tr>
+<tr class="row-even"><td>031X</td>
+<td>NV31</td>
+<td>1</td>
+<td>4</td>
+<td>low-end chipset [GeForce FX 5600]</td>
+</tr>
+<tr class="row-odd"><td>034X</td>
+<td>NV36</td>
+<td>3</td>
+<td>4</td>
+<td>middle-end chipset [GeForce FX 5700]</td>
+</tr>
+<tr class="row-even"><td>032X</td>
+<td>NV34</td>
+<td>1</td>
+<td>4</td>
+<td>low-end chipset [GeForce FX 5200]</td>
+</tr>
+<tr class="row-odd"><td>00fa</td>
+<td>NV36</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-even"><td>00fb</td>
+<td>NV35</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-odd"><td>00fc</td>
+<td>NV34</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-even"><td>00fd</td>
+<td>NV34</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-odd"><td>00fe</td>
+<td>NV35</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+</tbody>
+</table>
+<p>The pci vendor id is 0x10de.</p>
+</div>
+<div class="section" id="nv40-family">
+<h3><a class="toc-backref" href="#id11">NV40 family</a><a class="headerlink" href="#nv40-family" title="Permalink to this headline">¶</a></h3>
+<p>This family was the first to feature PCIE cards, and many fundamental areas
+got significant changes, which later paved the way for NV50. It is also the
+family where chipset ids started to diverge from nvidia code names. The
+changes:</p>
+<ul class="simple">
+<li>NV40:<ul>
+<li>RAMIN bumped in size to max 16MB, many structure layout changes</li>
+<li>RAMIN reversal unit bumped to 512kB</li>
+<li>3d engine: support for shader model 3 and other additions</li>
+<li>Z compression came back</li>
+<li>PGRAPH context switching microcode</li>
+<li>redesigned clock setup</li>
+<li>separate clock for shaders</li>
+<li>rearranged PCOUNTER to handle up to 8 clock domains</li>
+<li>PFIFO cache bumped in size and moved location</li>
+<li>added independent PRMVIO for two heads</li>
+<li>second set of straps added, new strap override registers</li>
+<li>new PPCI PCI config space access window</li>
+<li>MPEG2 encoding capability added to VPE</li>
+<li>FIFO engines now identify the channels by their context addresses, not chids</li>
+<li>BIOS uses all-new BIT structure to describe the card</li>
+<li>individually disablable shader and ROP units.</li>
+<li>added PCONTROL area to... control... stuff?</li>
+<li>memory controller uses NV30-style timings again</li>
+</ul>
+</li>
+<li>NV41:<ul>
+<li>introduced context switching to VPE</li>
+<li>introduced PVP1, microcoded video processor</li>
+<li>first natively PCIE card</li>
+<li>added PCIE GART to memory controller</li>
+</ul>
+</li>
+<li>NV43:<ul>
+<li>added a thermal sensor to the GPU</li>
+</ul>
+</li>
+<li>NV44:<ul>
+<li>a new PCIE GART page table format</li>
+<li>3d engine: ???</li>
+</ul>
+</li>
+<li>NV4A:<ul>
+<li>like NV44, but AGP instead of PCIE</li>
+</ul>
+</li>
+</ul>
+<p>The chipsets are [vertex shaders : pixel shaders : ROPs]:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="13%" />
+<col width="20%" />
+<col width="9%" />
+<col width="9%" />
+<col width="5%" />
+<col width="33%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">pciid</th>
+<th class="head">chipset id</th>
+<th class="head">chipset names</th>
+<th class="head">vertex
+shaders</th>
+<th class="head">pixel
+shaders</th>
+<th class="head">ROPs</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>004X 021X</td>
+<td>NV40/NV45</td>
+<td>NV40/NV45/NV48</td>
+<td>6</td>
+<td>16</td>
+<td>16</td>
+<td>AGP</td>
+</tr>
+<tr class="row-odd"><td>00f0</td>
+<td>NV40/NV45</td>
+<td>NV40/NV45/NV48</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-even"><td>00f8</td>
+<td>NV40/NV45</td>
+<td>NV40/NV45/NV48</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-odd"><td>00f9</td>
+<td>NV40/NV45</td>
+<td>NV40/NV45/NV48</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by PCIE bridge</td>
+</tr>
+<tr class="row-even"><td>00cX</td>
+<td>NV41/NV42</td>
+<td>NV41/NV42</td>
+<td>5</td>
+<td>12</td>
+<td>12</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>014X</td>
+<td>NV43</td>
+<td>NV43</td>
+<td>3</td>
+<td>8</td>
+<td>4</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>00f1</td>
+<td>NV43</td>
+<td>NV43</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>00f2</td>
+<td>NV43</td>
+<td>NV43</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-even"><td>00f3</td>
+<td>NV43</td>
+<td>NV43</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>00f4</td>
+<td>NV43</td>
+<td>NV43</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-even"><td>00f6</td>
+<td>NV43</td>
+<td>NV43</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>016X</td>
+<td>NV44</td>
+<td>NV44</td>
+<td>3</td>
+<td>4</td>
+<td>2</td>
+<td>TURBOCACHE</td>
+</tr>
+<tr class="row-even"><td>022X</td>
+<td>NV4A</td>
+<td>NV44A</td>
+<td>3</td>
+<td>4</td>
+<td>2</td>
+<td>AGP</td>
+</tr>
+<tr class="row-odd"><td>009X</td>
+<td>NV47</td>
+<td>G70</td>
+<td>8</td>
+<td>24</td>
+<td>16</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>01dX</td>
+<td>NV46</td>
+<td>G72</td>
+<td>3</td>
+<td>4</td>
+<td>2</td>
+<td>TURBOCACHE</td>
+</tr>
+<tr class="row-odd"><td>029X</td>
+<td>NV49</td>
+<td>G71</td>
+<td>8</td>
+<td>24</td>
+<td>16</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>00f5</td>
+<td>NV49</td>
+<td>G71</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>02e3</td>
+<td>NV49</td>
+<td>G71</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-even"><td>02e4</td>
+<td>NV49</td>
+<td>G71</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>039X</td>
+<td>NV4B</td>
+<td>G73</td>
+<td>8</td>
+<td>12</td>
+<td>8</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>02e0</td>
+<td>NV4B</td>
+<td>G73</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>02e1</td>
+<td>NV4B</td>
+<td>G73</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-even"><td>02e2</td>
+<td>NV4B</td>
+<td>G73</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>pciid faked by AGP bridge</td>
+</tr>
+<tr class="row-odd"><td>024X</td>
+<td>NV4E</td>
+<td>C51</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>IGP, TURBOCACHE</td>
+</tr>
+<tr class="row-even"><td>03dX</td>
+<td>NV4C</td>
+<td>C61</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>IGP, TURBOCACHE</td>
+</tr>
+<tr class="row-odd"><td>053X</td>
+<td>NV67/NV68</td>
+<td>C67/C68</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>IGP, TURBOCACHE</td>
+</tr>
+<tr class="row-even"><td>07eX</td>
+<td>NV63</td>
+<td>C73</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>IGP, TURBOCACHE</td>
+</tr>
+</tbody>
+</table>
+<p>It&#8217;s not clear how NV40 is different from NV45, or NV41 from NV42,
+or NV67 from NV68 - they even share pciid ranges.</p>
+<p>The NV4x IGPs actually have a memory controller as opposed to earlier ones.
+This controller still accesses only host memory, though.</p>
+<p>As execution units can be disabled on NV40+ cards, these configs are just the
+maximum configs - a card can have just a subset of them enabled.</p>
+</div>
+<div class="section" id="nv50-family">
+<h3><a class="toc-backref" href="#id12">NV50 family</a><a class="headerlink" href="#nv50-family" title="Permalink to this headline">¶</a></h3>
+<p>The card where they redesigned everything. The most significant change was the
+redesigned memory subsystem, complete with a paging MMU [see <a class="reference external" href="memory/nv50-vm.txt">memory/nv50-vm.txt</a>].</p>
+<ul class="simple">
+<li>NV50:<ul>
+<li>a new VM subsystem, complete with redesigned DMA objects</li>
+<li>RAMIN is gone, all structures can be placed arbitrarily in VRAM, and
+usually host memory memory as well</li>
+<li>all-new channel structure storing page tables, RAMFC, RAMHT, context
+pointers, and DMA objects</li>
+<li>PFIFO redesigned, PIO mode dropped</li>
+<li>PGRAPH redesigned: based on unified shader architecture, now supports
+running standalone computations, D3D10 support, unified 2d acceleration
+object</li>
+<li>display subsystem reinvented from scratch: a stub version of the old
+VGA-based one remains for VGA compatibility, the new one is not VGA based
+and is controlled by PFIFO-like DMA push buffers</li>
+<li>memory partitions tied directly to ROPs</li>
+</ul>
+</li>
+<li>NV84:<ul>
+<li>redesigned channel structure with a new layout</li>
+<li>got rid of VP1 video decoding and VPE encoding support, but VPE decoder
+still exists</li>
+<li>added VP2 xtensa-based programmable video decoding and BSP engines</li>
+<li>removed restrictions on host memory access by rendering: rendering to host
+memory and using tiled textures from host are now ok</li>
+<li>added VM stats write support to PCOUNTER</li>
+<li>PEEPHOLE moved out of PBUS</li>
+<li>PFIFO_BAR_FLUSH moved out of PFIFO</li>
+</ul>
+</li>
+<li>NV98:<ul>
+<li>introduced VP3 video decoding engines, and the falcon microcode with them</li>
+<li>got rid of VP2 video decoding</li>
+</ul>
+</li>
+<li>NVA0:<ul>
+<li>developped in parallel with NV98</li>
+<li>VP2 again, no VP3</li>
+<li>PGRAPH rearranged to make room for more MPs/TPs</li>
+<li>streamout enhancements [ARB_transform_feedback2]</li>
+<li>CUDA ISA 1.3: 64-bit g[] atomics, s[] atomics, voting, fp64 support</li>
+</ul>
+</li>
+<li>NVAA:<ul>
+<li>merged NVA0 and NV98 changes: has both VP3 and new PGRAPH</li>
+<li>only CUDA ISA 1.2 now: fp64 support got cut out again</li>
+</ul>
+</li>
+<li>NVA3:<ul>
+<li>a new revision of the falcon ISA</li>
+<li>a revision to VP3 video decoding, known as VP4. Adds MPEG-4 ASP support.</li>
+<li>added PDAEMON, a falcon engine meant to do card monitoring and power maanagement</li>
+<li>PGRAPH additions for D3D10.1 support</li>
+<li>added HDA audio codec for HDMI sound support, on a separate PCI function</li>
+<li>Added PCOPY, the dedicated copy engine</li>
+<li>Merged PCRYPT3 functionality into PVLD</li>
+</ul>
+</li>
+<li>NVAF:<ul>
+<li>added PVCOMP, the video compositor engine</li>
+</ul>
+</li>
+</ul>
+<p>The chipsets in this family are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="10%" />
+<col width="8%" />
+<col width="22%" />
+<col width="6%" />
+<col width="12%" />
+<col width="8%" />
+<col width="12%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">core pciid</th>
+<th class="head">hda
+pciid</th>
+<th class="head">id</th>
+<th class="head">name</th>
+<th class="head">TPs</th>
+<th class="head">MPs/TP</th>
+<th class="head">ROPs</th>
+<th class="head">notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>019X</td>
+<td>-</td>
+<td>NV50</td>
+<td>G80</td>
+<td>8</td>
+<td>2</td>
+<td>6</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>040X</td>
+<td>-</td>
+<td>NV84</td>
+<td>G84</td>
+<td>4</td>
+<td>2</td>
+<td>4</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>042X</td>
+<td>-</td>
+<td>NV86</td>
+<td>G86</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>060X+</td>
+<td>-</td>
+<td>NV92</td>
+<td>G92</td>
+<td>8</td>
+<td>2</td>
+<td>4</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>062X+</td>
+<td>-</td>
+<td>NV94</td>
+<td>G94</td>
+<td>4</td>
+<td>2</td>
+<td>4</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>064X+</td>
+<td>-</td>
+<td>NV96</td>
+<td>G96</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>06eX+</td>
+<td>-</td>
+<td>NV98</td>
+<td>G98</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>05eX+</td>
+<td>-</td>
+<td>NVA0</td>
+<td>G200</td>
+<td>10</td>
+<td>3</td>
+<td>8</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>084X+</td>
+<td>-</td>
+<td>NVAA</td>
+<td>MCP77/MCP78</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>IGP</td>
+</tr>
+<tr class="row-odd"><td>086X+</td>
+<td>-</td>
+<td>NVAC</td>
+<td>MCP79/MCP7A</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>IGP</td>
+</tr>
+<tr class="row-even"><td>0caX+</td>
+<td>0be4</td>
+<td>NVA3</td>
+<td>GT215</td>
+<td>4</td>
+<td>3</td>
+<td>4</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>0a2X+</td>
+<td>0be2</td>
+<td>NVA5</td>
+<td>GT216</td>
+<td>2</td>
+<td>3</td>
+<td>2</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>0a6X+ 10cX+</td>
+<td>0be3</td>
+<td>NVA8</td>
+<td>GT218</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>08aX+</td>
+<td>-</td>
+<td>NVAF</td>
+<td>MCP89</td>
+<td>2</td>
+<td>3</td>
+<td>2</td>
+<td>IGP</td>
+</tr>
+</tbody>
+</table>
+<p>Like NV40, these are just the maximal numbers.</p>
+<p>The pci vendor id is 0x10de.</p>
+</div>
+<div class="section" id="nvc0-family">
+<h3><a class="toc-backref" href="#id13">NVC0 family</a><a class="headerlink" href="#nvc0-family" title="Permalink to this headline">¶</a></h3>
+<p>The card where they redesigned everything again.</p>
+<ul class="simple">
+<li>NVC0:<ul>
+<li>redesigned PFIFO, now with up to 3 subfifos running in parallel</li>
+<li>redesigned PGRAPH:<ul>
+<li>split into a central HUB managing everything and several GPCs
+doing all actual work</li>
+<li>GPCs further split into a common part and several TPs</li>
+<li>using falcon for context switching</li>
+<li>D3D11 support</li>
+</ul>
+</li>
+<li>redesigned memory controller<ul>
+<li>split into three parts:<ul>
+<li>per-partition low-level memory controllers [PBFB]</li>
+<li>per-partition middle memory controllers: compression, ECC, ... [PMFB]</li>
+<li>a single &#8220;hub&#8221; memory controller: VM control, TLB control, ... [PFFB]</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ROPs, memory partitions, GPCs, TPs have independent register areas, as well
+as &#8220;broadcast&#8221; areas that can be used to control all units at once</li>
+<li>second PCOPY engine</li>
+<li>redesigned PCOUNTER, now having multiple more or less independent subunits
+to monitor various parts of GPU</li>
+<li>redesigned clock setting</li>
+<li>...</li>
+</ul>
+</li>
+<li>NVD9:<ul>
+<li>a major revision to VP3 video decoding, now called VP5. vµc microcode removed.</li>
+<li>another revision to the falcon ISA, allowing 24-bit PC</li>
+<li>added PUNK1C3 falcon engine</li>
+<li>redesigned I2C bus interface</li>
+<li>redesigned PDISPLAY</li>
+<li>removed second PCOPY engine</li>
+</ul>
+</li>
+<li>NVD7:<ul>
+<li>PGRAPH changes:<ul>
+<li>???</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>NVE4:<ul>
+<li>redesigned PCOPY: the falcon controller is now gone, replaced with hardware
+control logic, partially in PFIFO</li>
+<li>an additional PCOPY engine</li>
+<li>PFIFO redesign - a channel can now only access a single engine selected on
+setup, with PCOPY2+PGRAPH considered as one engine</li>
+<li>PGRAPH changes:<ul>
+<li>subchannel to object assignments are now fixed</li>
+<li>m2mf is gone and replaced by a new p2mf object that only does simple
+upload, other m2mf functions are now PCOPY&#8217;s responsibility instead</li>
+<li>the ISA requires explicit scheduling information now</li>
+<li>lots of setup has been moved from methods/registers into memory
+structures</li>
+<li>???</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>NVF0:<ul>
+<li>PFIFO changes:<ul>
+<li>???</li>
+</ul>
+</li>
+<li>PGRAPH changes:<ul>
+<li>ISA format change</li>
+<li>???</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Chipsets in NVC0 family:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="12%" />
+<col width="9%" />
+<col width="12%" />
+<col width="9%" />
+<col width="16%" />
+<col width="9%" />
+<col width="21%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">core</th>
+<th class="head">hda</th>
+<th class="head">id</th>
+<th class="head">name</th>
+<th class="head">GPCs</th>
+<th class="head">TPs/GPC</th>
+<th class="head">ROPs</th>
+<th class="head">parts/ROP</th>
+</tr>
+<tr class="row-even"><th class="head">pciid</th>
+<th class="head">pciid</th>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+<th class="head">&nbsp;</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-odd"><td>06cX+</td>
+<td>0be5</td>
+<td>NVC0</td>
+<td>GF100</td>
+<td>4</td>
+<td>4</td>
+<td>6</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>0e2X+</td>
+<td>0beb</td>
+<td>NVC4</td>
+<td>GF104</td>
+<td>2</td>
+<td>4</td>
+<td>4</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>0dcX+</td>
+<td>0be9</td>
+<td>NVC3</td>
+<td>GF106</td>
+<td>1</td>
+<td>4</td>
+<td>3</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>120X+</td>
+<td>0e0c</td>
+<td>NVCE</td>
+<td>GF114</td>
+<td>2</td>
+<td>4</td>
+<td>4</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>124X+</td>
+<td>0bee</td>
+<td>NVCF</td>
+<td>GF116</td>
+<td>1</td>
+<td>4</td>
+<td>3</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>0deX+</td>
+<td>0bea</td>
+<td>NVC1</td>
+<td>GF108</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>108X+</td>
+<td>0e09</td>
+<td>NVC8</td>
+<td>GF110</td>
+<td>4</td>
+<td>4</td>
+<td>6</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>104X*</td>
+<td>0e08</td>
+<td>NVD9</td>
+<td>GF119</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>1140</td>
+<td>-</td>
+<td>NVD7</td>
+<td>GF117</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>118X*</td>
+<td>0e0a</td>
+<td>NVE4</td>
+<td>GK104</td>
+<td>4</td>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>0fcX*</td>
+<td>0e1b</td>
+<td>NVE7</td>
+<td>GK107</td>
+<td>1</td>
+<td>2</td>
+<td>2</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>11cX+</td>
+<td>0e0b</td>
+<td>NVE6</td>
+<td>GK106</td>
+<td>3</td>
+<td>2</td>
+<td>?</td>
+<td>?</td>
+</tr>
+<tr class="row-odd"><td>100X+</td>
+<td>0e1a</td>
+<td>NVF0</td>
+<td>GK110</td>
+<td>5</td>
+<td>3</td>
+<td>6</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>?</td>
+<td>?</td>
+<td>?</td>
+<td>GK208</td>
+<td>?</td>
+<td>?</td>
+<td>?</td>
+<td>?</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Chipsets</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#the-chipset-families">The chipset families</a><ul>
+<li><a class="reference internal" href="#nv01-family-nv01">NV01 family: NV01</a></li>
+<li><a class="reference internal" href="#nv03-family-nv03-nv03t">NV03 family: NV03, NV03T</a></li>
+<li><a class="reference internal" href="#nv04-family-nv04-nv05">NV04 family: NV04, NV05</a></li>
+<li><a class="reference internal" href="#nv10-family-nv10-nv15-nv1a-nv11-nv17-nv1f-nv18">NV10 family: NV10, NV15, NV1A, NV11, NV17, NV1F, NV18</a></li>
+<li><a class="reference internal" href="#nv20-family-nv20-nv2a-nv25-nv28">NV20 family: NV20, NV2A, NV25, NV28</a></li>
+<li><a class="reference internal" href="#nv30-family-nv30-nv35-nv31-nv36-nv34">NV30 family: NV30, NV35, NV31, NV36, NV34</a></li>
+<li><a class="reference internal" href="#nv40-family">NV40 family</a></li>
+<li><a class="reference internal" href="#nv50-family">NV50 family</a></li>
+<li><a class="reference internal" href="#nvc0-family">NVC0 family</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">nVidia GPU introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="mmio.html"
+                        title="next chapter">MMIO register ranges</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/chipsets.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="mmio.html" title="MMIO register ranges"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="nVidia GPU introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

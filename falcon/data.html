@@ -1,0 +1,542 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Data space &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Branch instructions" href="branch.html" />
+    <link rel="prev" title="Arithmetic instructions" href="arith.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="branch.html" title="Branch instructions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="arith.html" title="Arithmetic instructions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="data-space">
+<span id="falcon-data"></span><h1><a class="toc-backref" href="#id1">Data space</a><a class="headerlink" href="#data-space" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#data-space" id="id1">Data space</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#the-stack" id="id3">The stack</a></li>
+<li><a class="reference internal" href="#pseudocode-conventions" id="id4">Pseudocode conventions</a></li>
+<li><a class="reference internal" href="#load-ld" id="id5">Load: ld</a></li>
+<li><a class="reference internal" href="#store-st" id="id6">Store: st</a></li>
+<li><a class="reference internal" href="#push-onto-stack-push" id="id7">Push onto stack: push</a></li>
+<li><a class="reference internal" href="#pop-from-stack-pop" id="id8">Pop from stack: pop</a></li>
+<li><a class="reference internal" href="#adjust-stack-pointer-add" id="id9">Adjust stack pointer: add</a></li>
+<li><a class="reference internal" href="#accessing-data-segment-through-io" id="id10">Accessing data segment through IO</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Data segment of the falcon is inside the microcontroller itself. Its size can
+be determined by looking at <a class="reference internal" href="proc.html#falcon-io-uc-caps"><em>UC_CAPS register</em></a>, bits
+9-16 shifted left by 8.</p>
+<p>The segment has byte-oriented addressing and can be accessed in units of 8,
+16, or 32 bits. Unaligned accesses are not supported and cause botched reads
+or writes.</p>
+<p>Multi-byte quantities are stored as little-endian.</p>
+</div>
+<div class="section" id="the-stack">
+<span id="falcon-sr-sp"></span><span id="falcon-stack"></span><h2><a class="toc-backref" href="#id3">The stack</a><a class="headerlink" href="#the-stack" title="Permalink to this headline">¶</a></h2>
+<p>The stack is also stored in data segment. Stack pointer is stored in $sp
+special register and is always aligned to 4 bytes. Stack grows downwards,
+with $sp pointing at the last pushed value. The low 2 bits of $sp and bits
+higher than what&#8217;s needed to span the data space are forced to 0.</p>
+</div>
+<div class="section" id="pseudocode-conventions">
+<span id="falcon-data-conventions"></span><h2><a class="toc-backref" href="#id4">Pseudocode conventions</a><a class="headerlink" href="#pseudocode-conventions" title="Permalink to this headline">¶</a></h2>
+<p>sz, for sized instructions, is the selected size of operation: 8, 16, or 32.</p>
+<p>LD(size, address) returns the contents of size-bit quantity in data segment
+at specified address:</p>
+<div class="highlight-python"><pre>int LD(size, addr) {
+        if (size == 32) {
+                addr &amp;= ~3;
+                return D[addr] | D[addr + 1] &lt;&lt; 8 | D[addr + 2] &lt;&lt; 16 | D[addr + 3] &lt;&lt; 24;
+        } else if (size == 16) {
+                addr &amp;= ~1;
+                return D[addr] | D[addr + 1] &lt;&lt; 8;
+        } else { // size == 8
+                return D[addr];
+        }
+}</pre>
+</div>
+<p>ST(size, address, value) stores the given size-bit value to data segment:</p>
+<div class="highlight-python"><pre>void ST(size, addr, val) {
+        if (size == 32) {
+                if (addr &amp; 1) { // fuck up the written datum as penalty for unaligned access.
+                        val = (val &amp; 0xff) &lt;&lt; (addr &amp; 3) * 8;
+                } else if (addr &amp; 2) {
+                        val = (val &amp; 0xffff) &lt;&lt; (addr &amp; 3) * 8;
+                }
+                addr &amp;= ~3;
+                D[addr] = val;
+                D[addr + 1] = val &gt;&gt; 8;
+                D[addr + 2] = val &gt;&gt; 16;
+                D[addr + 3] = val &gt;&gt; 24;
+        } else if (size == 16) {
+                if (addr &amp; 1) {
+                        val = (val &amp; 0xff) &lt;&lt; (addr &amp; 1) * 8;
+                }
+                addr &amp;= ~1;
+                D[addr] = val;
+                D[addr + 1] = val &gt;&gt; 8;
+        } else { // size == 8
+                D[addr] = val;
+        }
+}</pre>
+</div>
+</div>
+<div class="section" id="load-ld">
+<span id="falcon-isa-ld"></span><h2><a class="toc-backref" href="#id5">Load: ld</a><a class="headerlink" href="#load-ld" title="Permalink to this headline">¶</a></h2>
+<p>Loads 8-bit, 16-bit or 32-bit quantity from data segment to register.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="6%" />
+<col width="42%" />
+<col width="25%" />
+<col width="28%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - normal</th>
+<th class="head">Subopcode - with $sp</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>ld</td>
+<td>Load a value from data segment</td>
+<td>8</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Operands:</dt>
+<dd>DST, BASE, IDX</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R1, R2, I8</td>
+<td>10</td>
+</tr>
+<tr class="row-odd"><td>R2, $sp, I8</td>
+<td>34</td>
+</tr>
+<tr class="row-even"><td>R2, $sp, R1</td>
+<td>3a</td>
+</tr>
+<tr class="row-odd"><td>R3, R2, R1</td>
+<td>3c</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">DST</span> <span class="o">=</span> <span class="n">LD</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span> <span class="n">BASE</span> <span class="o">+</span> <span class="n">IDX</span> <span class="o">*</span> <span class="p">(</span><span class="n">sz</span><span class="o">/</span><span class="mi">8</span><span class="p">));</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="store-st">
+<span id="falcon-isa-st"></span><h2><a class="toc-backref" href="#id6">Store: st</a><a class="headerlink" href="#store-st" title="Permalink to this headline">¶</a></h2>
+<p>Stores 8-bit, 16-bit or 32-bit quantity from register to data segment.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="6%" />
+<col width="41%" />
+<col width="25%" />
+<col width="28%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - normal</th>
+<th class="head">Subopcode - with $sp</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>st</td>
+<td>Store a value to data segment</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>sized</dd>
+<dt>Operands:</dt>
+<dd>BASE, IDX, SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="65%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, I8, R1</td>
+<td>00</td>
+</tr>
+<tr class="row-odd"><td>$sp, I8, R2</td>
+<td>30</td>
+</tr>
+<tr class="row-even"><td>R2, 0, R1</td>
+<td>38</td>
+</tr>
+<tr class="row-odd"><td>$sp, R1, R2</td>
+<td>38</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>zero-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="n">ST</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span> <span class="n">BASE</span> <span class="o">+</span> <span class="n">IDX</span> <span class="o">*</span> <span class="p">(</span><span class="n">sz</span><span class="o">/</span><span class="mi">8</span><span class="p">),</span> <span class="n">SRC</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="push-onto-stack-push">
+<span id="falcon-isa-push"></span><h2><a class="toc-backref" href="#id7">Push onto stack: push</a><a class="headerlink" href="#push-onto-stack-push" title="Permalink to this headline">¶</a></h2>
+<p>Decrements $sp by 4, then stores a 32-bit value at top of the stack.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="64%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>push</td>
+<td>Push a value onto stack</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2</td>
+<td>f9</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$sp -= 4;
+ST(32, $sp, SRC);</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="pop-from-stack-pop">
+<span id="falcon-isa-pop"></span><h2><a class="toc-backref" href="#id8">Pop from stack: pop</a><a class="headerlink" href="#pop-from-stack-pop" title="Permalink to this headline">¶</a></h2>
+<p>Loads 32-bit value from top of the stack, then incrments $sp by 4.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="10%" />
+<col width="68%" />
+<col width="23%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>pop</td>
+<td>Pops a value from the stack</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>DST</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2</td>
+<td>f2</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>DST = LD(32, $sp);
+$sp += 4;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="adjust-stack-pointer-add">
+<span id="falcon-isa-addsp"></span><h2><a class="toc-backref" href="#id9">Adjust stack pointer: add</a><a class="headerlink" href="#adjust-stack-pointer-add" title="Permalink to this headline">¶</a></h2>
+<p>Adds a value to the stack pointer.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="5%" />
+<col width="39%" />
+<col width="31%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode - opcodes f4, f5</th>
+<th class="head">Subopcode - opcode f9</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>add</td>
+<td>Add a value to the stack pointer.</td>
+<td>30</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>DST, SRC</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="57%" />
+<col width="43%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>$sp, I8</td>
+<td>f4</td>
+</tr>
+<tr class="row-odd"><td>$sp, I16</td>
+<td>f5</td>
+</tr>
+<tr class="row-even"><td>$sp, R2</td>
+<td>f9</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Immediates:</dt>
+<dd>sign-extended</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>$sp += SRC;</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="accessing-data-segment-through-io">
+<span id="falcon-io-data"></span><h2><a class="toc-backref" href="#id10">Accessing data segment through IO</a><a class="headerlink" href="#accessing-data-segment-through-io" title="Permalink to this headline">¶</a></h2>
+<p>On v3+, the data segment is accessible through normal IO space through
+index/data reg pairs. The number of available index/data pairs is accessible
+by <a class="reference internal" href="proc.html#falcon-io-uc-caps"><em>UC_CAPS2 register</em></a>. This number is equal to 4
+on PDAEMON, 1 on other engines:</p>
+<dl class="docutils">
+<dt>MMIO 0x1c0 + i * 8 / I[0x07000 + i * 0x200]: DATA_INDEX</dt>
+<dd><p class="first">Selects the place in D[] accessed by DATA reg. Bits:</p>
+<ul class="last simple">
+<li>bits 2-15: bits 2-15 of the data address to poke</li>
+<li>bit 24: write autoincrement flag: if set, every write to corresponding DATA
+register increments the address by 4</li>
+<li>bit 25: read autoincrement flag: like 24, but for reads</li>
+</ul>
+</dd>
+<dt>MMIO 0x1c4 + i * 8 / I[0x07100 + i * 0x200]: DATA</dt>
+<dd>Writes execute ST(32, DATA_INDEX &amp; 0xfffc, value); and increment the address
+if write autoincrement is enabled. Reads return the result of LD(32,
+DATA_INDEX &amp; 0xfffc); and increment if read autoincrement is enabled.</dd>
+</dl>
+<p>i should be less than DATA_PORTS value from
+<a class="reference internal" href="proc.html#falcon-io-uc-caps"><em>UC_CAPS2 register</em></a>.</p>
+<p>On v0, the data segment is instead accessible through the high falcon MMIO
+range, see <a class="reference internal" href="io.html#falcon-io-upload"><em>v0 code/data upload registers</em></a> for details.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Data space</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#the-stack">The stack</a></li>
+<li><a class="reference internal" href="#pseudocode-conventions">Pseudocode conventions</a></li>
+<li><a class="reference internal" href="#load-ld">Load: ld</a></li>
+<li><a class="reference internal" href="#store-st">Store: st</a></li>
+<li><a class="reference internal" href="#push-onto-stack-push">Push onto stack: push</a></li>
+<li><a class="reference internal" href="#pop-from-stack-pop">Pop from stack: pop</a></li>
+<li><a class="reference internal" href="#adjust-stack-pointer-add">Adjust stack pointer: add</a></li>
+<li><a class="reference internal" href="#accessing-data-segment-through-io">Accessing data segment through IO</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="arith.html"
+                        title="previous chapter">Arithmetic instructions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="branch.html"
+                        title="next chapter">Branch instructions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/data.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="branch.html" title="Branch instructions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="arith.html" title="Arithmetic instructions"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

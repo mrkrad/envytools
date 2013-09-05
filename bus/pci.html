@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PCI configuration space &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="PCI/PCIE/AGP bus interface and card management logic" href="index.html" />
+    <link rel="next" title="Power, thermal, and clock management" href="../pm/index.html" />
+    <link rel="prev" title="PUNITS: Card subunit disable control" href="punits.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pm/index.html" title="Power, thermal, and clock management"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="punits.html" title="PUNITS: Card subunit disable control"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pci-configuration-space">
+<span id="pci"></span><h1><a class="toc-backref" href="#id1">PCI configuration space</a><a class="headerlink" href="#pci-configuration-space" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pci-configuration-space" id="id1">PCI configuration space</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
+<li><a class="reference internal" href="#pci-pcie-configuration-space-registers" id="id4">PCI/PCIE configuration space registers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="mmio-registers">
+<span id="ppci-hda-mmio"></span><span id="ppci-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="pci-pcie-configuration-space-registers">
+<h2><a class="toc-backref" href="#id4">PCI/PCIE configuration space registers</a><a class="headerlink" href="#pci-pcie-configuration-space-registers" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>0x00-0x3f: PCI configuration header, type 0</li>
+<li>0x40-0x43: subsystem ID. Aliases standard PCI register 0x2c, but is writable.</li>
+<li>0x44-0x4f: PCI AGP capability [AGP cards only]</li>
+<li>0x50-0x53: ROM shadow enable flag - 0 to disable ROM shadow, disable video
+output, and use EEPROM for PCI ROM; 1 to enable ROM shadow and
+video output, using shadow copy in VRAM for PCI ROM. On NV04:NV50
+cards, enabling shadowing additionally disables PROM read/write
+circuitry.</li>
+</ul>
+<ul class="simple">
+<li>0x54-0x57: VGA legacy IO/memory ranges decoding enable - 1 to enable, 0 to
+disable</li>
+<li>0x60-0x67: PCI power management capability</li>
+<li>0x68-0x77: PCI MSI capability - 64-bit addressing, no mask [PCIE cards and NV40+ IGPs only]</li>
+<li>0x78-0x8b: PCI express capability - express endpoint [PCIE cards only]</li>
+</ul>
+<p>And for PCIE cards only:</p>
+<ul class="simple">
+<li>0x100-0x127: PCIE virtual channel capability</li>
+<li>0x128-0x137: PCIE power budgeting capability</li>
+</ul>
+<p>All registers introduced by nvidia [ie. not in standard PCI config header or
+capabilities] are 32-bit LE words.</p>
+<p>On NV01:NV50 cards, PCI config space, or first 0x100 bytes of PCIE config
+space, are also mapped to MMIO register space at addresses 0x1800-0x18ff.
+On NV40+ cards, all 0x1000 bytes of PCIE config space are mapped to MMIO
+register space at addresses 0x88000-0x88fff. It&#8217;s a bad idea to access config
+space addresses &gt;= 0x100 on NV40/NV45/NV4A.</p>
+<p>All NV01:NV40 cards, as well as NV40, NV45, NV4A are natively PCI/AGP devices,
+all other cards are natively PCIE devices. Pre-NV40 IGPs are connected through
+an internal AGP bus and are considered AGP devices, while NV40+ IGPs are
+connected by northbridge-internal interfaces and are <em>not</em> considered PCIE
+devices, thus lack the capability and extended config space. Some native AGP
+cards have PCIE variants, which consist of the PCIE GPU and a thin bridge
+between the GPU and the AGP bus, called BR02. In the same way, native PCIE
+cards have AGP variants. On these devices, the BAR0 accesses will touch the
+underlying GPU&#8217;s config space, but real PCI config cycles will be intercepted
+by the bridge, which will hide tha native bus type capability and expose the
+other one, and show its own pciid instead of the GPU&#8217;s.</p>
+<p>Note that bus master functionality may need to be enabled for NV50+ VM
+circuitry to work even when only VRAM is being accessed. The reason for this
+is currently unknown.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PCI configuration space</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#pci-pcie-configuration-space-registers">PCI/PCIE configuration space registers</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="punits.html"
+                        title="previous chapter">PUNITS: Card subunit disable control</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pm/index.html"
+                        title="next chapter">Power, thermal, and clock management</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/bus/pci.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pm/index.html" title="Power, thermal, and clock management"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="punits.html" title="PUNITS: Card subunit disable control"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

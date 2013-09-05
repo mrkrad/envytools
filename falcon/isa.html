@@ -1,0 +1,2263 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ISA &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Arithmetic instructions" href="arith.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="arith.html" title="Arithmetic instructions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="isa">
+<span id="falcon-isa"></span><h1><a class="toc-backref" href="#id1">ISA</a><a class="headerlink" href="#isa" title="Permalink to this headline">¶</a></h1>
+<p>This file deals with description of the ISA used by the falcon microprocessor,
+which is described in <a class="reference internal" href="intro.html#falcon-intro"><em>Introduction</em></a>.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#isa" id="id1">ISA</a><ul>
+<li><a class="reference internal" href="#registers" id="id2">Registers</a><ul>
+<li><a class="reference internal" href="#flags-register" id="id3">$flags register</a><ul>
+<li><a class="reference internal" href="#p-predicates" id="id4">$p predicates</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#instructions" id="id5">Instructions</a><ul>
+<li><a class="reference internal" href="#sized" id="id6">Sized</a></li>
+<li><a class="reference internal" href="#unsized" id="id7">Unsized</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#code-segment" id="id8">Code segment</a></li>
+<li><a class="reference internal" href="#invalid-opcode-handling" id="id9">Invalid opcode handling</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="registers">
+<h2><a class="toc-backref" href="#id2">Registers</a><a class="headerlink" href="#registers" title="Permalink to this headline">¶</a></h2>
+<p>There are 16 32-bit GPRs, $r0-$r15. There are also a dozen or so special
+registers:</p>
+<table border="1" class="docutils" id="falcon-sr">
+<colgroup>
+<col width="7%" />
+<col width="12%" />
+<col width="16%" />
+<col width="66%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Index</th>
+<th class="head">Name</th>
+<th class="head">Present on</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>$sr0</td>
+<td>$iv0</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-sr-iv"><em>Interrupt 0 vector</em></a></td>
+</tr>
+<tr class="row-odd"><td>$sr1</td>
+<td>$iv1</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-sr-iv"><em>Interrupt 1 vector</em></a></td>
+</tr>
+<tr class="row-even"><td>$sr3</td>
+<td>$tv</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-sr-tv"><em>Trap vector</em></a></td>
+</tr>
+<tr class="row-odd"><td>$sr4</td>
+<td>$sp</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-sr-sp"><em>Stack pointer</em></a></td>
+</tr>
+<tr class="row-even"><td>$sr5</td>
+<td>$pc</td>
+<td>all units</td>
+<td><a class="reference internal" href="branch.html#falcon-sr-pc"><em>Program counter</em></a></td>
+</tr>
+<tr class="row-odd"><td>$sr6</td>
+<td>$xcbase</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-sr-xcbase"><em>Code xfer external base</em></a></td>
+</tr>
+<tr class="row-even"><td>$sr7</td>
+<td>$xdbase</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-sr-xdbase"><em>Data xfer external base</em></a></td>
+</tr>
+<tr class="row-odd"><td>$sr8</td>
+<td>$flags</td>
+<td>all units</td>
+<td><a class="reference internal" href="#falcon-sr-flags"><em>Misc flags</em></a></td>
+</tr>
+<tr class="row-even"><td>$sr9</td>
+<td>$cx</td>
+<td>crypto units</td>
+<td><a class="reference internal" href="crypt.html#falcon-sr-cx"><em>Crypt xfer mode</em></a></td>
+</tr>
+<tr class="row-odd"><td>$sr10</td>
+<td>$cauth</td>
+<td>crypto units</td>
+<td><a class="reference internal" href="crypt.html#falcon-sr-cauth"><em>Crypt auth code selection</em></a></td>
+</tr>
+<tr class="row-even"><td>$sr11</td>
+<td>$xtargets</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-sr-xtargets"><em>Xfer port selection</em></a></td>
+</tr>
+<tr class="row-odd"><td>$sr12</td>
+<td>$tstatus</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="intr.html#falcon-sr-tstatus"><em>Trap status</em></a></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="flags-register">
+<span id="falcon-sr-flags"></span><h3><a class="toc-backref" href="#id3">$flags register</a><a class="headerlink" href="#flags-register" title="Permalink to this headline">¶</a></h3>
+<p>$flags [<a class="reference internal" href="#falcon-sr"><em>$sr8</em></a>] register contains various flags controlling
+the operation of the falcon microprocessor. It is split into the following
+bitfields:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="10%" />
+<col width="14%" />
+<col width="69%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Bits</th>
+<th class="head">Name</th>
+<th class="head">Present on</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0-7</td>
+<td>$p0-$p7</td>
+<td>all units</td>
+<td><a class="reference internal" href="#falcon-flags-p"><em>General-purpose predicates</em></a></td>
+</tr>
+<tr class="row-odd"><td>8</td>
+<td>c</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-flags-arith"><em>Carry flag</em></a></td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>o</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-flags-arith"><em>Signed overflow flag</em></a></td>
+</tr>
+<tr class="row-odd"><td>10</td>
+<td>s</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-flags-arith"><em>Sign/negative flag</em></a></td>
+</tr>
+<tr class="row-even"><td>11</td>
+<td>z</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-flags-arith"><em>Zero flag</em></a></td>
+</tr>
+<tr class="row-odd"><td>16</td>
+<td>ie0</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-flags-ie"><em>Interrupt 0 enable</em></a></td>
+</tr>
+<tr class="row-even"><td>17</td>
+<td>ie1</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-flags-ie"><em>Interrupt 1 enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>18</td>
+<td>???</td>
+<td>v4+ units</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>20</td>
+<td>is0</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-flags-is"><em>Interrupt 0 saved enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>21</td>
+<td>is1</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-flags-is"><em>Interrupt 1 saved enable</em></a></td>
+</tr>
+<tr class="row-even"><td>22</td>
+<td>???</td>
+<td>v4+ units</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>24</td>
+<td>ta</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-flags-ta"><em>Trap handler active</em></a></td>
+</tr>
+<tr class="row-even"><td>26-28</td>
+<td>???</td>
+<td>v4+ units</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>29-31</td>
+<td>???</td>
+<td>v4+ units</td>
+<td>???</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="p-predicates">
+<span id="falcon-flags-p"></span><h4><a class="toc-backref" href="#id4">$p predicates</a><a class="headerlink" href="#p-predicates" title="Permalink to this headline">¶</a></h4>
+<p>$flags.p0-p7 are general-purpose single-bit flags. They can be used to store
+single-bit variables. They can be set via <a class="reference internal" href="arith.html#falcon-isa-bit"><em>bset, bclr, btgl</em></a>,
+and <a class="reference internal" href="arith.html#falcon-isa-setp"><em>setp</em></a> instructions. They can be read by
+<a class="reference internal" href="arith.html#falcon-isa-xbit"><em>xbit</em></a> instruction, or checked by
+<a class="reference internal" href="proc.html#falcon-isa-sleep"><em>sleep</em></a> and <a class="reference internal" href="branch.html#falcon-isa-bra"><em>bra</em></a> instructions.</p>
+</div>
+</div>
+</div>
+<div class="section" id="instructions">
+<h2><a class="toc-backref" href="#id5">Instructions</a><a class="headerlink" href="#instructions" title="Permalink to this headline">¶</a></h2>
+<p>Instructions have 2, 3, or 4 bytes. First byte of instruction determines its
+length and format. High 2 bits of the first byte determine the instruction&#8217;s
+operand size; 00 means 8-bit, 01 means 16-bit, 10 means 32-bit, and 11 means
+an instruction that doesn&#8217;t use operand sizing. The set of available opcodes
+varies greatly with the instruction format.</p>
+<p>The subopcode can be stored in one of the following places:</p>
+<ul class="simple">
+<li>O1: subopcode goes to low 4 bits of byte 0</li>
+<li>O2: subopcode goes to low 4 bits of byte 1</li>
+<li>OL: subopcode goes to low 6 bits of byte 1</li>
+<li>O3: subopcode goes to low 4 bits of byte 2</li>
+</ul>
+<p>The operands are denoted as follows:</p>
+<ul class="simple">
+<li>R1x: register encoded in low 4 bits of byte 1</li>
+<li>R2x: register encoded in high 4 bits of byte 1</li>
+<li>R3x: register encoded in high 4 bits of byte 2</li>
+<li>RxS: register used as source</li>
+<li>RxD: register used as destination</li>
+<li>RxSD: register used as both source and destination</li>
+<li>I8: 8-bit immediate encoded in byte 2</li>
+<li>I16: 16-bit immediate encoded in bytes 2 [low part] and 3 [high part]</li>
+</ul>
+<div class="section" id="sized">
+<h3><a class="toc-backref" href="#id6">Sized</a><a class="headerlink" href="#sized" title="Permalink to this headline">¶</a></h3>
+<p>Sized opcodes are [low 6 bits of opcode]:</p>
+<ul class="simple">
+<li>0x: O1 R2S R1S I8</li>
+<li>1x: O1 R1D R2S I8</li>
+<li>2x: O1 R1D R2S I16</li>
+<li>30: O2 R2S I8</li>
+<li>31: O2 R2S I16</li>
+<li>34: O2 R2D I8</li>
+<li>36: O2 R2SD I8</li>
+<li>37: O2 R2SD I16</li>
+<li>38: O3 R2S R1S</li>
+<li>39: O3 R1D R2S</li>
+<li>3a: O3 R2D R1S</li>
+<li>3b: O3 R2SD R1S</li>
+<li>3c: O3 R3D R2S R1S</li>
+<li>3d: O2 R2SD</li>
+</ul>
+<p>The subopcodes are as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="3%" />
+<col width="3%" />
+<col width="4%" />
+<col width="5%" />
+<col width="9%" />
+<col width="42%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Instruction</th>
+<th class="head">0x</th>
+<th class="head">1x</th>
+<th class="head">2x</th>
+<th class="head">30</th>
+<th class="head">31</th>
+<th class="head">34</th>
+<th class="head">36</th>
+<th class="head">37</th>
+<th class="head">38</th>
+<th class="head">39</th>
+<th class="head">3a</th>
+<th class="head">3b</th>
+<th class="head">3c</th>
+<th class="head">3d</th>
+<th class="head">imm</th>
+<th class="head">flg0</th>
+<th class="head">flg3+</th>
+<th class="head">Cycles</th>
+<th class="head">Present on</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>st</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-st"><em>store</em></a></td>
+</tr>
+<tr class="row-odd"><td>st [sp]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-st"><em>store</em></a></td>
+</tr>
+<tr class="row-even"><td>cmpu</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>CZ</td>
+<td>CZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-cmp"><em>unsigned compare</em></a></td>
+</tr>
+<tr class="row-odd"><td>cmps</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>S</td>
+<td>CZ</td>
+<td>CZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-cmp"><em>signed compare</em></a></td>
+</tr>
+<tr class="row-even"><td>cmp</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>S</td>
+<td>N/A</td>
+<td>COSZ</td>
+<td>1</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-cmp"><em>compare</em></a></td>
+</tr>
+<tr class="row-odd"><td>add</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>COSZ</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-add"><em>add</em></a></td>
+</tr>
+<tr class="row-even"><td>adc</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>COSZ</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-add"><em>add with carry</em></a></td>
+</tr>
+<tr class="row-odd"><td>sub</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>COSZ</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-add"><em>substract</em></a></td>
+</tr>
+<tr class="row-even"><td>sbb</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>COSZ</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-add"><em>substract with borrow</em></a></td>
+</tr>
+<tr class="row-odd"><td>shl</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>C</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-shift"><em>shift left</em></a></td>
+</tr>
+<tr class="row-even"><td>shr</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>C</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-shift"><em>shift right</em></a></td>
+</tr>
+<tr class="row-odd"><td>sar</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>C</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-shift"><em>shift right with sign</em></a></td>
+</tr>
+<tr class="row-even"><td>ld</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-ld"><em>load</em></a></td>
+</tr>
+<tr class="row-odd"><td>shlc</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>C</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-shift"><em>shift left with carry</em></a></td>
+</tr>
+<tr class="row-even"><td>shrc</td>
+<td>&nbsp;</td>
+<td>d</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>d</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>d</td>
+<td>d</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>C</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-shift"><em>shift right with carry</em></a></td>
+</tr>
+<tr class="row-odd"><td>ld [sp]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-ld"><em>load</em></a></td>
+</tr>
+<tr class="row-even"><td>not</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>OSZ</td>
+<td>OSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-unary"><em>bitwise not</em></a></td>
+</tr>
+<tr class="row-odd"><td>neg</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>OSZ</td>
+<td>OSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-unary"><em>sign negation</em></a></td>
+</tr>
+<tr class="row-even"><td>movf</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>OSZ</td>
+<td>N/A</td>
+<td>1</td>
+<td>v0 units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-unary"><em>move</em></a></td>
+</tr>
+<tr class="row-odd"><td>mov</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>1</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-unary"><em>move</em></a></td>
+</tr>
+<tr class="row-even"><td>hswap</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>OSZ</td>
+<td>OSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-unary"><em>swap halves</em></a></td>
+</tr>
+<tr class="row-odd"><td>clear</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-clear"><em>set to 0</em></a></td>
+</tr>
+<tr class="row-even"><td>setf</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>OSZ</td>
+<td>1</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-setf"><em>set flags from value</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="unsized">
+<h3><a class="toc-backref" href="#id7">Unsized</a><a class="headerlink" href="#unsized" title="Permalink to this headline">¶</a></h3>
+<p>Unsized opcodes are:</p>
+<ul class="simple">
+<li>cx: O1 R1D R2S I8</li>
+<li>dx: O1 R2S R1S I8</li>
+<li>ex: O1 R1D R2S I16</li>
+<li>f0: O2 R2SD I8</li>
+<li>f1: O2 R2SD I16</li>
+<li>f2: O2 R2S I8</li>
+<li>f4: OL I8</li>
+<li>f5: OL I16</li>
+<li>f8: O2</li>
+<li>f9: O2 R2S</li>
+<li>fa: O3 R2S R1S</li>
+<li>fc: O2 R2D</li>
+<li>fd: O3 R2SD R1S</li>
+<li>fe: O3 R1D R2S</li>
+<li>ff: O3 R3D R2S R1S</li>
+</ul>
+<p>The subopcodes are as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="2%" />
+<col width="3%" />
+<col width="4%" />
+<col width="5%" />
+<col width="10%" />
+<col width="43%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Instruction</th>
+<th class="head">cx</th>
+<th class="head">dx</th>
+<th class="head">ex</th>
+<th class="head">f0</th>
+<th class="head">f1</th>
+<th class="head">f2</th>
+<th class="head">f4</th>
+<th class="head">f5</th>
+<th class="head">f8</th>
+<th class="head">f9</th>
+<th class="head">fa</th>
+<th class="head">fc</th>
+<th class="head">fd</th>
+<th class="head">fe</th>
+<th class="head">ff</th>
+<th class="head">imm</th>
+<th class="head">flg0</th>
+<th class="head">flg3+</th>
+<th class="head">cycles</th>
+<th class="head">Present on</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>mulu</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-mul"><em>unsigned 16x16 -&gt; 32 multiply</em></a></td>
+</tr>
+<tr class="row-odd"><td>muls</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>S</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-mul"><em>signed 16x16 -&gt; 32 multiply</em></a></td>
+</tr>
+<tr class="row-even"><td>sext</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>U</td>
+<td>SZ</td>
+<td>SZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-sext"><em>sign extend</em></a></td>
+</tr>
+<tr class="row-odd"><td>extrs</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>U</td>
+<td>N/A</td>
+<td>SZ</td>
+<td>1</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-extr"><em>extract signed bitfield</em></a></td>
+</tr>
+<tr class="row-even"><td>sethi</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>H</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-loadimm"><em>set high 16 bits</em></a></td>
+</tr>
+<tr class="row-odd"><td>and</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>U</td>
+<td>-</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-logop"><em>bitwise and</em></a></td>
+</tr>
+<tr class="row-even"><td>or</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>5</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>U</td>
+<td>-</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-logop"><em>bitwise or</em></a></td>
+</tr>
+<tr class="row-odd"><td>xor</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>6</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>U</td>
+<td>-</td>
+<td>COSZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-logop"><em>bitwise xor</em></a></td>
+</tr>
+<tr class="row-even"><td>extr</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>U</td>
+<td>N/A</td>
+<td>SZ</td>
+<td>1</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-extr"><em>extract bitfield</em></a></td>
+</tr>
+<tr class="row-odd"><td>mov</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>S</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-loadimm"><em>move</em></a></td>
+</tr>
+<tr class="row-even"><td>xbit</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>U</td>
+<td>-</td>
+<td>SZ</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-xbit"><em>extract single bit</em></a></td>
+</tr>
+<tr class="row-odd"><td>bset</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>9</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>9</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-bit"><em>set single bit</em></a></td>
+</tr>
+<tr class="row-even"><td>bclr</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>a</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>a</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-bit"><em>clear single bit</em></a></td>
+</tr>
+<tr class="row-odd"><td>btgl</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>b</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>b</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-bit"><em>toggle single bit</em></a></td>
+</tr>
+<tr class="row-even"><td>ins</td>
+<td>b</td>
+<td>&nbsp;</td>
+<td>b</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>N/A</td>
+<td>-</td>
+<td>1</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-ins"><em>insert bitfield</em></a></td>
+</tr>
+<tr class="row-odd"><td>xbit[fl]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>SZ</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-xbit"><em>extract single bit</em></a></td>
+</tr>
+<tr class="row-even"><td>div</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>U</td>
+<td>N/A</td>
+<td>-</td>
+<td>30-33</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-div"><em>divide</em></a></td>
+</tr>
+<tr class="row-odd"><td>mod</td>
+<td>d</td>
+<td>&nbsp;</td>
+<td>d</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>d</td>
+<td>U</td>
+<td>N/A</td>
+<td>-</td>
+<td>30-33</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-div"><em>modulus</em></a></td>
+</tr>
+<tr class="row-even"><td>???</td>
+<td>e</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>e</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="io.html#falcon-isa-iord"><em>??? IO port</em></a></td>
+</tr>
+<tr class="row-odd"><td>iord</td>
+<td>f</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>f</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>~1-x</td>
+<td>all units</td>
+<td><a class="reference internal" href="io.html#falcon-isa-iord"><em>read IO port</em></a></td>
+</tr>
+<tr class="row-even"><td>iowr</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>1-x</td>
+<td>all units</td>
+<td><a class="reference internal" href="io.html#falcon-isa-iowr"><em>write IO port asynchronous</em></a></td>
+</tr>
+<tr class="row-odd"><td>iowrs</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>N/A</td>
+<td>-</td>
+<td>9-x</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="io.html#falcon-isa-iowr"><em>write IO port synchronous</em></a></td>
+</tr>
+<tr class="row-even"><td>xcld</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-isa-xfer"><em>code xfer to falcon</em></a></td>
+</tr>
+<tr class="row-odd"><td>xdld</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-isa-xfer"><em>data xfer to falcon</em></a></td>
+</tr>
+<tr class="row-even"><td>xdst</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-isa-xfer"><em>data xfer from falcon</em></a></td>
+</tr>
+<tr class="row-odd"><td>setp</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-setp"><em>set predicate</em></a></td>
+</tr>
+<tr class="row-even"><td>ccmd</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>c</td>
+<td>3c</td>
+<td>3c</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>crypto units</td>
+<td><a class="reference internal" href="crypt.html#falcon-isa-ccmd"><em>crypto coprocessor command</em></a></td>
+</tr>
+<tr class="row-odd"><td>bra</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0x</td>
+<td>0x</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>S</td>
+<td>-</td>
+<td>-</td>
+<td>5</td>
+<td>all units</td>
+<td><a class="reference internal" href="branch.html#falcon-isa-bra"><em>branch relative conditional</em></a></td>
+</tr>
+<tr class="row-even"><td>bra</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1x</td>
+<td>1x</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>S</td>
+<td>-</td>
+<td>-</td>
+<td>5</td>
+<td>all units</td>
+<td><a class="reference internal" href="branch.html#falcon-isa-bra"><em>branch relative conditional</em></a></td>
+</tr>
+<tr class="row-odd"><td>jmp</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>20</td>
+<td>20</td>
+<td>&nbsp;</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>4-5</td>
+<td>all units</td>
+<td><a class="reference internal" href="branch.html#falcon-isa-jmp"><em>branch absolute</em></a></td>
+</tr>
+<tr class="row-even"><td>call</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>21</td>
+<td>21</td>
+<td>&nbsp;</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>4-5</td>
+<td>all units</td>
+<td><a class="reference internal" href="branch.html#falcon-isa-call"><em>call subroutine</em></a></td>
+</tr>
+<tr class="row-odd"><td>sleep</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>28</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>NA</td>
+<td>all units</td>
+<td><a class="reference internal" href="proc.html#falcon-isa-sleep"><em>sleep until interrupt</em></a></td>
+</tr>
+<tr class="row-even"><td>add [sp]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>30</td>
+<td>30</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>S</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-addsp"><em>add to stack pointer</em></a></td>
+</tr>
+<tr class="row-odd"><td>bset[fl]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>31</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>9</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-bit"><em>set single bit</em></a></td>
+</tr>
+<tr class="row-even"><td>bclr[fl]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>32</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>a</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-bit"><em>clear single bit</em></a></td>
+</tr>
+<tr class="row-odd"><td>btgl[fl]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>33</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>b</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>U</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="arith.html#falcon-isa-bit"><em>toggle single bit</em></a></td>
+</tr>
+<tr class="row-even"><td>ret</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>5-6</td>
+<td>all units</td>
+<td><a class="reference internal" href="branch.html#falcon-isa-ret"><em>return from subroutine</em></a></td>
+</tr>
+<tr class="row-odd"><td>iret</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="intr.html#falcon-isa-iret"><em>return from interrupt handler</em></a></td>
+</tr>
+<tr class="row-even"><td>exit</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="proc.html#falcon-isa-exit"><em>halt microcontroller</em></a></td>
+</tr>
+<tr class="row-odd"><td>xdwait</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-isa-xwait"><em>wait for data xfer</em></a></td>
+</tr>
+<tr class="row-even"><td>???</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>xcwait</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="xfer.html#falcon-isa-xwait"><em>wait for code xfer</em></a></td>
+</tr>
+<tr class="row-even"><td>trap 0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="intr.html#falcon-isa-trap"><em>trigger software trap</em></a></td>
+</tr>
+<tr class="row-odd"><td>trap 1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>9</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="intr.html#falcon-isa-trap"><em>trigger software trap</em></a></td>
+</tr>
+<tr class="row-even"><td>trap 2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>a</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="intr.html#falcon-isa-trap"><em>trigger software trap</em></a></td>
+</tr>
+<tr class="row-odd"><td>trap 3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>b</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="intr.html#falcon-isa-trap"><em>trigger software trap</em></a></td>
+</tr>
+<tr class="row-even"><td>push</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-push"><em>push onto stack</em></a></td>
+</tr>
+<tr class="row-odd"><td>itlb</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="vm.html#falcon-isa-itlb"><em>drop TLB entry</em></a></td>
+</tr>
+<tr class="row-even"><td>pop</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>all units</td>
+<td><a class="reference internal" href="data.html#falcon-isa-pop"><em>pop from stack</em></a></td>
+</tr>
+<tr class="row-odd"><td>mov[&gt;sr]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="proc.html#falcon-isa-movsr"><em>move to special register</em></a></td>
+</tr>
+<tr class="row-even"><td>mov[&lt;sr]</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>-</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>all units</td>
+<td><a class="reference internal" href="proc.html#falcon-isa-movsr"><em>move from special register</em></a></td>
+</tr>
+<tr class="row-odd"><td>ptlb</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="vm.html#falcon-isa-ptlb"><em>lookup TLB by phys address</em></a></td>
+</tr>
+<tr class="row-even"><td>vtlb</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>N/A</td>
+<td>-</td>
+<td>&nbsp;</td>
+<td>v3+ units</td>
+<td><a class="reference internal" href="vm.html#falcon-isa-vtlb"><em>lookup TLB by virt address</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="code-segment">
+<h2><a class="toc-backref" href="#id8">Code segment</a><a class="headerlink" href="#code-segment" title="Permalink to this headline">¶</a></h2>
+<p>falcon has separate code and data spaces. Code segment, like data segment, is
+located in small piece of SRAM in the microcontroller. Its size can be
+determined by looking at MMIO address falcon+0x108, bits 0-8 shifted left by 8.</p>
+<p>Code is byte-oriented, but can only be accessed by 32-bit words from outside,
+and can only be modified in 0x100-byte [page] units.</p>
+<p>On pre-NVA3, code segment is just a flat piece of RAM, except for the per-page
+secret flag. See <a class="reference internal" href="io.html#falcon-io-upload"><em>v0 code/data upload registers</em></a> for information on uploading code
+and data.</p>
+<p>On NVA3+, code segment is paged with virtual -&gt; physical translation and needs
+special handling. See <a class="reference internal" href="io.html#falcon-io"><em>IO space</em></a> for details.</p>
+<p>Code execution is started by host via MMIO from arbitrary entry point, and is
+stopped either by host or by the microcode itself, see <a class="reference internal" href="proc.html#falcon-isa-exit"><em>Halting microcode execution: exit</em></a>,
+<a class="reference internal" href="proc.html#falcon-io-uc-ctrl"><em>Processor execution control registers</em></a>.</p>
+</div>
+<div class="section" id="invalid-opcode-handling">
+<span id="falcon-trap-invalid-opcode"></span><h2><a class="toc-backref" href="#id9">Invalid opcode handling</a><a class="headerlink" href="#invalid-opcode-handling" title="Permalink to this headline">¶</a></h2>
+<p>When an invalid opcode is hit, $pc is unmodified and a trap is generated. On
+NVA3+, $tstatus reason field is set to 8. Pre-NVA3 cards don&#8217;t have $tstatus
+register, but this is the only trap type they support anyway.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">ISA</a><ul>
+<li><a class="reference internal" href="#registers">Registers</a><ul>
+<li><a class="reference internal" href="#flags-register">$flags register</a><ul>
+<li><a class="reference internal" href="#p-predicates">$p predicates</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#instructions">Instructions</a><ul>
+<li><a class="reference internal" href="#sized">Sized</a></li>
+<li><a class="reference internal" href="#unsized">Unsized</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#code-segment">Code segment</a></li>
+<li><a class="reference internal" href="#invalid-opcode-handling">Invalid opcode handling</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="arith.html"
+                        title="next chapter">Arithmetic instructions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/isa.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="arith.html" title="Arithmetic instructions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Code/data xfers to/from external memory &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="IO space" href="io.html" />
+    <link rel="prev" title="Interrupts" href="intr.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="io.html" title="IO space"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intr.html" title="Interrupts"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="code-data-xfers-to-from-external-memory">
+<span id="falcon-xfer"></span><h1><a class="toc-backref" href="#id1">Code/data xfers to/from external memory</a><a class="headerlink" href="#code-data-xfers-to-from-external-memory" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#code-data-xfers-to-from-external-memory" id="id1">Code/data xfers to/from external memory</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#xfer-special-registers" id="id3">xfer special registers</a></li>
+<li><a class="reference internal" href="#submitting-xfer-requests-xcld-xdld-xdst" id="id4">Submitting xfer requests: xcld, xdld, xdst</a></li>
+<li><a class="reference internal" href="#waiting-for-xfer-completion-xcwait-xdwait" id="id5">Waiting for xfer completion: xcwait, xdwait</a></li>
+<li><a class="reference internal" href="#submitting-xfer-requests-via-io-space" id="id6">Submitting xfer requests via IO space</a></li>
+<li><a class="reference internal" href="#xfer-queue-status-registers" id="id7">xfer queue status registers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The falcon has a builtin DMA controller that allows running asynchronous copies
+beteween falcon data/code segments and external memory.</p>
+<p>An xfer request consists of the following:</p>
+<ul class="simple">
+<li>mode: code load [external -&gt; falcon code], data load [external -&gt; falcon data],
+or data store [falcon data -&gt; external]</li>
+<li>external port: 0-7. Specifies which external memory space the xfer should
+use.</li>
+<li>external base: 0-0xffffffff. Shifted left by 8 bits to obtain the base
+address of the transfer in external memory.</li>
+<li>external offset: 0-0xffffffff. Offset in external memory, and for v3+
+code segments, virtual address that code should be loaded at.</li>
+<li>local address: 0-0xffff. Offset in falcon code/data segment where data should
+be transferred. Physical address for code xfers.</li>
+<li>xfer size: 0-6 for data xfers, ignored for code xfers [always effectively
+6]. The xfer copies (4&lt;&lt;size) bytes.</li>
+<li>secret flag: Secret engines code xfers only. Specifies if the xfer should
+load secret code.</li>
+</ul>
+<p>Note that xfer functionality is greatly enhanced on secret engines to cover
+copying data to/from crypto registers. See <a class="reference internal" href="crypt.html#falcon-crypt"><em>Cryptographic coprocessor</em></a> for details.</p>
+<p>xfer requests can be submitted either through special falcon instructions, or
+through poking IO registers. The requests are stored in a queue and processed
+asynchronously.</p>
+<p>A data load xfer copies (4&lt;&lt;$size) bytes from external memory port $port
+at address ($ext_base &lt;&lt; 8) + $ext_offset to falcon data segment at address
+$local_address. external offset and local address have to be aligned to the
+xfer size.</p>
+<p>A code load xfer copies 0x100 bytes from external memory port $port at address
+($ext_base &lt;&lt; 8) + $ext_offset to falcon code segment at physical address
+$local_address. Right after queuing the transfer, the code page is marked
+&#8220;busy&#8221; and, for v3+, mapped to virtual address $ext_offset. If the secret
+flag is set, it&#8217;ll also be set for the page. When the transfer is finished,
+The page flags are set to &#8220;usable&#8221; for non-secret pages, or &#8220;secret&#8221; for
+secret pages.</p>
+</div>
+<div class="section" id="xfer-special-registers">
+<span id="falcon-sr-xtargets"></span><span id="falcon-sr-xdbase"></span><span id="falcon-sr-xcbase"></span><h2><a class="toc-backref" href="#id3">xfer special registers</a><a class="headerlink" href="#xfer-special-registers" title="Permalink to this headline">¶</a></h2>
+<p>There are 3 falcon special registers that hold parameters for uc-originated xfer
+requests. $xdbase stores ext_base for data loads/stores, $xcbase stores
+ext_base for code loads. $xtargets stores the ports for various types of
+xfer:</p>
+<ul class="simple">
+<li>bits 0-2: port for code loads</li>
+<li>bits 8-10: port for data loads</li>
+<li>bits 12-14: port for data stores</li>
+</ul>
+<p>The external memory that falcon will use depends on the particular engine.
+See <a class="reference external" href="../graph/nvc0-ctxctl/memif.txt">../graph/nvc0-ctxctl/memif.txt</a> for NVC0 PGRAPH CTXCTLs,
+<a class="reference internal" href="memif.html#falcon-memif"><em>Memory interface</em></a> for the other engines.</p>
+</div>
+<div class="section" id="submitting-xfer-requests-xcld-xdld-xdst">
+<span id="falcon-isa-xfer"></span><h2><a class="toc-backref" href="#id4">Submitting xfer requests: xcld, xdld, xdst</a><a class="headerlink" href="#submitting-xfer-requests-xcld-xdld-xdst" title="Permalink to this headline">¶</a></h2>
+<p>These instruction submit xfer requests of the relevant type. ext_base
+and port are taken from $xdbase/$xcbase and $xtargets special registers.
+ext_offset is taken from first operand, local_address is taken from low 16
+bits of second operand, and size [for data xfers] is taken from bits 16-18
+of the second operand. Secret flag is taken from $cauth bit 16.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="17%" />
+<col width="46%" />
+<col width="38%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>xcld</td>
+<td>code load</td>
+<td>4</td>
+</tr>
+<tr class="row-odd"><td>xdld</td>
+<td>data load</td>
+<td>5</td>
+</tr>
+<tr class="row-even"><td>xdst</td>
+<td>data store</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>SRC1, SRC2</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>R2, R1</td>
+<td>fa</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == xcld)
+        XFER(mode=code_load, port=$xtargets[0:2], ext_base=$xcbase,
+                ext_offset=SRC1, local_address=(SRC2&amp;0xffff),
+                       secret=($cauth[16:16]));
+else if (op == xdld)
+        XFER(mode=data_load, port=$xtargets[8:10], ext_base=$xdbase,
+                ext_offset=SRC1, local_address=(SRC2&amp;0xffff),
+                       size=(SRC2&gt;&gt;16));
+else // xdst
+        XFER(mode=data_store, port=$xtargets[12:14], ext_base=$xdbase,
+                ext_offset=SRC1, local_address=(SRC2&amp;0xffff),
+                       size=(SRC2&gt;&gt;16));</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="waiting-for-xfer-completion-xcwait-xdwait">
+<span id="falcon-isa-xwait"></span><h2><a class="toc-backref" href="#id5">Waiting for xfer completion: xcwait, xdwait</a><a class="headerlink" href="#waiting-for-xfer-completion-xcwait-xdwait" title="Permalink to this headline">¶</a></h2>
+<p>These instructions wait until all xfers of the relevant type have finished.</p>
+<dl class="docutils">
+<dt>Instructions:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="11%" />
+<col width="73%" />
+<col width="16%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+<th class="head">Subopcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>xdwait</td>
+<td>wait for all data loads/stores to finish</td>
+<td>3</td>
+</tr>
+<tr class="row-odd"><td>xcwait</td>
+<td>wait for all code loads to finish</td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Instruction class:</dt>
+<dd>unsized</dd>
+<dt>Operands:</dt>
+<dd>[none]</dd>
+<dt>Forms:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="68%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Form</th>
+<th class="head">Opcode</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>[no operands]</td>
+<td>f8</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Operation:</dt>
+<dd><div class="first last highlight-python"><pre>if (op == xcwait)
+        while (XFER_ACTIVE(mode=code_load));
+else
+        while (XFER_ACTIVE(mode=data_load) || XFER_ACTIVE(mode=data_store));</pre>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="submitting-xfer-requests-via-io-space">
+<span id="falcon-io-xfer"></span><h2><a class="toc-backref" href="#id6">Submitting xfer requests via IO space</a><a class="headerlink" href="#submitting-xfer-requests-via-io-space" title="Permalink to this headline">¶</a></h2>
+<p>There are 4 IO registers that can be used to manually submit xfer reuqests.
+The request is sent out by writing XFER_CTRL register, other registers have
+to be set beforehand.</p>
+<dl class="docutils">
+<dt>MMIO 0x110 / I[0x04400]: XFER_EXT_BASE</dt>
+<dd>Specifies the ext_base for the xfer that will be launched by XFER_CTRL.</dd>
+<dt>MMIO 0x114 / I[0x04500]: XFER_LOCAL_ADDRESS</dt>
+<dd>Specifies the local_address for the xfer that will be launched by XFER_CTRL.</dd>
+<dt>MMIO 0x118 / I[0x04600]: XFER_CTRL</dt>
+<dd><p class="first">Writing requests a new xfer with given params, reading shows the last value
+written + two status flags</p>
+<ul class="last simple">
+<li>bit 0: pending [RO]: The last write to XFER_CTRL is still waiting for place
+in the queue. XFER_CTRL shouldn&#8217;t be written until this bit clears.</li>
+<li>bit 1: ??? [RO]</li>
+<li>bit 2: secret flag [secret engines only]</li>
+<li>bit 3: ??? [secret engines only]</li>
+<li>bits 4-5: mode<ul>
+<li>0: data load</li>
+<li>1: code load</li>
+<li>2: data store</li>
+</ul>
+</li>
+<li>bits 8-10: size</li>
+<li>bits 12-14: port</li>
+</ul>
+</dd>
+</dl>
+<dl class="docutils">
+<dt>MMIO 0x11c / I[0x04700]: XFER_EXT_OFFSET</dt>
+<dd>Specifies the ext_offset for the xfer that will be launched by XFER_CTRL.</dd>
+</dl>
+</div>
+<div class="section" id="xfer-queue-status-registers">
+<span id="falcon-io-xfer-status"></span><h2><a class="toc-backref" href="#id7">xfer queue status registers</a><a class="headerlink" href="#xfer-queue-status-registers" title="Permalink to this headline">¶</a></h2>
+<p>The status of the xfer queue can be read out through an IO register:</p>
+<dl class="docutils">
+<dt>MMIO 0x120 / I[0x04800]: XFER_STATUS</dt>
+<dd><ul class="first last simple">
+<li>bit 1: busy. 1 if any data xfer is pending.</li>
+<li>bits 4-5: ??? writable</li>
+<li>bits 16-18: number of data stores pending</li>
+<li>bits 24-26: number of data loads pending</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Code/data xfers to/from external memory</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#xfer-special-registers">xfer special registers</a></li>
+<li><a class="reference internal" href="#submitting-xfer-requests-xcld-xdld-xdst">Submitting xfer requests: xcld, xdld, xdst</a></li>
+<li><a class="reference internal" href="#waiting-for-xfer-completion-xcwait-xdwait">Waiting for xfer completion: xcwait, xdwait</a></li>
+<li><a class="reference internal" href="#submitting-xfer-requests-via-io-space">Submitting xfer requests via IO space</a></li>
+<li><a class="reference internal" href="#xfer-queue-status-registers">xfer queue status registers</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intr.html"
+                        title="previous chapter">Interrupts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="io.html"
+                        title="next chapter">IO space</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/xfer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="io.html" title="IO space"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intr.html" title="Interrupts"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

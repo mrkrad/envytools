@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Timers &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Performance monitoring signals" href="perf.html" />
+    <link rel="prev" title="IO space" href="io.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="perf.html" title="Performance monitoring signals"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="io.html" title="IO space"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="timers">
+<span id="falcon-timer"></span><h1><a class="toc-backref" href="#id1">Timers</a><a class="headerlink" href="#timers" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#timers" id="id1">Timers</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#periodic-timer" id="id3">Periodic timer</a></li>
+<li><a class="reference internal" href="#watchdog-timer" id="id4">Watchdog timer</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Time and timer-related registers are the same on all falcon engines, except
+PGRAPH CTXCTLs which lack PTIMER access.</p>
+<p>You can:</p>
+<ul class="simple">
+<li>Read PTIMER&#8217;s clock</li>
+<li>Use a periodic timer: Generate an interrupt periodically</li>
+<li>Use a watchdog/one-shot timer: Generate an interrupt once in the future</li>
+</ul>
+<p>Also note that the CTXCTLs have another watchdog timer on their own - see
+<a class="reference external" href="../graph/nvc0-ctxctl/intro.txt">../graph/nvc0-ctxctl/intro.txt</a> for more information.</p>
+</div>
+<div class="section" id="periodic-timer">
+<span id="falcon-io-periodic"></span><span id="falcon-intr-periodic"></span><h2><a class="toc-backref" href="#id3">Periodic timer</a><a class="headerlink" href="#periodic-timer" title="Permalink to this headline">¶</a></h2>
+<p>All falcon engines have a periodic timer. This timer generates periodic interrupts
+on interrupt line. The registers controlling this timer are:</p>
+<dl class="docutils">
+<dt>MMIO 0x020 / I[0x00800]: PERIODIC_PERIOD</dt>
+<dd>A 32-bit register defining the period of the periodic timer, minus 1.</dd>
+<dt>MMIO 0x024 / I[0x00900]: PERIODIC_TIME</dt>
+<dd>A 32-bit counter storing the time remaining before the tick.</dd>
+<dt>MMIO 0x028 / I[0x00a00]: PERIODIC_ENABLE</dt>
+<dd>bit 0: Enable the periodic timer. If 0, the counter doesn&#8217;t change and no
+interrupts are generated.</dd>
+</dl>
+<p>When the counter is enabled, PERIODIC_TIME decreases by 1 every clock cycle.
+When PERIODIC_TIME reaches 0, an interrupt is generated on line 0 and the
+counter is reset to PERIODIC_PERIOD.</p>
+<p>Operation (after each falcon core clock tick):</p>
+<div class="highlight-python"><pre>if (PERIODIC_ENABLE) {
+        if (PERIODIC_TIME == 0) {
+                PERIODIC_TIME = PERIODIC_PERIOD;
+                intr_line[0] = 1;
+        } else {
+                PERIODIC_TIME--;
+                intr_line[0] = 0;
+        }
+} else {
+        intr_line[0] = 0;
+}</pre>
+</div>
+<p id="falcon-io-ptimer">= PTIMER access =</p>
+<p>The falcon engines other than PGRAPH&#8217;s CTXCTLs have PTIMER&#8217;s time registers
+aliased into their IO space. aliases are:</p>
+<dl class="docutils">
+<dt>MMIO 0x02c / I[0x00b00]: TIME_LOW</dt>
+<dd>Alias of PTIMER&#8217;s TIME_LOW register [MMIO 0x9400]</dd>
+<dt>MMIO 0x030 / I[0x00c00]: TIME_HIGH</dt>
+<dd>Alias of PTIMER&#8217;s TIME_HIGH register [MMIO 0x9410]</dd>
+</dl>
+<p>Both of these registers are read-only. See <a class="reference internal" href="../bus/ptimer.html#ptimer"><em>PTIMER: Timer engine</em></a> for more information
+about PTIMER.</p>
+</div>
+<div class="section" id="watchdog-timer">
+<span id="falcon-io-watchdog"></span><span id="falcon-intr-watchdog"></span><h2><a class="toc-backref" href="#id4">Watchdog timer</a><a class="headerlink" href="#watchdog-timer" title="Permalink to this headline">¶</a></h2>
+<p>Apart from a periodic timer, the falcon engines also have an independent one-shot
+timer, also called watchdog timer. It can be used to set up a single interrupt
+in near future. The registers are:</p>
+<dl class="docutils">
+<dt>MMIO 0x034 / I[0x00d00]: WATCHDOG_TIME</dt>
+<dd>A 32-bit counter storing the time remaining before the interrupt.</dd>
+<dt>MMIO 0x038 / I[0x00e00]: WATCHDOG_ENABLE</dt>
+<dd>bit 0: Enable the watchdog timer. If 0, the counter doesn&#8217;t change and no
+interrupts are generated.</dd>
+</dl>
+<p>A classic use of a watchdog is to set it before calling a sensitive function by
+initializing it to, for instance, twice the usual time needed by this function to
+be executed.</p>
+<p>In falcon&#8217;s case, the watchdog doesn&#8217;t reboot the µc. Indeed, it is very similar to
+the periodic timer. The differences are:</p>
+<ul class="simple">
+<li>it generates an interrupt on line 1 instead of 0.</li>
+<li>it needs to be reset manually</li>
+</ul>
+<p>Operation (after each falcon core clock tick):</p>
+<div class="highlight-python"><pre>if (WATCHDOG_ENABLE) {
+        if (WATCHDOG_TIME == 0) {
+                intr_line[1] = 1;
+        } else {
+                WATCHDOG_TIME--;
+                intr_line[1] = 0;
+        }
+} else {
+        intr_line[1] = 0;
+}</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Timers</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#periodic-timer">Periodic timer</a></li>
+<li><a class="reference internal" href="#watchdog-timer">Watchdog timer</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="io.html"
+                        title="previous chapter">IO space</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="perf.html"
+                        title="next chapter">Performance monitoring signals</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/falcon/timer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="perf.html" title="Performance monitoring signals"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="io.html" title="IO space"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >falcon microprocessor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,555 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Hardware sequencer &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="PCI/PCIE/AGP bus interface and card management logic" href="index.html" />
+    <link rel="next" title="PRMA: Real mode MMIO access" href="prma.html" />
+    <link rel="prev" title="PBUS area" href="pbus.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="prma.html" title="PRMA: Real mode MMIO access"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pbus.html" title="PBUS area"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="hardware-sequencer">
+<span id="hwsq"></span><h1><a class="toc-backref" href="#id1">Hardware sequencer</a><a class="headerlink" href="#hardware-sequencer" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#hardware-sequencer" id="id1">Hardware sequencer</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
+<li><a class="reference internal" href="#code-space" id="id4">Code space</a></li>
+<li><a class="reference internal" href="#opcodes" id="id5">Opcodes</a></li>
+<li><a class="reference internal" href="#script-execution" id="id6">Script execution</a></li>
+<li><a class="reference internal" href="#ptimer-wait-opcodes" id="id7">PTIMER wait opcodes</a></li>
+<li><a class="reference internal" href="#flags" id="id8">Flags</a></li>
+<li><a class="reference internal" href="#mmio-poke-opcodes" id="id9">MMIO poke opcodes</a></li>
+<li><a class="reference internal" href="#events" id="id10">Events</a></li>
+<li><a class="reference internal" href="#framebuffer-pause-feature" id="id11">Framebuffer pause feature</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>HWSQ is a very limitted programmable &#8220;microcontroller&#8221; present on NV17:NV20
+and NV25:NVC0 cards. Its capabilities include: setting/clearing several
+register bits all around the card, waiting a fixed amount of time, waiting
+for one of a small predefined set of events [NV41+ only], and writing
+arbitrary values to arbitrary MMIO registers [NV41+ only].</p>
+<p>There is no control flow, no GPRs, no arithmetic. It&#8217;s only possible to
+execute a very simple preconfigured series of commands from start to finish.</p>
+<p>Most HWSQ registers reside inside of <a class="reference internal" href="pbus.html#pbus-mmio"><em>PBUS MMIO area</em></a>.</p>
+</div>
+<div class="section" id="mmio-registers">
+<span id="hwsq-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+<p>no annotation - NV17:NVC0
+[1] NV17:NV41
+[2] NV41:NV50
+[3] NV50:NVC0
+[4] NV92:NVC0</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="37%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Variants</th>
+<th class="head">Name</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>001098 bit 3</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>HWSQ_ENABLE</td>
+</tr>
+<tr class="row-odd"><td>001098 bit 4</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>HWSQ_OVERRIDE_MODE</td>
+</tr>
+<tr class="row-even"><td>001304</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>ENTRY_POINT</td>
+</tr>
+<tr class="row-odd"><td>001308</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>STATUS</td>
+</tr>
+<tr class="row-even"><td>00130c</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>TRIGGER</td>
+</tr>
+<tr class="row-odd"><td>001310</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>FLAGS_0</td>
+</tr>
+<tr class="row-even"><td>001314</td>
+<td>NV17:NV20 NV25:NVC0</td>
+<td>FLAGS_1</td>
+</tr>
+<tr class="row-odd"><td>001318</td>
+<td>NV92:NVC0</td>
+<td>ENTRY_POINT_HIGH</td>
+</tr>
+<tr class="row-even"><td>001400:001440</td>
+<td>NV17:NV20 NV25:NV41</td>
+<td>CODE</td>
+</tr>
+<tr class="row-odd"><td>001400:001480</td>
+<td>NV41:NV50</td>
+<td>CODE</td>
+</tr>
+<tr class="row-even"><td>001400:001500</td>
+<td>NV50:NVC0</td>
+<td>CODE</td>
+</tr>
+<tr class="row-odd"><td>001578</td>
+<td>NV41:NV50</td>
+<td>EVENTS</td>
+</tr>
+<tr class="row-even"><td>080000:080200</td>
+<td>NV92:NVC0</td>
+<td>NEW_CODE</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="code-space">
+<span id="pbus-hwsq-new-code-mmio"></span><h2><a class="toc-backref" href="#id4">Code space</a><a class="headerlink" href="#code-space" title="Permalink to this headline">¶</a></h2>
+<p>The HWSQ commands are stored in dedicated code RAM. The code RAM is 0x40
+bytes long on NV17:NV41 cards, 0x80 bytes long on NV41:NV50, 0x100 bytes long
+on NV50:NV92, and 0x200 bytes long on NV92+.</p>
+<p>The code RAM is byte-oriented, but the MMIO registers used to access it are
+word-oriented, and touch 4 bytes at once. They are treated as little-endian:
+bits 0-7 of the word touch byte 0, bits 8-15 touch byte 1, 16-23 touch byte 2,
+24-31 touch byte 3.</p>
+<p>The code RAM is direct-mapped to MMIO space. On all cards, accessing a word
+at MMIO 0x1400 + i, where 0 &lt;= i &lt; 0x100, i &lt; code RAM size, and i is
+divisible by 4, accesses bytes i..i+3 of code RAM. On NV92+, due to
+increased code RAM size, a new code RAM access window has been introduced
+at MMIO 0x080000: MMIO 0x80000 + i, where 0 &lt;= i &lt; 0x200 and i is divisible
+by 4, accesses bytes i..i+3 of code RAM. The old 0x1400 window still exists,
+but is limitted to first 0x100 bytes of code RAM.</p>
+<p>MMIO 0x1400 + [0..0xf] * 4: CODE [NV17:NV41]
+MMIO 0x1400 + [0..0x1f] * 4: CODE [NV41:NV50]
+MMIO 0x1400 + [0..0x3f] * 4: CODE [NV50:NVC0]
+MMIO 0x80000 + [0..0x7f] * 4: NEW_CODE [NV92:NVC0]</p>
+<blockquote>
+<div>Index i accesses code RAM bytes i*4, i*4+1, i*4+2, i*4+3, mapped to bits
+0-7, 8-15, 16-23, 24-31 respectively.</div></blockquote>
+</div>
+<div class="section" id="opcodes">
+<h2><a class="toc-backref" href="#id5">Opcodes</a><a class="headerlink" href="#opcodes" title="Permalink to this headline">¶</a></h2>
+<p>The HWSQ opcodes are variable-length, most are a single byte. The first byte
+determines the length of the opcode. The valid opcodes [or their first bytes]
+are:</p>
+<ul class="simple">
+<li>0x00-0x3f: wait - waits a fixed amount of PTIMER clocks [single byte]</li>
+<li>0x40: addrlo - sets low 16 bits of MMIO address and executes MMIO write [3 bytes] [NV41+ only]</li>
+<li>0x42: datalo - sets low 16 bits of MMIO data [3 bytes] [NV41+ only]</li>
+<li>0x5f: ewait - waits for an event [3 bytes] [NV41+ only]</li>
+<li>0x7f: exit - finishes HWSQ execution [single byte]</li>
+<li>0x80-0x9f: unset - sets a flag to &#8220;don&#8217;t touch&#8221; [single byte]</li>
+<li>0xa0-0xbf: set1 - sets a flag to &#8220;override to 1&#8221; [single byte]</li>
+<li>0xc0-0xdf: set0 - sets a flag to &#8220;override to 0&#8221; [single byte]</li>
+<li>0xe0: addr - sets MMIO address and executes MMIO write [5 bytes] [NV41+ only]</li>
+<li>0xe2: data - sets MMIO data [5 bytes] [NV41+ only]</li>
+</ul>
+</div>
+<div class="section" id="script-execution">
+<h2><a class="toc-backref" href="#id6">Script execution</a><a class="headerlink" href="#script-execution" title="Permalink to this headline">¶</a></h2>
+<p>HWSQ execution has to be started manually by the host every time the script
+is to be executed. The execution can begin at arbitrary point and continues
+until the &#8220;exit&#8221; opcode is executed.</p>
+<p>First, the entry point needs to be set. There are 4 entry points, selectable
+when triggering the execution start. They are set through the ENTRY_POINT
+registers:</p>
+<dl class="docutils">
+<dt>MMIO 0x001304: ENTRY_POINT</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: bits 0-7 of entry point 0 address</li>
+<li>bits 8-15: bits 0-7 of entry point 1 address</li>
+<li>bits 16-23: bits 0-7 of entry point 2 address</li>
+<li>bits 24-31: bits 0-7 of entry point 3 address</li>
+</ul>
+</dd>
+<dt>MMIO 0x001318: ENTRY_POINT_HIGH [NV92:NVC0]</dt>
+<dd><ul class="first last simple">
+<li>bit 0: bit 8 of entry point 0 address</li>
+<li>bit 8: bit 8 of entry point 1 address</li>
+<li>bit 16: bit 8 of entry point 2 address</li>
+<li>bit 24: bit 8 of entry point 3 address</li>
+</ul>
+</dd>
+</dl>
+<p>Once entry points are set and the code is uploaded, scripts can be started by
+poking the TRIGGER register. The NV17:NV92 HWSQ hardware has support for two
+HWSQ &#8220;execution slots&#8221;, with independent instruction pointers. However, they
+have no support for concurrent execution: a long wait on one of the slots will
+also hang the other. NV92+ have only one execution slot.</p>
+<dl class="docutils">
+<dt>MMIO 0x00130c: TRIGGER [write only]</dt>
+<dd><ul class="first last simple">
+<li>bit 0: trigger type. 0 aborts execution, 1 starts execution.</li>
+<li>bit 1: slot. 0 means slot B, 1 means slot A [NV17:NV92 only]</li>
+<li>bits 2-3: entry point selection [for start trigger only]</li>
+</ul>
+</dd>
+</dl>
+<p>Execution status can be monitored through the STATUS register:</p>
+<dl class="docutils">
+<dt>MMIO 0x001308: STATUS [read only]</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: bits 0-7 of current slot A IP [instruction pointer]. The IP is the
+address of the <em>next</em> instruction to be fetched, so if HWSQ is
+currently executing a wait opcode, this will point to the byte
+after the opcode. After the script exits normally, it&#8217;ll point
+to the exit instruction - exit doesn&#8217;t increase the IP.</li>
+<li>bit 8: 1 if HWSQ slot A is currently executing, 0 if not</li>
+<li>bit 9: 1 if HWSQ slot A encountered an unknown opcode [NV41:NV92 only]</li>
+<li>bit 10: bit 8 of current slot A IP [NV92+ only]</li>
+<li>bits 16-31: like bits 0-15, but for slot B [NV17:NV92 only]</li>
+</ul>
+</dd>
+</dl>
+<p>When HWSQ hits an unknown opcode on NV41:NV92 cards, the &#8220;illegal opcode&#8221; bit
+in STATUS register is lit, and the execution hangs. The HWSQ slot is still
+considered executing, however, and needs to be manually aborted. On NV17:NV41
+and NV92:NVC0, unknown opcodes are treated as 1-byte nops.</p>
+<p>HWSQ execution can end by hitting an &#8220;exit&#8221; opcode, or manual abort. The exit
+opcode is:</p>
+<dl class="docutils">
+<dt>Opcode: 0x7f - exit</dt>
+<dd>Stops HWSQ execution on a given slot. IP is not incremented.</dd>
+</dl>
+<p>Manual abort is executed by poking the TRIGGER register with type set to
+abort. Note that, in some cases on wait instructions, the abort triggers
+an unknown opcode condition and the script hangs instead - a second abort
+is needed to clear the unknown opcode condition and actually abort the
+execution.</p>
+</div>
+<div class="section" id="ptimer-wait-opcodes">
+<h2><a class="toc-backref" href="#id7">PTIMER wait opcodes</a><a class="headerlink" href="#ptimer-wait-opcodes" title="Permalink to this headline">¶</a></h2>
+<p>The PTIMER wait opcodes are used to insert constant delays into a script. The
+delays are selectable by a simple encoding style, and are counted in PTIMER
+clocks. A PTIMER clock here is considered to be the actual clock at which the
+TIME_* registers are increased - ie. a single clock is what causes the TIME_*
+registers to increase by 0x20.</p>
+<p>The opcodes are:</p>
+<dl class="docutils">
+<dt>Opcode: 0x00-0x3f - wait #wait_length shl #(wait_shift * 2)</dt>
+<dd><ul class="first simple">
+<li>opcode bits 0-1: wait_length [0-3]</li>
+<li>opcode bits 2-5: wait_shift [0-15] - written in the assembler instruction
+premultiplied by 2.</li>
+</ul>
+<p class="last">Delays next HWSQ opcode execution by (wait_length &lt;&lt; (wait_shift * 2)) * 0x20
+PTIMER clocks. If PTIMER uses standard calibration values, this corresponds
+to (wait_length &lt;&lt; (wait_shift * 2)) µs.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="flags">
+<h2><a class="toc-backref" href="#id8">Flags</a><a class="headerlink" href="#flags" title="Permalink to this headline">¶</a></h2>
+<p>The main purpose of HWSQ on pre-NV41 chipsets is to twiddle various bits in
+registers all around the card. They&#8217;re called &#8220;HWSQ flags&#8221;. There are 32
+flags. A flag can be in one of 3 states:</p>
+<ul class="simple">
+<li>unset: the value of corresponding register bit is unaffected</li>
+<li>override to 0: the value of corresponding register bit is forced to 0, and
+cannot be changed by normal means</li>
+<li>override to 1: the value of corresponding register bit is forced to 1, and
+cannot be changed by normal means</li>
+</ul>
+<p>The current state of HWSQ flags can be accessed by the FLAGS registers:</p>
+<dl class="docutils">
+<dt>MMIO 0x001310: FLAGS_0</dt>
+<dd><ul class="first last simple">
+<li>bits 0-15: values of flags 0-15. If override is enabled for a flag, this is
+what the corresponding register bit should be forced to.
+Otherwise, it is ignored.</li>
+<li>bits 15-31: override enables of flags 0-15. If the bit corresponding to
+a given flag is set, the flag is in one of the override states,
+otherwise it&#8217;s in the unset state.</li>
+</ul>
+</dd>
+<dt>MMIO 0x001314: FLAGS_1</dt>
+<dd>Like FLAGS_0, but for flags 16-31.</dd>
+</dl>
+<p>The flags state can be modified from HWSQ scripts by using one of the flag
+opcodes:</p>
+<dl class="docutils">
+<dt>Opcode: 0x80-0x9f - unset #flag</dt>
+<dd><ul class="first simple">
+<li>bits 0-4: flag index</li>
+</ul>
+<p class="last">Switches the selected flag to &#8220;unset&#8221; state.</p>
+</dd>
+<dt>Opcode: 0xa0-0xbf - set1 #flag</dt>
+<dd><ul class="first simple">
+<li>bits 0-4: flag index</li>
+</ul>
+<p class="last">Switches the selected flag to &#8220;override to 1&#8221; state.</p>
+</dd>
+<dt>Opcode: 0xc0-0xdf - set0 #flag</dt>
+<dd><ul class="first simple">
+<li>bits 0-4: flag index</li>
+</ul>
+<p class="last">Switches the selected flag to &#8220;override to 0&#8221; state.</p>
+</dd>
+</dl>
+<p>The flag behavior is additionally controlled by two bits in PBUS.DEBUG_6
+register:</p>
+<dl class="docutils">
+<dt>MMIO 0x001098 bit 3: HWSQ_ENABLE</dt>
+<dd>When set to 1, flag overrides and MMIO accesses will work. When set to 0,
+HWSQ programs will execute, but flag overrides will be ignored, and MMIO
+accesses will hang until HWSQ_ENABLE is set to 1.</dd>
+<dt>MMIO 0x001098 bit 4: HWSQ_OVERRIDE_MODE</dt>
+<dd><p class="first">Selects the value that will be returned when reading register bits
+overriden by HWSQ flags. Values:</p>
+<ul class="last simple">
+<li>0: READ_NORMAL - the value read from the overriden register by MMIO will
+be the pre-override value. However, the overriden values will be
+still used internally by hw.</li>
+<li>1: READ_OVERRIDE - the value read from the overriden register by MMIO
+will be the one provided by HWSQ.</li>
+</ul>
+</dd>
+</dl>
+<p>The known flags are:</p>
+<ul class="simple">
+<li>0: 60081c/60281c/CR4d b0 [NV17:NV50] [io/nv10-gpio.txt]</li>
+<li>1: 60081c/60281c/CR4d b1 [NV17:NV50] [io/nv10-gpio.txt]</li>
+<li>2: 60081c/60281c/CR4d b4 [NV17:NV50] [io/nv10-gpio.txt]</li>
+<li>3: 60081c/60281c/CR4d b5 [NV17:NV50] [io/nv10-gpio.txt]</li>
+<li>4: 680880 b28 [NV17:NV40] [display/nv03/pramdac.txt] [XXX: check variants, some NV4x could have it]</li>
+<li>5: 682880 b28 [NV17:NV40] [display/nv03/pramdac.txt]</li>
+<li>6: 680880 b29 [NV17:NV50] [display/nv03/pramdac.txt]</li>
+<li>7: 682880 b29 [NV17:NV50] [display/nv03/pramdac.txt]</li>
+<li>14: 60081c/60281c b28 [NV31:NV50] [io/nv10-gpio.txt] [XXX: check variants]</li>
+<li>15: 60081c/60281c b29 [NV31:NV50] [io/nv10-gpio.txt]</li>
+<li>16: FB_PAUSE [NV41-] [see below]</li>
+<li>25: 15fc b31 [NV41:NV50] [io/nv10-gpio.txt]</li>
+<li>26: 15f4 b31 [NV41:NV50] [io/nv10-gpio.txt]</li>
+<li>27: 10f0 b31 [NV17:NV50] [io/nv10-gpio.txt]</li>
+<li>28: 1084 b22 [NV17:NV50] [XXX]</li>
+<li>29: 1084 b24 [NV17:NV50] [XXX]</li>
+<li>30: 1084 b26 [NV17:NV50] [XXX]</li>
+<li>31: 1084 b27 [NV17:NV50] [XXX]</li>
+</ul>
+</div>
+<div class="section" id="mmio-poke-opcodes">
+<h2><a class="toc-backref" href="#id9">MMIO poke opcodes</a><a class="headerlink" href="#mmio-poke-opcodes" title="Permalink to this headline">¶</a></h2>
+<p>On NV41+ cards, HWSQ can write arbitrary values to arbitrary MMIO addresses.
+This is done in two parts: first, the data value has to be set with one of
+the &#8220;set data&#8221; opcodes, then the MMIO address should be set using the &#8220;set
+address&#8221; opcode. The opcode setting the address also triggers the MMIO write.</p>
+<p>If a script writes multiple MMIO registers, it may make use of the &#8220;short&#8221;
+data and address opcodes. They take a 16-bit parameter, filling the high 16
+bits with the high 16 bits of previously used value.</p>
+<p>Thus, there are 2 32-bit state registers used for MMIO poke opcodes: ADDR
+and DATA. Both of these registers are per-slot on chipsets that have two
+executions slots. These registers are not directly accessible through MMIO.</p>
+<dl class="docutils">
+<dt>Opcode: 0xe2 &lt;b0:7&gt; &lt;b8:15&gt; &lt;b16:23&gt; &lt;b24:31&gt; - data #imm32 [NV41+]</dt>
+<dd><p class="first">This is a 5-byte opcode. First byte is the actual opcode, while the next
+bytes specify the 32-bit immediate value.</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">DATA</span> <span class="o">=</span> <span class="n">imm32</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd>
+<dt>Opcode: 0x42 &lt;b0:7&gt; &lt;b8:15&gt; - datalo #imm16 [NV41+]</dt>
+<dd>This is a 3-byte opcode. First byte is the actual opcode, while the next
+bytes specify the 16-bit immediate value.
+DATA = (DATA &amp; 0xffff0000) | imm16;</dd>
+<dt>Opcode: 0xe0 &lt;b0:7&gt; &lt;b8:15&gt; &lt;b16:23&gt; &lt;b24:31&gt; - addr #imm32 [NV41+]</dt>
+<dd><p class="first">This is a 5-byte opcode. First byte is the actual opcode, while the next
+bytes specify the 32-bit immediate value.</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">ADDR</span> <span class="o">=</span> <span class="n">imm32</span><span class="p">;</span>
+<span class="n">MMIO_WR32</span><span class="p">(</span><span class="n">ADDR</span><span class="p">,</span> <span class="n">DATA</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+<dt>Opcode: 0x40 &lt;b0:7&gt; &lt;b8:15&gt; - addrlo #imm16 [NV41+]</dt>
+<dd><p class="first">This is a 3-byte opcode. First byte is the actual opcode, while the next
+bytes specify the 16-bit immediate value.</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="n">ADDR</span> <span class="o">=</span> <span class="p">(</span><span class="n">ADDR</span> <span class="o">&amp;</span> <span class="mh">0xffff0000</span><span class="p">)</span> <span class="o">|</span> <span class="n">imm16</span><span class="p">;</span>
+<span class="n">MMIO_WR32</span><span class="p">(</span><span class="n">ADDR</span><span class="p">,</span> <span class="n">DATA</span><span class="p">);</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>For the addr and addrlo instructions to work, and the pokes to be executed,
+HWSQ_ENABLE bit has to be set to 1.</p>
+</div>
+<div class="section" id="events">
+<h2><a class="toc-backref" href="#id10">Events</a><a class="headerlink" href="#events" title="Permalink to this headline">¶</a></h2>
+<p>On NV41+ cards, HWSQ can wait for certain events to happen [in addition to
+plain time-based waits from older cards]. An event is a 1-bit signal coming
+from some part of the GPU. There can be up to 32 events, depending on the GPU.
+The current state of all events can be read by the EVENTS register:</p>
+<dl class="docutils">
+<dt>MMIO 0x001578: EVENTS [NV41-]</dt>
+<dd><ul class="first last simple">
+<li>bits 0-31: values of events 0-31.</li>
+</ul>
+</dd>
+</dl>
+<p>The events can be waited on from HWSQ scripts by using the ewait opcode. HWSQ
+can wait for both a 0 value and a 1 value on events.</p>
+<dl class="docutils">
+<dt>Opcode: 0x5f &lt;e&gt; &lt;v&gt; - ewait #event #value</dt>
+<dd>This is a 3-byte opcode. First byte is the actual opcode, second byte
+specifies the event to wait on, third byte specifies the value to wait on.
+Delays next HWSQ opcode execution until given event has the given value.</dd>
+</dl>
+<p>The events are:</p>
+<ul class="simple">
+<li>0: FB_PAUSED [see below]</li>
+<li>1: CRTC0_VBLANK [display/nv03/vga.txt, display/nv50/pdisplay.txt]</li>
+<li>2: CRTC0_HBLANK [display/nv03/vga.txt, display/nv50/pdisplay.txt]</li>
+<li>3: CRTC1_VBLANK [display/nv03/vga.txt, display/nv50/pdisplay.txt]</li>
+<li>4: CRTC1_HBLANK [display/nv03/vga.txt, display/nv50/pdisplay.txt]</li>
+</ul>
+</div>
+<div class="section" id="framebuffer-pause-feature">
+<h2><a class="toc-backref" href="#id11">Framebuffer pause feature</a><a class="headerlink" href="#framebuffer-pause-feature" title="Permalink to this headline">¶</a></h2>
+<p>One purpose of HWSQ is memory reclocking. Memory reclocking can only be done
+reliably if noone accesses the memory while it&#8217;s being reclocked. Thus HWSQ
+can request memory accesses to be blocked for a while. This is done by
+flag #16, FB_PAUSE. This pause functionality is present on NV41:NVC0 cards.</p>
+<p>The FB_PAUSE flag, as opposed to all other flags, doesn&#8217;t override any actual
+register bitfield - the signal it controls can only be set via that flag.
+Framebuffer pause is thus active iff flag #16 is in &#8220;override to 1&#8221; state.
+FB_PAUSE is also unaffected by the HWSQ_ENABLE bit.</p>
+<p>Framebuffer pausing doesn&#8217;t work immediately and the HWSQ has to wait until
+the framebuffer is actually paused. The FB_PAUSED event is provided for that.
+The FB_PAUSED event is set to 1 iff framebuffer pause has been requested by
+HWSQ and completed by memory controller.</p>
+<p>On NV41:NV50, framebuffer pause will indefinitely block all accesses to memory
+until it&#8217;s unpaused. This includes accesses from the host via BAR1, BAR2,
+PEEPHOLE, and the PRAMIN range.</p>
+<p>On NV50+, framebuffer pause not only blocks memory accesses, it additionally
+blocks all accesses to the GPU from host - including MMIO accesses.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Hardware sequencer</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#code-space">Code space</a></li>
+<li><a class="reference internal" href="#opcodes">Opcodes</a></li>
+<li><a class="reference internal" href="#script-execution">Script execution</a></li>
+<li><a class="reference internal" href="#ptimer-wait-opcodes">PTIMER wait opcodes</a></li>
+<li><a class="reference internal" href="#flags">Flags</a></li>
+<li><a class="reference internal" href="#mmio-poke-opcodes">MMIO poke opcodes</a></li>
+<li><a class="reference internal" href="#events">Events</a></li>
+<li><a class="reference internal" href="#framebuffer-pause-feature">Framebuffer pause feature</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pbus.html"
+                        title="previous chapter">PBUS area</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="prma.html"
+                        title="next chapter">PRMA: Real mode MMIO access</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/bus/hwsq.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="prma.html" title="PRMA: Real mode MMIO access"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pbus.html" title="PBUS area"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >PCI/PCIE/AGP bus interface and card management logic</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

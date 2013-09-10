@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>falcon parameters &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="IO register space" href="../pdaemon/io.html" />
+    <link rel="prev" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/io.html" title="IO register space"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/index.html" title="PDAEMON: card management microprocesor"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="falcon-parameters">
+<span id="pdaemon-falcon"></span><h1>falcon parameters<a class="headerlink" href="#falcon-parameters" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Present on:</dt>
+<dd>v0:
+NVA3:NVAF
+v1:
+NVAF:NVC0
+v2:
+NVC0:NVD9
+v3:
+NVD9:NVE4
+v4:
+NVE4+</dd>
+<dt>BAR0 address:</dt>
+<dd>0x10a000</dd>
+<dt>PMC interrupt line:</dt>
+<dd>v0-v1:
+18
+v2+:
+24</dd>
+<dt>PMC enable bit:</dt>
+<dd>v0-v1:
+none, use reg 0x22210 instead
+v2+:
+13</dd>
+<dt>Version:</dt>
+<dd>v0-v2:
+3
+v3,v4:
+4</dd>
+<dt>Code segment size:</dt>
+<dd>v0:
+0x4000
+v1+:
+0x6000</dd>
+<dt>Data segment size:</dt>
+<dd>v0:
+0x3000
+v1+:
+0x6000</dd>
+<dt>Fifo size:</dt>
+<dd>v0-v1:
+0x10
+v2+:
+3</dd>
+<dt>Xfer slots:</dt>
+<dd>v0-v2:
+8
+v3-v4:
+0x10</dd>
+<dt>Secretful:</dt>
+<dd>no</dd>
+<dt>Code TLB index bits:</dt>
+<dd>v0-v2:
+8
+v3-v4:
+9</dd>
+<dt>Code ports:</dt>
+<dd>1</dd>
+<dt>Data ports:</dt>
+<dd>4</dd>
+<dt>Version 4 unknown caps:</dt>
+<dd>31</dd>
+<dt>Unified address space:</dt>
+<dd>yes [on v3, v4]</dd>
+<dt>IO addressing type:</dt>
+<dd>v0-v2:
+indexed
+v3-v4:
+simple</dd>
+<dt>Core clock:</dt>
+<dd><dl class="first last docutils">
+<dt>v0-v1:</dt>
+<dd><a class="reference internal" href="../nva3-clock.html#nva3-clock-dclk"><em>DCLK: daemon clock</em></a></dd>
+<dt>v2-v4:</dt>
+<dd><a class="reference internal" href="../nvc0-clock.html#nvc0-clock-dclk"><em>DCLK: daemon clock</em></a></dd>
+</dl>
+</dd>
+<dt>NV50 VM engine:</dt>
+<dd>0xe</dd>
+<dt>NV50 VM client:</dt>
+<dd>0x11</dd>
+<dt>NV50 context DMA:</dt>
+<dd>[none]</dd>
+<dt>NVC0 VM engine:</dt>
+<dd>0x17</dd>
+<dt>NVC0 VM client:</dt>
+<dd>HUB 0x12</dd>
+<dt>Interrupts:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="4%" />
+<col width="4%" />
+<col width="9%" />
+<col width="15%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Line</th>
+<th class="head">Type</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>8</td>
+<td>edge</td>
+<td>NVA3:NVC0</td>
+<td>MEMIF_PORT_INVALID</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-port-invalid"><em>MEMIF port not initialised</em></a></td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>edge</td>
+<td>NVA3:NVC0</td>
+<td>MEMIF_FAULT</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-fault"><em>MEMIF VM fault</em></a></td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>edge</td>
+<td>NVC0-</td>
+<td>MEMIF_BREAK</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-break"><em>MEMIF breakpoint</em></a></td>
+</tr>
+<tr class="row-odd"><td>10</td>
+<td>level</td>
+<td>all</td>
+<td>PMC_DAEMON</td>
+<td><a class="reference internal" href="../../bus/pmc.html#pdaemon-intr-pmc-daemon"><em>PMC interrupts routed directly to PDAEMON</em></a></td>
+</tr>
+<tr class="row-even"><td>11</td>
+<td>level</td>
+<td>all</td>
+<td>SUBINTR</td>
+<td><a class="reference internal" href="../pdaemon/subintr.html#pdaemon-intr-subintr"><em>second-level interrupt</em></a></td>
+</tr>
+<tr class="row-odd"><td>12</td>
+<td>level</td>
+<td>all</td>
+<td>THERM</td>
+<td><a class="reference internal" href="../pdaemon/therm.html#pdaemon-intr-therm"><em>PTHERM subinterrupts routed to PDAEMON</em></a></td>
+</tr>
+<tr class="row-even"><td>13</td>
+<td>level</td>
+<td>all</td>
+<td>SIGNAL</td>
+<td><a class="reference internal" href="../pdaemon/signal.html#pdaemon-intr-signal"><em>input signal rise/fall interrupts</em></a></td>
+</tr>
+<tr class="row-odd"><td>14</td>
+<td>level</td>
+<td>all</td>
+<td>TIMER</td>
+<td><a class="reference internal" href="../pdaemon/timer.html#pdaemon-intr-timer"><em>the timer interrupt</em></a></td>
+</tr>
+<tr class="row-even"><td>15</td>
+<td>level</td>
+<td>all</td>
+<td>IREDIR_PMC</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-intr-iredir-pmc"><em>PMC interrupts redirected to PDAEMON by IREDIR</em></a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Status bits:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="6%" />
+<col width="11%" />
+<col width="11%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Bit</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>all</td>
+<td>FALCON</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-status"><em>Falcon unit</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>all</td>
+<td>EPWR_GRAPH</td>
+<td><a class="reference internal" href="../pdaemon/epwr.html#pdaemon-status-epwr"><em>PGRAPH engine power gating</em></a></td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>all</td>
+<td>EPWR_VDEC</td>
+<td><a class="reference internal" href="../pdaemon/epwr.html#pdaemon-status-epwr"><em>video decoding engine power gating</em></a></td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-status"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>NVA3:NVAF
+NVC0-</td>
+<td>USER</td>
+<td><a class="reference internal" href="../pdaemon/user.html#pdaemon-status-user"><em>User controlled</em></a></td>
+</tr>
+<tr class="row-odd"><td>4</td>
+<td>NVAF:NVC0</td>
+<td>EPWR_VCOMP</td>
+<td><a class="reference internal" href="../pdaemon/epwr.html#pdaemon-status-epwr"><em>PVCOMP engine power gating</em></a></td>
+</tr>
+<tr class="row-even"><td>5</td>
+<td>NVAF:NVC0</td>
+<td>USER</td>
+<td><a class="reference internal" href="../pdaemon/user.html#pdaemon-status-user"><em>User controlled</em></a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>IO registers:</dt>
+<dd><a class="reference internal" href="../pdaemon/io.html#pdaemon-io"><em>IO register space</em></a></dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/index.html"
+                        title="previous chapter">PDAEMON: card management microprocesor</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/io.html"
+                        title="next chapter">IO register space</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/falcon.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/io.html" title="IO register space"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/index.html" title="PDAEMON: card management microprocesor"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -52,28 +52,28 @@
           <div class="body">
             
   <div class="section" id="nvidia-gpu-introduction">
-<span id="intro"></span><h1><a class="toc-backref" href="#id4">nVidia GPU introduction</a><a class="headerlink" href="#nvidia-gpu-introduction" title="Permalink to this headline">¶</a></h1>
+<span id="intro"></span><h1><a class="toc-backref" href="#id3">nVidia GPU introduction</a><a class="headerlink" href="#nvidia-gpu-introduction" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#nvidia-gpu-introduction" id="id4">nVidia GPU introduction</a><ul>
-<li><a class="reference internal" href="#introduction" id="id5">Introduction</a></li>
-<li><a class="reference internal" href="#card-schmatic" id="id6">Card schmatic</a></li>
-<li><a class="reference internal" href="#gpu-schematic-nv03-nv50" id="id7">GPU schematic - NV03:NV50</a></li>
-<li><a class="reference internal" href="#gpu-schematic-nv50-nvc0" id="id8">GPU schematic - NV50:NVC0</a></li>
-<li><a class="reference internal" href="#gpu-schematic-nvc0" id="id9">GPU schematic - NVC0-</a></li>
+<li><a class="reference internal" href="#nvidia-gpu-introduction" id="id3">nVidia GPU introduction</a><ul>
+<li><a class="reference internal" href="#introduction" id="id4">Introduction</a></li>
+<li><a class="reference internal" href="#card-schmatic" id="id5">Card schmatic</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nv03-nv50" id="id6">GPU schematic - NV03:NV50</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nv50-nvc0" id="id7">GPU schematic - NV50:NVC0</a></li>
+<li><a class="reference internal" href="#gpu-schematic-nvc0" id="id8">GPU schematic - NVC0-</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="introduction">
-<h2><a class="toc-backref" href="#id5">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>This file is a short introduction to nvidia GPUs and graphics cards. Note
 that the schematics shown here are simplified and do not take all details
 into account - consult specific unit documentation when needed.</p>
 </div>
 <div class="section" id="card-schmatic">
-<h2><a class="toc-backref" href="#id6">Card schmatic</a><a class="headerlink" href="#card-schmatic" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Card schmatic</a><a class="headerlink" href="#card-schmatic" title="Permalink to this headline">¶</a></h2>
 <p>An nvidia-based graphics card is made of a main GPU chip and many supporting
 chips. Note that the following schematic attempts to show as many chips as
 possible - not all of them are included on all cards.</p>
@@ -140,9 +140,8 @@ be supported: VRAM, EDO, SGRAM, SDR, DDR, DDR2, GDDR3, DDR3, GDDR5.</li>
 image, in addition to standard VGA BIOS code, contains information about
 the devices and connectors present on the card and scripts to boot up and
 manage devices on the card.</li>
-<li>configuration straps - a set of resistors used to configure various
-functions of the card that need to be up before the card is POSTed.
-[<a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a>]</li>
+<li><a class="reference internal" href="io/pstraps.html#pstraps"><em>configuration straps</em></a> - a set of resistors used to configure
+various functions of the card that need to be up before the card is POSTed.</li>
 <li>a small I2C EEPROM with encrypted HDCP keys [optional, some NV84:NVA3, now
 discontinued in favor of storing the keys in fuses on the GPU]</li>
 <li>a voltage regulator [starting with NV10 [?] family] - starting with roughly
@@ -183,7 +182,7 @@ integrated into the main system chipset. They don&#8217;t have on-board memory
 or memory controller, sharing the main system RAM instead.</p>
 </div>
 <div class="section" id="gpu-schematic-nv03-nv50">
-<h2><a class="toc-backref" href="#id7">GPU schematic - NV03:NV50</a><a class="headerlink" href="#gpu-schematic-nv03-nv50" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">GPU schematic - NV03:NV50</a><a class="headerlink" href="#gpu-schematic-nv03-nv50" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre> PCI/AGP/PCIE bus  +----------+        +--------+
 -------------------| PMC+PBUS |--+     |  VRAM  |
                    +----------+  |     +--------+
@@ -249,8 +248,8 @@ the GPU</li>
 <li>PCLOCK+PCONTROL: clock generation and distribution [contained in PRAMDAC
 on pre-NV40 GPUs]</li>
 <li>PFB: memory controller and arbiter</li>
-<li>PROM: VIOS ROM access</li>
-<li>PSTRAPS: configuration straps access [<a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a>]</li>
+<li><a class="reference internal" href="io/prom.html#prom"><em>PROM</em></a>: VIOS ROM access</li>
+<li><a class="reference internal" href="io/pstraps.html#pstraps"><em>PSTRAPS</em></a>: configuration straps access</li>
 </ul>
 </li>
 <li>processing engines:<ul>
@@ -289,7 +288,7 @@ by a common bus and visible through PCI BAR0 [see <a class="reference internal" 
 not shown above.</p>
 </div>
 <div class="section" id="gpu-schematic-nv50-nvc0">
-<h2><a class="toc-backref" href="#id8">GPU schematic - NV50:NVC0</a><a class="headerlink" href="#gpu-schematic-nv50-nvc0" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">GPU schematic - NV50:NVC0</a><a class="headerlink" href="#gpu-schematic-nv50-nvc0" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><pre>                              +---------------+
  PCIE bus  +----------+    +--|--+   +------+ |
 -----------| PMC+PBUS |----| PFB |---| VRAM | |
@@ -334,8 +333,8 @@ sleep in a given sequence</li>
 </li>
 <li><a class="reference internal" href="bus/ptimer.html#ptimer"><em>PTIMER</em></a>: measures wall time and delivers alarm interrupts</li>
 <li>PCLOCK+PCONTROL: clock generation and distribution</li>
-<li>PTHERM: thermal sensor and clock throttling circuitry [<a class="reference external" href="pm/ptherm.txt">pm/ptherm.txt</a>]</li>
-<li>PDAEMON: card management microcontroller [<a class="reference external" href="pm/pdaemon.txt">pm/pdaemon.txt</a>]</li>
+<li><a class="reference internal" href="pm/ptherm.html#ptherm"><em>PTHERM</em></a>: thermal sensor and clock throttling circuitry</li>
+<li><a class="reference internal" href="pm/pdaemon/index.html#pdaemon"><em>PDAEMON</em></a>: card management microcontroller</li>
 <li>PFB: memory controller and arbiter</li>
 </ul>
 </li>
@@ -374,7 +373,7 @@ controller for them</li>
 </ul>
 </div>
 <div class="section" id="gpu-schematic-nvc0">
-<h2><a class="toc-backref" href="#id9">GPU schematic - NVC0-</a><a class="headerlink" href="#gpu-schematic-nvc0" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">GPU schematic - NVC0-</a><a class="headerlink" href="#gpu-schematic-nvc0" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NVC0- signals &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="Performance counters" href="index.html" />
+    <link rel="next" title="Display subsystem" href="../display/index.html" />
+    <link rel="prev" title="NV40:NVC0 signals" href="nv40.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../display/index.html" title="Display subsystem"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nv40.html" title="NV40:NVC0 signals"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Performance counters</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nvc0-signals">
+<span id="pcounter-signal-nvc0"></span><h1><a class="toc-backref" href="#id1">NVC0- signals</a><a class="headerlink" href="#nvc0-signals" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#nvc0-signals" id="id1">NVC0- signals</a></li>
+</ul>
+</div>
+<div class="highlight-python"><pre>[XXX: write me]</pre>
+</div>
+<p>= NVCF signals =</p>
+<p>[XXX: figure out what the fuck is going on]</p>
+<dl class="docutils">
+<dt>HUB domain 0 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: ???</li>
+<li>1: ???</li>
+</ul>
+</dd>
+<dt>HUB domain 0 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x01: SRC1 ???</li>
+<li>0x02: SRC1 ???</li>
+</ul>
+</dd>
+<dt>HUB domain 1 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: ???</li>
+<li>1: ???</li>
+<li>2: ???</li>
+<li>3: ???</li>
+</ul>
+</dd>
+<dt>HUB domain 1 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x00-0x02: SRC0 ???</li>
+<li>0x13-0x14: SRC2 ???</li>
+<li>0x16: SRC3 ???</li>
+</ul>
+</dd>
+<dt>HUB domain 2 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: CTXCTL [?]</li>
+<li>1: ???</li>
+<li>2: PDAEMON</li>
+</ul>
+</dd>
+<dt>HUB domain 2 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x14,0x15: PDAEMON PM_SEL_2,3</li>
+<li>0x18: CTXCTL ???</li>
+<li>0x22-0x25: CTXCTL USER_0..USER_5</li>
+<li>0x2c: PDAEMON PM_SEL_0</li>
+<li>0x2d: PDAEMON PM_SEL_1</li>
+<li>0x2e-0x2f: SRC1 ???</li>
+<li>0x30: PDAEMON ???</li>
+</ul>
+</dd>
+<dt>HUB domain 3 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: PCOPY[0].???</li>
+<li>1: PCOPY[0].FALCON</li>
+<li>2: PCOPY[0].???</li>
+<li>3: PCOPY[1].???</li>
+<li>4: PCOPY[1].FALCON</li>
+<li>5: PCOPY[1].???</li>
+<li>6: PVDEC.???</li>
+<li>7: PPPP.???</li>
+<li>8: PVLD.???</li>
+</ul>
+</dd>
+<dt>HUB domain 3 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x00: PCOPY[0].SRC0 ???</li>
+<li>0x02: PCOPY[0].SRC0 ???</li>
+<li>0x05-0x07: PCOPY[1].SRC3 ???</li>
+<li>0x0a: PPPP.SRC7 ???</li>
+<li>0x0c: PVDEC.SRC6 ???</li>
+<li>0x0e-0x10: PVLD.SRC8 ???</li>
+<li>0x12: PCOPY[0].SRC2 ???</li>
+<li>0x14: PCOPY[1].SRC5 ???</li>
+<li>0x16: PCOPY[1].SRC5 ???</li>
+<li>0x17,0x18: PCOPY[0].FALCON PM_SEL_2,3</li>
+<li>0x19,0x1a: PCOPY[1].FALCON PM_SEL_2,3</li>
+<li>0x1d: PPPP.SRC7 ???</li>
+<li>0x1f: PPPP.SRC7 ???</li>
+<li>0x22: PVDEC.SRC6 ???</li>
+<li>0x24: PVDEC.SRC6 ???</li>
+<li>0x27: PVLD.SRC8 ???</li>
+<li>0x29: PVLD.SRC8 ???</li>
+<li>0x2e: PCOPY[0].FALCON ???</li>
+<li>0x34: PCOPY[1].FALCON ???</li>
+<li>0x38: PCOPY[0].SRC0 ???</li>
+<li>0x39: PCOPY[0].FALCON ???</li>
+<li>0x3a: PCOPY[0].SRC2 ???</li>
+<li>0x3b: PCOPY[1].SRC3 ???</li>
+<li>0x3c: PCOPY[1].FALCON ???</li>
+<li>0x3d: PCOPY[1].SRC5 ???</li>
+<li>0x3e: PVDEC.SRC6 ???</li>
+<li>0x3f: PPPP.SRC7 ???</li>
+<li>0x40: PVLD.SRC8 ???</li>
+</ul>
+</dd>
+<dt>HUB domain 4 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: PVDEC.???</li>
+<li>1: PVDEC.FALCON</li>
+<li>2: PPPP.???</li>
+<li>3: PPPP.FALCON</li>
+<li>4: PVLD.???</li>
+<li>5: PVLD.FALCON</li>
+</ul>
+</dd>
+<dt>HUB domain 4 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x00-0x03: PPPP.SRC2 ???</li>
+<li>0x06-0x07: PVDEC.SRC0 ???</li>
+<li>0x09: PVLD.SRC4 ???</li>
+<li>0x0b: PVLD.SRC4 ???</li>
+<li>0x0c,0x0d: PPPP.FALCON PM_SEL_2,3</li>
+<li>0x0e,0x0f: PVDEC.FALCON PM_SEL_2,3</li>
+<li>0x10,0x11: PVLD.FALCON PM_SEL_2,3</li>
+<li>0x16-0x17: PPPP.FALCON ???</li>
+<li>0x1c-0x1d: PVDEC.FALCON ???</li>
+<li>0x1e: PVLD.FALCON ???</li>
+<li>0x24-0x25: PVDEC.SRC0 ???</li>
+<li>0x26: PVDEC.FALCON ???</li>
+<li>0x27: PPPP.SRC2 ???</li>
+<li>0x28: PPPP.FALCON ???</li>
+<li>0x29: PVLD.SRC4 ???</li>
+<li>0x2a: PVLD.FALCON ???</li>
+</ul>
+</dd>
+<dt>HUB domain 5 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: ???</li>
+</ul>
+</dd>
+<dt>HUB domain 5 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x00: SRC0 ???</li>
+<li>0x05-0x06: SRC0 ???</li>
+<li>0x09: SRC0 ???</li>
+<li>0x0c: SRC0 ???</li>
+</ul>
+</dd>
+<dt>HUB domain 6 sources:</dt>
+<dd><ul class="first last simple">
+<li>0: ???</li>
+<li>1: ???</li>
+<li>2: ???</li>
+<li>3: ???</li>
+<li>4: ???</li>
+<li>5: ???</li>
+<li>6: ???</li>
+<li>7: ???</li>
+<li>8: ???</li>
+</ul>
+</dd>
+<dt>HUB domain 6 signals:</dt>
+<dd><ul class="first last simple">
+<li>0x0a-0x0b: SRC8 ???</li>
+<li>0x36: SRC2 ???</li>
+<li>0x39: SRC5 ???</li>
+<li>0x45: SRC0 ???</li>
+<li>0x47: SRC0 ???</li>
+<li>0x4c: SRC6 ???</li>
+</ul>
+</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nv40.html"
+                        title="previous chapter">NV40:NVC0 signals</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../display/index.html"
+                        title="next chapter">Display subsystem</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/pcounter/nvc0.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../display/index.html" title="Display subsystem"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nv40.html" title="NV40:NVC0 signals"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Performance counters</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

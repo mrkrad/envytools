@@ -80,7 +80,7 @@ a special area for. It is unaffected by any PMC.ENABLE bits.</p>
 <div class="section" id="mmio-registers">
 <span id="pbus-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
 <p>The main PBUS MMIO range is 0x1000:0x2000. It&#8217;s present on all cards.
-In addition to this range, PBUS also owns <em class="xref std std-ref">PEEPHOLE</em> and
+In addition to this range, PBUS also owns <a class="reference internal" href="../memory/peephole.html#peephole-mmio"><em>PEEPHOLE</em></a> and
 <a class="reference internal" href="hwsq.html#pbus-hwsq-new-code-mmio"><em>PBUS_HWSQ_NEW_CODE</em></a> ranges.</p>
 <p>The registers in the PBUS area are:</p>
 <table border="1" class="docutils">
@@ -102,7 +102,7 @@ In addition to this range, PBUS also owns <em class="xref std std-ref">PEEPHOLE<
 </tr>
 <tr class="row-odd"><td>0010f0:0010f4</td>
 <td>NV11:NV50</td>
-<td>PWM - PWM generators [io/nv10-gpio.txt]</td>
+<td><a class="reference internal" href="../io/nv10-gpio.html#pbus-mmio-pwm"><em>PWM - PWM generators</em></a></td>
 </tr>
 <tr class="row-even"><td>001100:001200</td>
 <td>NV03-</td>
@@ -110,7 +110,7 @@ In addition to this range, PBUS also owns <em class="xref std std-ref">PEEPHOLE<
 </tr>
 <tr class="row-odd"><td>001200:001208</td>
 <td>NV04:NV50</td>
-<td>ROM control [io/prom.txt]</td>
+<td><a class="reference internal" href="../io/prom.html#prom-mmio-rom-timings"><em>ROM control</em></a></td>
 </tr>
 <tr class="row-even"><td>001300:001380</td>
 <td>NV17:NV20
@@ -119,7 +119,7 @@ NV25:NVC0</td>
 </tr>
 <tr class="row-odd"><td>001380:001400</td>
 <td>NV41:NV50</td>
-<td>VGA_STACK [display/nv03/vga-stack.txt]</td>
+<td><a class="reference internal" href="../display/nv03/vga-stack.html#pbus-mmio-vga-stack"><em>VGA_STACK</em></a></td>
 </tr>
 <tr class="row-even"><td>001400:001500</td>
 <td>NV17:NV20
@@ -136,7 +136,7 @@ NV25:NVC0</td>
 </tr>
 <tr class="row-odd"><td>00155c:001578</td>
 <td>NV30:NV84</td>
-<td>PEEPHOLE - indirect memory access [memory/peephole.txt]</td>
+<td><a class="reference internal" href="../memory/peephole.html#peephole-mmio"><em>PEEPHOLE - indirect memory access</em></a></td>
 </tr>
 <tr class="row-even"><td>001578:001580</td>
 <td>NV41:NVC0</td>
@@ -149,35 +149,35 @@ NV25:NVC0</td>
 </tr>
 <tr class="row-even"><td>0015b0:0015c0</td>
 <td>NV43:NV50</td>
-<td>THERM - thermal sensor [pm/nv43-therm.txt]</td>
+<td><a class="reference internal" href="../pm/nv43-therm.html#nv43-therm-mmio"><em>THERM - thermal sensor</em></a></td>
 </tr>
 <tr class="row-odd"><td>0015f4:001604</td>
 <td>NV41:NV50</td>
-<td>PWM - PWM generators [io/nv10-gpio.txt]</td>
+<td><a class="reference internal" href="../io/nv10-gpio.html#pbus-mmio-pwm"><em>PWM - PWM generators</em></a></td>
 </tr>
 <tr class="row-even"><td>001700:001800</td>
 <td>TC</td>
-<td>HOST_MEM - host memory access setup [memory/nv44-host-mem.txt]</td>
+<td><a class="reference internal" href="../memory/nv44-host-mem.html#pbus-mmio-nv44-host-mem"><em>HOST_MEM - host memory access setup</em></a></td>
 </tr>
 <tr class="row-odd"><td>001700:001800</td>
 <td>NV50:NVC0</td>
-<td>HOST_MEM - host memory access setup [memory/nv50-host-mem.txt]</td>
+<td><a class="reference internal" href="../memory/nv50-host-mem.html#pbus-mmio-nv50-host-mem"><em>HOST_MEM - host memory access setup</em></a></td>
 </tr>
 <tr class="row-even"><td>001700:001800</td>
 <td>NVC0-</td>
-<td>HOST_MEM - host memory access setup [memory/nvc0-host-mem.txt]</td>
+<td><a class="reference internal" href="../memory/nvc0-host-mem.html#pbus-mmio-nvc0-host-mem"><em>HOST_MEM - host memory access setup</em></a></td>
 </tr>
 <tr class="row-odd"><td>001800:001a00</td>
 <td>NV01:NV50</td>
-<td>PCI - PCI configuration space [bus/pci.txt]</td>
+<td><a class="reference internal" href="pci.html#pbus-mmio-pci"><em>PCI - PCI configuration space</em></a></td>
 </tr>
 <tr class="row-even"><td>001900:001980</td>
 <td>NV50:NVC0</td>
-<td>REMAP - BAR1 remapping circuitry [memory/nv50-remap.txt]</td>
+<td><a class="reference internal" href="../memory/nv50-remap.html#pbus-mmio-nv50-remap"><em>REMAP - BAR1 remapping circuitry</em></a></td>
 </tr>
 <tr class="row-odd"><td>001980:001a00</td>
 <td>NV50:NVC0</td>
-<td>P2P - NV50 P2P slave [memory/nv50-p2p.txt]</td>
+<td><a class="reference internal" href="../memory/nv50-p2p.html#pbus-mmio-nv50-p2p"><em>P2P - NV50 P2P slave</em></a></td>
 </tr>
 <tr class="row-even"><td>001a14</td>
 <td>NVA3:NVC0</td>
@@ -192,12 +192,10 @@ NV25:NVC0</td>
 usually group together unrelated bits. The known bits include:</p>
 <dl class="docutils">
 <dt>MMIO 0x001084: DEBUG_1 [NV04-]</dt>
-<dd><dl class="first last docutils">
-<dt>bit 11: FUSE_READOUT_ENABLE - enables reads from fuses in PFUSE [NV50:NVC0]</dt>
-<dd>[bus/pfuse.txt]</dd>
-<dt>bit 28: HEADS_TIED - mirrors writes to CRTC/RAMDAC registers on any head to</dt>
-<dd>the other head too [NV11:NV20, NV25:NV50] [display/nv03/vga.txt]</dd>
-</dl>
+<dd><p class="first">bit 11: FUSE_READOUT_ENABLE - enables reads from fuses in <a class="reference internal" href="pfuse.html#pfuse"><em>PFUSE</em></a> [NV50:NVC0]
+bit 28: HEADS_TIED - mirrors writes to <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc-mmio"><em>CRTC</em></a>/<a class="reference internal" href="../display/nv03/pramdac.html#pramdac-mmio"><em>RAMDAC</em></a> registers on any head to</p>
+<blockquote class="last">
+<div>the other head too [NV11:NV20, NV25:NV50]</div></blockquote>
 </dd>
 <dt>MMIO 0x001098: DEBUG_6 [NV17:NV20, NV25-]</dt>
 <dd>bit 3: <a class="reference internal" href="hwsq.html#hwsq-mmio"><em>HWSQ_ENABLE - enables HWSQ effects</em></a>
@@ -209,9 +207,9 @@ bit 4: <a class="reference internal" href="hwsq.html#hwsq-mmio"><em>HWSQ_OVERRID
 <p>The following registers deal with PBUS interrupts:</p>
 <ul class="simple">
 <li>001100 INTR - interrupt status [NV03-]</li>
-<li>001104 INTR_GPIO - GPIO interrupt status [NV31:NV50] [io/nv10-gpio.txt]</li>
+<li>001104 INTR_GPIO - <a class="reference internal" href="../io/nv10-gpio.html#nv10-gpio-intr"><em>GPIO interrupt status [NV31:NV50]</em></a></li>
 <li>001140 INTR - interrupt enable [NV03-]</li>
-<li>001144 INTR_GPIO_EN - GPIO interrupt enable [NV31:NV50] [io/nv10-gpio.txt]</li>
+<li>001144 INTR_GPIO_EN - <a class="reference internal" href="../io/nv10-gpio.html#nv10-gpio-intr"><em>GPIO interrupt enable [NV31:NV50]</em></a></li>
 <li>001144 INTE_EN_NRHOST - interrupt enable for the NRHOST line [NVC0-]</li>
 <li>001150 INTR_USER0_TRIGGER - user interrupt generation [NV50-]</li>
 <li>001154+i*4, i&lt;4 INTR_USER0_SCRATCH - user interrupt generation [NV50-]</li>
@@ -233,24 +231,23 @@ and INTR_EN_NRHOST registers:</p>
 <li>bit 0: BUS_ERROR - ??? [NV03:NV50]</li>
 <li>bit 1: MMIO_DISABLED_ENG - MMIO access from host failed due to accessing
 an area disabled via PMC.ENABLE [NVC0-] [XXX: document]</li>
-<li>bit 2: MMIO_IBUS_ERR - MMIO access from host failed due to some error in
-IBUS [NVC0-] [see bus/pibus.txt]</li>
+<li>bit 2: MMIO_IBUS_ERR - <a class="reference internal" href="pibus.html#pbus-intr-mmio-ibus-err"><em>MMIO access from host failed due to some error in
+IBUS</em></a> [NVC0-]</li>
 <li>bit 3: MMIO_FAULT - MMIO access from host failed due to other reasons
 [NV41-] [XXX: document]</li>
-<li>bit 4: GPIO_0_RISE - GPIO #0 went from 0 to 1 [NV10:NV31] [io/nv10-gpio.txt]</li>
-<li>bit 7: HOST_MEM_TIMEOUT - an access to memory from host timed out [NVC0-]
-[see memory/nvc0-host-mem.txt]</li>
-<li>bit 8: GPIO_0_FALL - GPIO #0 went from 1 to 0 [NV10:NV31] [io/nv10-gpio.txt]</li>
-<li>bit 8: HOST_MEM_ZOMBIE - an access to memory from host thought to have timed
-out has finally succeeded [NVC0-] [see memory/nvc0-host-mem.txt]</li>
-<li>bit 12: PEEPHOLE_W_PAIR_MISMATCH - violation of PEEPHOLE write port protocol
-[NV30:NVC0] [see memory/peephole.txt]</li>
+<li>bit 4: GPIO_0_RISE - <a class="reference internal" href="../io/nv10-gpio.html#nv10-gpio-intr"><em>GPIO #0 went from 0 to 1 [NV10:NV31]</em></a></li>
+<li>bit 7: HOST_MEM_TIMEOUT - <a class="reference internal" href="../memory/nvc0-host-mem.html#pbus-intr-host-mem-timeout"><em>an access to memory from host timed out [NVC0-]</em></a></li>
+<li>bit 8: GPIO_0_FALL - <a class="reference internal" href="../io/nv10-gpio.html#nv10-gpio-intr"><em>GPIO #0 went from 1 to 0 [NV10:NV31]</em></a></li>
+<li>bit 8: HOST_MEM_ZOMBIE - <a class="reference internal" href="../memory/nvc0-host-mem.html#pbus-intr-host-mem-zombie"><em>an access to memory from host thought to have timed
+out has finally succeeded [NVC0-]</em></a></li>
+<li>bit 12: PEEPHOLE_W_PAIR_MISMATCH - <a class="reference internal" href="../memory/peephole.html#pbus-intr-peephole-w-pair-mismatch"><em>violation of PEEPHOLE write port protocol
+[NV30:NVC0]</em></a></li>
 <li>bit 16: THERM_ALARM - Temperature is critical and requires actions
-[NV43-] [pm/nv43-therm.txt, pm/ptherm.txt]</li>
+[NV43-] [<a class="reference internal" href="../pm/nv43-therm.html#nv43-therm-intr-alarm"><em>NV43</em></a>, <a class="reference internal" href="../pm/ptherm.html#ptherm-intr"><em>NV50</em></a>]</li>
 <li>bit 17: THERM_THRS_LOW - Temperature is lower than TEMP_RANGE.LOW
-[NV43:NV50] [pm/nv43-therm.txt]</li>
+[NV43:NV50] [<a class="reference internal" href="../pm/nv43-therm.html#nv43-therm-intr-range"><em>NV43</em></a>]</li>
 <li>bit 18: THERM_THRS_HIGH - Temperature is higher than TEMP_RANGE.HIGH
-[NV43:NV50] [pm/nv43-therm.txt]</li>
+[NV43:NV50] [<a class="reference internal" href="../pm/nv43-therm.html#nv43-therm-intr-range"><em>NV43</em></a>]</li>
 <li>bit 26: USER0 - user interrupt #0 [NV50-] [see below]</li>
 <li>bit 28: USER1 - user interrupt #1. Note that this interrupt cannot be
 enabled for delivery to NRHOST line. [NVC0-] [see below]</li>
@@ -269,7 +266,7 @@ are set in the written value.</p>
 which are reported via INTR_GPIO register and enabled via INTR_GPIO_EN
 register. These registers effectively function as extra bits to INTR and
 INTR_EN. For description of these registrers and GPIO interupts, see
-io/nv10-gpio.txt .</p>
+<a class="reference internal" href="../io/nv10-gpio.html#nv10-gpio-intr"><em>Interrupts</em></a>.</p>
 <div class="section" id="user-interrupts">
 <h3><a class="toc-backref" href="#id6">User interrupts</a><a class="headerlink" href="#user-interrupts" title="Permalink to this headline">¶</a></h3>
 <p>NV50+ PBUS has one [NV50:NVC0] or two [NVC0-] user-triggerable interupts.

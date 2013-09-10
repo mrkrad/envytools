@@ -1,0 +1,892 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VP2 command macro processor &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="VP2 video decoding" href="../vp2/index.html" />
+    <link rel="next" title="PCRYPT2: AES encryption engine" href="../vp2/pcrypt2.html" />
+    <link rel="prev" title="MBRING format" href="../vp2/mbring.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vp2/pcrypt2.html" title="PCRYPT2: AES encryption engine"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/mbring.html" title="MBRING format"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" accesskey="U">VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="vp2-command-macro-processor">
+<span id="pvp2-macro"></span><h1><a class="toc-backref" href="#id1">VP2 command macro processor</a><a class="headerlink" href="#vp2-command-macro-processor" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#vp2-command-macro-processor" id="id1">VP2 command macro processor</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
+<li><a class="reference internal" href="#control-and-status-registers" id="id4">Control and status registers</a></li>
+<li><a class="reference internal" href="#interrupts" id="id5">Interrupts</a></li>
+<li><a class="reference internal" href="#fifos" id="id6">FIFOs</a></li>
+<li><a class="reference internal" href="#commands" id="id7">Commands</a></li>
+<li><a class="reference internal" href="#execution-state-and-registers" id="id8">Execution state and registers</a><ul>
+<li><a class="reference internal" href="#code-ram" id="id9">Code RAM</a></li>
+<li><a class="reference internal" href="#execution-control" id="id10">Execution control</a></li>
+<li><a class="reference internal" href="#parameter-registers" id="id11">Parameter registers</a></li>
+<li><a class="reference internal" href="#global-registers" id="id12">Global registers</a></li>
+<li><a class="reference internal" href="#special-registers" id="id13">Special registers</a></li>
+<li><a class="reference internal" href="#the-lut" id="id14">The LUT</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#opcodes" id="id15">Opcodes</a><ul>
+<li><a class="reference internal" href="#command-opcodes" id="id16">Command opcodes</a></li>
+<li><a class="reference internal" href="#data-opcodes" id="id17">Data opcodes</a></li>
+<li><a class="reference internal" href="#destination-write" id="id18">Destination write</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The VP2 macro processor is a small programmable processor that can emit vector
+processor commands when triggered by special commands from xtensa. All vector
+commands first go through the macro processor, which checks whether they&#8217;re
+in macro command range, and either passes them down to vector processor, or
+interprets them itself, possibly launching a macro and submitting other vector
+commands. It is one of the four major blocks making up the PVP2 engine.</p>
+<p>The macro processor has:</p>
+<ul class="simple">
+<li>64-bit VLIW opcodes, controlling two separate execution paths, one
+primarily for processing/emitting commands, the other for command
+parameters</li>
+<li>dedicated code RAM, 512 64-bit words in size</li>
+<li>32 * 32-bit word LUT data space, RW by host and RO by the macro code</li>
+<li>6 32-bit global [not banked] GPRs visible to macro code and host [$g0-$g5]</li>
+<li>8 32-bit banked GPRs visible to macro code and host, meant for passing
+parameters - one bank is writable by the param commands, the other is in
+use by macro code at any time [$p0-$p7]</li>
+<li>3 1-bit predicates, with conditional execution [$p1-$p3]</li>
+<li>instruction set consisting of bit operations, shifts, and 16-bit addition</li>
+<li>no branch/loop capabilities</li>
+<li>a 32-bit command path accumulator [$cacc]</li>
+<li>a 32-bit data path accumulator [$dacc]</li>
+<li>a 7-bit LUT address register [$lutidx]</li>
+<li>15-bit command, 32-bit data, and 8-bit high data registers for command
+submission [$cmd, $data, $datahi]</li>
+<li>64-entry input command FIFO</li>
+<li>2-entry output command FIFO</li>
+<li>a single hardware breakpoint</li>
+</ul>
+</div>
+<div class="section" id="mmio-registers">
+<span id="pvp2-io-macro"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+<p>The macro processor registers occupy 0x00f600:0x00f700 range in BAR0 space,
+corresponding to 0x2c000:0x2e000 range in PVP2&#8217;s XLMI space. They are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="14%" />
+<col width="10%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">XLMI</th>
+<th class="head">MMIO</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x2c000</td>
+<td>0x00f600</td>
+<td>CONTROL</td>
+<td><a class="reference internal" href="#pvp2-io-macro-control"><em>master control</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2c100</td>
+<td>0x00f608</td>
+<td>STATUS</td>
+<td><a class="reference internal" href="#pvp2-io-macro-status"><em>detailed status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2c180</td>
+<td>0x00f60c</td>
+<td>IDLE</td>
+<td><a class="reference internal" href="#pvp2-io-macro-idle"><em>a busy/idle status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2c200</td>
+<td>0x00f610</td>
+<td>INTR_EN</td>
+<td><a class="reference internal" href="#pvp2-io-macro-intr"><em>interrupt enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2c280</td>
+<td>0x00f614</td>
+<td>INTR</td>
+<td><a class="reference internal" href="#pvp2-io-macro-intr"><em>interrupt status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2c300</td>
+<td>0x00f618</td>
+<td>BREAKPOINT</td>
+<td><a class="reference internal" href="#pvp2-io-macro-breakpoint"><em>breakpoint address and enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2c800:0x2c880</td>
+<td>0x00f640</td>
+<td>LUT[0:32]</td>
+<td><a class="reference internal" href="#pvp2-io-macro-lut"><em>the LUT data</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2c880:0x2c8a0</td>
+<td>0x00f644</td>
+<td>PARAM_A[0:8]</td>
+<td><a class="reference internal" href="#pvp2-io-macro-param"><em>$p bank A</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2c900:0x2c920</td>
+<td>0x00f648</td>
+<td>PARAM_B[0:8]</td>
+<td><a class="reference internal" href="#pvp2-io-macro-param"><em>$p bank B</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2c980:0x2c9a0</td>
+<td>0x00f64c</td>
+<td>GLOBAL[0:8]</td>
+<td><a class="reference internal" href="#pvp2-io-macro-global"><em>$g registers</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2cb80</td>
+<td>0x00f65c</td>
+<td>PARAM_SEL</td>
+<td><a class="reference internal" href="#pvp2-io-macro-param"><em>$p bank selection switch</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2cc00</td>
+<td>0x00f660</td>
+<td>RUNNING</td>
+<td><a class="reference internal" href="#pvp2-io-macro-running"><em>code execution in progress switch</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2cc80</td>
+<td>0x00f664</td>
+<td>PC</td>
+<td><a class="reference internal" href="#pvp2-io-macro-pc"><em>program counter</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2cd00</td>
+<td>0x00f668</td>
+<td>DATAHI</td>
+<td><a class="reference internal" href="#pvp2-io-macro-sreg"><em>$datahi register</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2cd80</td>
+<td>0x00f66c</td>
+<td>LUTIDX</td>
+<td><a class="reference internal" href="#pvp2-io-macro-sreg"><em>$lutidx register</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2ce00</td>
+<td>0x00f670</td>
+<td>CACC</td>
+<td><a class="reference internal" href="#pvp2-io-macro-sreg"><em>$cacc register</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2ce80</td>
+<td>0x00f674</td>
+<td>CMD</td>
+<td><a class="reference internal" href="#pvp2-io-macro-sreg"><em>$cmd register</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2cf00</td>
+<td>0x00f678</td>
+<td>DACC</td>
+<td><a class="reference internal" href="#pvp2-io-macro-sreg"><em>$dacc register</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2cf80</td>
+<td>0x00f67c</td>
+<td>DATA</td>
+<td><a class="reference internal" href="#pvp2-io-macro-sreg"><em>$data register</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2d000</td>
+<td>0x00f680</td>
+<td>IFIFO_DATA</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>input FIFO data</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2d080</td>
+<td>0x00f684</td>
+<td>IFIFO_ADDR</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>input FIFO command</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2d100</td>
+<td>0x00f688</td>
+<td>IFIFO_TRIGGER</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>input FIFO manual read/write trigger</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2d180</td>
+<td>0x00f66c</td>
+<td>IFIFO_SIZE</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>input FIFO size limitter</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2d200</td>
+<td>0x00f670</td>
+<td>IFIFO_STATUS</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>input FIFO status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2d280</td>
+<td>0x00f674</td>
+<td>OFIFO_DATA</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>output FIFO data</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2d300</td>
+<td>0x00f678</td>
+<td>OFIFO_ADDR</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>output FIFO command &amp; high data</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2d380</td>
+<td>0x00f67c</td>
+<td>OFIFO_TRIGGER</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>output FIFO manual read/write trigger</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2d400</td>
+<td>0x00f680</td>
+<td>OFIFO_SIZE</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>output FIFO size limitter</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2d480</td>
+<td>0x00f684</td>
+<td>OFIFO_STATUS</td>
+<td><a class="reference internal" href="#pvp2-io-macro-fifo"><em>output FIFO status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x2d780</td>
+<td>0x00f6bc</td>
+<td>CODE_SEL</td>
+<td><a class="reference internal" href="#pvp2-io-macro-code"><em>selects high or low part of code RAM for code window</em></a></td>
+</tr>
+<tr class="row-even"><td>0x2d800:0x2e000</td>
+<td>0x00f6c0:0x00f700</td>
+<td>CODE</td>
+<td><a class="reference internal" href="#pvp2-io-macro-code"><em>a 256-word window to code space</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="control-and-status-registers">
+<span id="pvp2-io-macro-idle"></span><span id="pvp2-io-macro-status"></span><span id="pvp2-io-macro-control"></span><h2><a class="toc-backref" href="#id4">Control and status registers</a><a class="headerlink" href="#control-and-status-registers" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="interrupts">
+<span id="pvp2-io-macro-intr"></span><h2><a class="toc-backref" href="#id5">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="fifos">
+<span id="pvp2-io-macro-fifo"></span><h2><a class="toc-backref" href="#id6">FIFOs</a><a class="headerlink" href="#fifos" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="commands">
+<span id="pvp2-cmd-macro"></span><h2><a class="toc-backref" href="#id7">Commands</a><a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>The macro processor processes commands in 0xc000-0xdfff range from the input
+FIFO, passing down all other commands directly to the output FIFO [provided
+that no macro is executing at the moment]. The macro processor commands are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="21%" />
+<col width="67%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Command</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0xc000+i*4</td>
+<td>MACRO_PARAM[0:8]</td>
+<td><a class="reference internal" href="#pvp2-cmd-macro-param"><em>write to $p host register bank</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xc020+i*4</td>
+<td>MACRO_GLOBAL[0:8]</td>
+<td><a class="reference internal" href="#pvp2-cmd-macro-global"><em>write to $g registers</em></a></td>
+</tr>
+<tr class="row-even"><td>0xc080+i*4</td>
+<td>MACRO_LUT[0:32]</td>
+<td><a class="reference internal" href="#pvp2-cmd-macro-lut"><em>write to given LUT entry</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xc100</td>
+<td>MACRO_EXEC</td>
+<td><a class="reference internal" href="#pvp2-cmd-macro-exec"><em>execute a macro</em></a></td>
+</tr>
+<tr class="row-even"><td>0xc200</td>
+<td>MACRO_DATAHI</td>
+<td><a class="reference internal" href="#pvp2-cmd-macro-datahi"><em>write to $datahi register</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xd000+i*4</td>
+<td>MACRO_CODE[0:0x400]</td>
+<td><a class="reference internal" href="#pvp2-cmd-macro-code"><em>upload half of a code word</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="execution-state-and-registers">
+<h2><a class="toc-backref" href="#id8">Execution state and registers</a><a class="headerlink" href="#execution-state-and-registers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="code-ram">
+<span id="pvp2-cmd-macro-code"></span><span id="pvp2-io-macro-code"></span><h3><a class="toc-backref" href="#id9">Code RAM</a><a class="headerlink" href="#code-ram" title="Permalink to this headline">¶</a></h3>
+<p>The code RAM contains 512 opcodes. Opcodes are 64 bits long and are accessible
+by the host as pairs of 32-bit words. Code may be read or written using MMIO
+window:</p>
+<dl class="docutils">
+<dt>BAR0 0x00f6bc / XLMI 0x2d780: CODE_SEL</dt>
+<dd>1-bit RW register. Writing 0 selects code RAM entries 0:0x100 to be mapped to
+the CODE window, writing 1 selects code RAM entries 0x100:0x200.</dd>
+<dt>BAR0 0x00f6c0 + (i &gt;&gt; 5) * 4 [index i &amp; 0x1f] / XLMI 0x2d800 + i * 4, i &lt; 0x200: CODE[i]</dt>
+<dd>The code window. Reading or writing CODE[i] is equivalent to reading or
+writing low [if i is even] or high [if i is odd] 32 bits of code RAM cell
+i &gt;&gt; 1 | CODE_SEL &lt;&lt; 8.</dd>
+</dl>
+<p>They can also be written in pipelined manner by the MACRO_CODE command:</p>
+<dl class="docutils">
+<dt>VP command 0xd000 + i * 4, i &lt; 0x400: MACRO_CODE[i]</dt>
+<dd>Write the parameter to low [if i is even] or high [if i is odd] 32 bits of
+code RAM cell i &gt;&gt; 1. If a macro is currently executing, execution of this
+command is blocked until it finishes. Valid only on macro input FIFO.</dd>
+</dl>
+</div>
+<div class="section" id="execution-control">
+<span id="pvp2-cmd-macro-exec"></span><span id="pvp2-io-macro-breakpoint"></span><span id="pvp2-io-macro-pc"></span><span id="pvp2-io-macro-running"></span><h3><a class="toc-backref" href="#id10">Execution control</a><a class="headerlink" href="#execution-control" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="parameter-registers">
+<span id="pvp2-cmd-macro-param"></span><span id="pvp2-io-macro-param"></span><h3><a class="toc-backref" href="#id11">Parameter registers</a><a class="headerlink" href="#parameter-registers" title="Permalink to this headline">¶</a></h3>
+<p>Parameter registers server dual purpose: they&#8217;re meant for passing parameters
+to macros, but can also be used as GPRs by the code. There are two banks of
+parameter registers, bank A and bank B. Each bank contains 8 32-bit registers.
+At any time, one of the banks is in use by the macro code, while the other can
+be written by the host via MACRO_PARAM commands for next macro execution. Each
+time a macro is launched, the bank assignments are swapped. The current
+assignment is controlled by the PARAM_SEL register:</p>
+<dl class="docutils">
+<dt>BAR0 0x00f65c / XLMI 0x2cb80: PARAM_SEL</dt>
+<dd><p class="first">1-bit RW register. Can be set to one of:</p>
+<ul class="simple">
+<li>0: CODE_A_CMD_B - bank A is in use by the macro code, commands will write
+to bank B</li>
+<li>1: CODE_B_CMD_A - bank B is in use by the macro code, commands will write
+to bank A</li>
+</ul>
+<p class="last">This register is toggled on every MACRO_EXEC command execution.</p>
+</dd>
+</dl>
+<p>The parameter register banks can be accessed through MMIO registers:</p>
+<p>BAR0 0x00f644 [index i] / XLMI 0x2c880 + i * 4, i &lt; 8: PARAM_A[i]
+BAR0 0x00f648 [index i] / XLMI 0x2c900 + i * 4, i &lt; 8: PARAM_B[i]</p>
+<blockquote>
+<div>These MMIO registers are mapped straight to corresponding parameter
+registers.</div></blockquote>
+<p>The bank not currently in use by code can also be written by MACRO_PARAM
+commands:</p>
+<dl class="docutils">
+<dt>VP command 0xc000 + i * 4, i &lt; 8: MACRO_PARAM[i]</dt>
+<dd>Write the command data to parameter register i of the bank currently
+not assigned to the macro code. Execution of this command won&#8217;t wait for
+the current macro execution to finish. Valid only on macro input FIFO.</dd>
+</dl>
+<p>The parameter registers are visible to the macro code as GPR registers 0-7.</p>
+</div>
+<div class="section" id="global-registers">
+<span id="pvp2-cmd-macro-global"></span><span id="pvp2-io-macro-global"></span><h3><a class="toc-backref" href="#id12">Global registers</a><a class="headerlink" href="#global-registers" title="Permalink to this headline">¶</a></h3>
+<p>There are 6 normal global registers, $g0-$g5. They are simply 32-bit GPRs for
+use by macro computations. There are also two special global pseudo-registers,
+$g6 and $g7.</p>
+<p>$g6 is the LUT readout register. Any attempt to read from it will read from
+the LUT entry selected by $lutidx register. Any attempt to write to it will
+be ignored.</p>
+<p>$g7 is the special predicate register, $pred. Its 4 low bits are mapped to the
+four predicates, $p0-$p3. Any attempt to read from this register will read
+the predicates, and fill high 28 bits with zeros. Any attempt to write this
+register will write the predicates.</p>
+<p>$p0 is always forced to 1, while $p1-$p3 are writable. The predicates are used
+for conditional execution in macro code. In addition to access through $pred,
+the predicates can also be written by macro code individually as a result of
+various operations.</p>
+<p>All 8 global registers are accessible through MMIO and the command stream:</p>
+<dl class="docutils">
+<dt>BAR0 0x00f64c [index i] / XLMI 0x2c980 + i * 4, i &lt; 8: GLOBAL[i]</dt>
+<dd>These registers are mapped straight to corresponding global registers.</dd>
+<dt>VP command 0xc020 + i * 4, i &lt; 8: MACRO_GLOBAL[i]</dt>
+<dd>Write the command data to global register i. If a macro is currently
+executing, execution of this command is blocked until it finishes. Valid
+only on macro input FIFO.</dd>
+</dl>
+<p>The global registers are visible to the macro code as GPR registers 8-15.</p>
+</div>
+<div class="section" id="special-registers">
+<span id="pvp2-cmd-macro-datahi"></span><span id="pvp2-io-macro-sreg"></span><h3><a class="toc-backref" href="#id13">Special registers</a><a class="headerlink" href="#special-registers" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the GPRs, the macro code can use 6 special registers. There are
+4 special registers belonging to the command execution path, identified by
+a 2-bit index:</p>
+<ul class="simple">
+<li>0: $cacc, command accumulator</li>
+<li>1: $cmd, output command register</li>
+<li>2: $lutidx, LUT index</li>
+<li>3: $datahi, output high data register</li>
+</ul>
+<p>There are also 2 special registers belonging to the data execution path,
+identified by a 1-bit index:</p>
+<ul class="simple">
+<li>0: $dacc, data accumulator</li>
+<li>1: $data, output data register</li>
+</ul>
+<p>The $cacc and $dacc registers are 32-bit and can be read back by the macro
+code, and so are usable for general purpose computations.</p>
+<p>The $cmd, $data, and $datahi registers are write-only by the macro code, and
+their contents are submitted to the macro output FIFO when a submit opcode
+is executed. $data is 32-bit, $datahi is 8-bit, mapping to bits 0-7 of written
+values. $cmd is 15-bit, mapping to bits 2-16 of written values. The $datahi
+register is also used to fill the high data bits in output FIFO whenever
+a command is bypassed from the input FIFO.</p>
+<p>The $lutidx register is 5-bit and write-only by the macro code. It maps to
+bits 0-4 of written values. Its value selects the LUT entry visible in $g6
+pseudo-register.</p>
+<p>All 6 special registers can be accessed through MMIO, and the $datahi register
+can be additionally set by a command:</p>
+<p>MMIO 0x00f668 / XLMI 0x2cd00: DATAHI
+MMIO 0x00f66c / XLMI 0x2cd80: LUTIDX
+MMIO 0x00f670 / XLMI 0x2ce00: CACC
+MMIO 0x00f674 / XLMI 0x2ce80: CMD
+MMIO 0x00f678 / XLMI 0x2cf00: DACC
+MMIO 0x00f67c / XLMI 0x2cf80: DATA</p>
+<blockquote>
+<div>These registers map directly to corresponding special registers. For $cacc,
+$dacc, and $data, all bits are valid. For $cmd, bits 2-16 are valid.
+For $lutidx, bits 0-4 are valid. For $datahi, bits 0-7 are valid. Remaining
+bits are forced to 0.</div></blockquote>
+<dl class="docutils">
+<dt>VP command 0xc200: MACRO_DATAHI</dt>
+<dd>Sets $datahi to low 8 bits of the command data.  If a macro is currently
+executing, execution of this command is blocked until it finishes. Valid
+only on macro input FIFO.</dd>
+</dl>
+</div>
+<div class="section" id="the-lut">
+<span id="pvp2-cmd-macro-lut"></span><span id="pvp2-io-macro-lut"></span><h3><a class="toc-backref" href="#id14">The LUT</a><a class="headerlink" href="#the-lut" title="Permalink to this headline">¶</a></h3>
+<p>The LUT is a small indexable RAM that&#8217;s read-only by the macro code, but
+freely writable by the host. It&#8217;s made of 32 32-bit words. The LUT entry
+selected by $lutidx register can be read by macro code simply by reading from
+the $g6 pseudo-register. The LUT can be accessed by the host through MMIO
+and the command stream:</p>
+<dl class="docutils">
+<dt>BAR0 0x00f640 [index i] / XLMI 0x2c800 + i * 4, i &lt; 32: LUT[i]</dt>
+<dd>These registers are mapped straight to corresponding LUT entries.</dd>
+<dt>VP command 0xc080 + i * 4, i &lt; 32: MACRO_LUT[i]</dt>
+<dd>Write the command data to LUT entry i. If a macro is currently executing,
+execution of this command is blocked until it finishes. Valid only on macro
+input FIFO.</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="opcodes">
+<h2><a class="toc-backref" href="#id15">Opcodes</a><a class="headerlink" href="#opcodes" title="Permalink to this headline">¶</a></h2>
+<p>The code opcodes are 64 bits long. They&#8217;re divided in several major parts:</p>
+<ul class="simple">
+<li>bits 0-2: conditional execution predicate selection.<ul>
+<li>bits 0-1: PRED, the predicate to use [selected from $p0-$p3]</li>
+<li>bit 2: PNOT, selects whether the predicate is negated before use.</li>
+</ul>
+</li>
+<li>bit 3: EXIT, exit flag</li>
+<li>bit 4: SUBMIT, submit flag</li>
+<li>bits 5-30: command opcode</li>
+<li>bits 31-32: PDST, predicate destination [selected from $p0-$p3]</li>
+<li>bits 33-63: data opcode</li>
+</ul>
+<p>When a macro is launched, opcodes are executed sequentially from the macro
+start address until an opcode with the exit flag set is executed. An opcode
+is executed as follows:</p>
+<ol class="arabic simple">
+<li>If the SUBMIT bit is set, the current values of $cmd, $data, $datahi are
+sent to the output FIFO.</li>
+<li>Conditional execution status is determined: the predicate selected by
+PRED is read. If PNOT is set to 0, conditional execution will be enabled
+if the predicate is set to 1. Otherwise [PNOT set to 1], conditional
+execution will be enabled if the predicate is set to 0.  Unconditional
+opcodes are simply opcodes using non-negated predicate $p0 [PRED = 0,
+PNOT = 0].</li>
+<li>If the SUBMIT bit is set, conditional execution is enabled, and
+($cmd &amp; 0x1fe80) == 0xb000 [ie. the submitted command was in 0xb000-0xb07c
+or 0xb100-0xb17c ranges, correnspoding to vector processor param commands],
+$cmd is incremented by 4. This enables submitting several parameters in
+a row without having to update the $cmd register.</li>
+<li>If conditional execution is enabled, the command opcode is executed, and
+the command result, command predicate result, and the C2D intermediate
+value are computed.</li>
+<li>If conditional execution is enabled, the data opcode is executed, and
+the data result and data predicate result are computed.</li>
+<li>If conditional execution is enabled, the command and data results are
+written to their destination registers.</li>
+<li>If the EXIT bit is set, macro execution halts.</li>
+</ol>
+<p>Effectively, conditional execution affects all computations [including auto
+$cmd increment], but doesn&#8217;t affect submit and exit opcodes.</p>
+<div class="section" id="command-opcodes">
+<h3><a class="toc-backref" href="#id16">Command opcodes</a><a class="headerlink" href="#command-opcodes" title="Permalink to this headline">¶</a></h3>
+<p>The command processing path is mainly meant for processing commands and data
+going to $lutidx/$datahi register, but can also exchange data with the data
+processing path if needed.</p>
+<p>The command opcode bitfields are:</p>
+<ul class="simple">
+<li>bits 5-9: CBFSTART - bitfield start [CINSRT_R, CINSRT_I, some data ops]</li>
+<li>bits 10-14: CBFEND - bitfield end [CINSRT_R, CINSRT_I, some data ops]</li>
+<li>bits 15-19: CSHIFT - shift count [CINSRT_R]</li>
+<li>bit 20: CSHDIR - shift direction [CINSRT_R]</li>
+<li>bits 15-20: CIMM6 - 6-bit unsigned immediate [CINSRT_I]</li>
+<li>bits 21-22: CSRC2 - selects command source #2 [CINSRT_I, CINSRT_R], one of:<ul>
+<li>0: ZERO, source #2 is 0</li>
+<li>1: CACC, source #2 is current value of $cacc</li>
+<li>2: DACC, source #2 is current value of $dacc</li>
+<li>3: GPR, source #2 is same as command source #1</li>
+</ul>
+</li>
+<li>bits 15-22: CIMM8 - 8-bit unsigned immediate [CEXTRADD8]</li>
+<li>bits 5-22: CIMM18 - 18-bit signed immediate [CMOV_I]</li>
+<li>bits 23-26: CSRC1 - selects command source #1 [CINSRT_R, CEXTRADD8,
+DSHIFT_R, DADD16_R]. The command source #1 is the GPR with index selected
+by this bitfield.</li>
+<li>bits 27-28: CDST - the command destination, determines where the command
+result will be written; one of:<ul>
+<li>0: CACC</li>
+<li>1: CMD</li>
+<li>2: LUTIDX</li>
+<li>3: DATAHI</li>
+</ul>
+</li>
+<li>bits 29-30: COP - the command operation, one of:<ul>
+<li>0: CINSRT_R, bitfield insertion with shift, register sources</li>
+<li>1: CINSRT_I, bitfield insertion with 6-bit immediate source</li>
+<li>2: CMOV_I, 18-bit immediate value load</li>
+<li>3: CEXTRADD8, bitfield extraction + 8-bit immediate addition</li>
+</ul>
+</li>
+</ul>
+<p>The command processing path computes four values for further processing:</p>
+<ul class="simple">
+<li>the command result, ie. the 32-bit value that will later be written to
+the command destination register</li>
+<li>the command predicate result, ie. the 1-bit value that may later be
+written to the destination predicate</li>
+<li>the C2D value, a 32-bit intermediate result used in some data opcodes</li>
+<li>the command bitfield mask [CBFMASK], a 32-bit value used in some command
+and data opcodes</li>
+</ul>
+<p>The command bitfield mask is used by the bitfield insertion operations. It
+is computed from the command bitfield start and end as follows:</p>
+<div class="highlight-python"><pre>if (CBFEND &gt;= CBFSTART) {
+    CBFMASK = (2 &lt;&lt; CBFEND) - (1 &lt;&lt; CBFSTART); // bits CBFSTART-CBFEND are 1
+} else {
+    CBFMASK = 0;
+}</pre>
+</div>
+<p>Since the CBFEND and CBFSTART fields conflict with CIMM18 field, the data ops
+using the command mask should not be used together with the CMOV_I operation.</p>
+<p>The CINSRT_R operation has the following semantics:</p>
+<div class="highlight-python"><pre>if (CSHDIR == 0) /* 0 is left shift, 1 is right logical shift */
+    shifted_source = command_source_1 &lt;&lt; CSHIFT;
+else
+    shifted_source = command_source_1 &gt;&gt; CSHIFT;
+C2D = command_result = (shifted_source &amp; CBFMASK) | (command_source_2 &amp; ~CBFMASK);
+command_predicate_result = (shifted_source &amp; CBFMASK) == 0;</pre>
+</div>
+<p>The CINSRT_I operation has the following semantics:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">C2D</span> <span class="o">=</span> <span class="n">command_result</span> <span class="o">=</span> <span class="p">(</span><span class="n">CIMM6</span> <span class="o">&lt;&lt;</span> <span class="n">CBFSTART</span> <span class="o">&amp;</span> <span class="n">CBFMASK</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">command_source_2</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">CBFMASK</span><span class="p">);</span>
+<span class="n">command_predicate_result</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The CMOV_I operation has the following semantics:</p>
+<div class="highlight-python"><pre>C2D = command_result = sext(CIMM18, 17); /* sign-extend 18-bit immediate to 32 bits */
+command_predicate_result = 0;</pre>
+</div>
+<p>The CEXTRADD8 operation has the following semantics:</p>
+<div class="highlight-python"><pre>C2D = (command_source_1 &amp; CBFMASK) &gt;&gt; CBFSTART;
+command_result = ((C2D + CIMM8) &amp; 0xff) | (C2D &amp; ~0xff); /* add immediate to low 8 bits of extracted value */
+command_predicate_result = 0;</pre>
+</div>
+</div>
+<div class="section" id="data-opcodes">
+<h3><a class="toc-backref" href="#id17">Data opcodes</a><a class="headerlink" href="#data-opcodes" title="Permalink to this headline">¶</a></h3>
+<p>The command processing path is mainly meant for processing command data, but
+can also exchange data with the command processing path if needed.</p>
+<p>The data opcode bitfields are:</p>
+<ul class="simple">
+<li>bits 33-37: DBFSTART - bitfield start [DINSRT_R, DINSRT_I, DSEXT]</li>
+<li>bits 38-42: DBFEND - bitfield end [DINSRT_R, DINSRT_I, DSEXT]</li>
+<li>bits 43-47: DSHIFT - shift count and SEXT bit position [DINSRT_R, DSEXT]</li>
+<li>bit 48: DSHDIR - shift direction [DINSRT_R, DSHIFT_R]</li>
+<li>bits 43-48: DIMM6 - 6-bit unsigned immediate [DINSRT_I]</li>
+<li>bits 33-48: DIMM16 - 16-bit immediate [DADD16_I, DLOGOP16_I]</li>
+<li>bit 49: C2DEN - enables double bitfield insertion, using C2D value
+[DINSRT_R, DINSRT_I, DSEXT]</li>
+<li>bit 49: DDSTSKIP - skips DDST write if set [DADD16_I]</li>
+<li>bit 49: DSUB - selects whether DADD16_R operation does an addition or
+substraction</li>
+<li>bits 49-50: DLOGOP - the DLOGOP16_I suboperation, one of:<ul>
+<li>0: MOV, result is set to immediate</li>
+<li>1: AND, result is source ANDed with the immediate</li>
+<li>2: OR, result is source ORed with the immediate</li>
+<li>3: XOR, result is source XORed with the immediate</li>
+</ul>
+</li>
+<li>bits 50-51: DSRC2 - selects data source #2 [DINSRT_R, DINSRT_I], one of:<ul>
+<li>0: ZERO, source #2 is 0</li>
+<li>1: CACC, source #2 is current value of $cacc</li>
+<li>2: DACC, source #2 is current value of $dacc</li>
+<li>3: GPR, source #2 is same as data source #1</li>
+</ul>
+</li>
+<li>bit 50: DHI2 - selects low or high 16 bits of second operand [DADD16_R]</li>
+<li>bit 51: DHI - selects low or high 16 bits of an operand [DADD16_I,
+DLOGOP16_I, DADD16_R]</li>
+<li>bits 52-55: DSRC1 - selects data source #1 [DINSRT_R, DINSRT_I,
+DADD16_I, DLOGOP16_I, DSHIFT_R, DSEXT, DADD16_R]. The data source #1 is
+the GPR with index selected by this bitfield.</li>
+<li>bits 33-55: DIMM23 - 23-bit signed immediate [DMOV_I]</li>
+<li>bits 56-59: DRDST - selects data GPR destination register. The GPR
+destination is the GPR with index selected by this bitfield. The data
+result will be written here, along with the special register selected
+by DDST.</li>
+<li>bit 60: DDST - the data special register destination, determines where the
+data result will be written (along with DRDST); one of:<ul>
+<li>0: DACC</li>
+<li>1: DATA</li>
+</ul>
+</li>
+<li>bits 61-63: DOP - the data operation, one of:<ul>
+<li>0: DINSRT_R, bitfield insertion with shift, register sources</li>
+<li>1: DINSRT_I, bitfield insertion with 6-bit immediate source</li>
+<li>2: DMOV_I, 23-bit immediate value load</li>
+<li>3: DADD16_I, 16-bit addition with immediate</li>
+<li>4: DLOGOP16_I, 16-bit logic operation with immediate</li>
+<li>5: DSHIFT_R, shift by the value of a register</li>
+<li>6: DSEXT, sign extension</li>
+<li>7: DADD16_R, 16-bit addition/substraction with register operands</li>
+</ul>
+</li>
+</ul>
+<p>The data processing path computes three values:</p>
+<ul class="simple">
+<li>the data result, ie. the 32-bit value that will be written to the data
+destination registers</li>
+<li>the data predicate result, ie. the 1-bit value that will be written to
+the destination predicate</li>
+<li>the skip special destination flag, a 1-bit flag that disables write
+to the data special register if set</li>
+</ul>
+<p>Not all data operations produce a predicate result. For ones that don&#8217;t, the
+command predicate result will be output instead.</p>
+<p>The DINSRT_R operation has the following semantics:</p>
+<div class="highlight-python"><pre>if (DBFEND &gt;= DBFSTART) {
+    DBFMASK = (2 &lt;&lt; DBFEND) - (1 &lt;&lt; DBFSTART); // bits DBFSTART-DBFEND are 1
+} else {
+    DBFMASK = 0;
+}
+if (DSHDIR == 0) /* 0 is left shift, 1 is right arithmetic shift */
+    shifted_source = data_source_1 &lt;&lt; DSHIFT;
+else
+    shifted_source = (-1 &lt;&lt; 32 | data_source_1) &gt;&gt; DSHIFT;
+data_result = (data_source_2 &amp; ~DBFMASK) | (shifted_source &amp; DBFMASK);
+if (C2DEN)
+    data_result = (data_result &amp; ~CBFMASK) | (C2D &amp; CBFMASK);
+data_predicate_result = (shifted_source &amp; DBFMASK) == 0;
+skip_special_destination = false;</pre>
+</div>
+<p>The DINSRT_I operation has the following semantics:</p>
+<div class="highlight-python"><pre>if (DBFEND &gt;= DBFSTART) {
+    DBFMASK = (2 &lt;&lt; DBFEND) - (1 &lt;&lt; DBFSTART); // bits DBFSTART-DBFEND are 1
+} else {
+    DBFMASK = 0;
+}
+data_result = (data_source_2 &amp; ~DBFMASK) | (DIMM6 &lt;&lt; DBFSTART &amp; DBFMASK);
+if (C2DEN)
+    data_result = (data_result &amp; ~CBFMASK) | (C2D &amp; CBFMASK);
+data_predicate_result = command_predicate_result;
+skip_special_destination = false;</pre>
+</div>
+<p>The DMOV_I operation has the following semantics:</p>
+<div class="highlight-python"><pre>data_result = sext(DIMM23, 22); /* sign-extend 23-bit immediate to 32 bits */
+data_predicate_result = command_predicate_result;
+skip_special_destination = false;</pre>
+</div>
+<p>The DADD16_I operation has the following semantics:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nb">sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">data_source_1</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">DHI</span><span class="p">))</span> <span class="o">+</span> <span class="n">DIMM16</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffff</span><span class="p">;</span>
+<span class="n">data_result</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_source_1</span> <span class="o">&amp;</span> <span class="o">~</span><span class="p">(</span><span class="mh">0xffff</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">DHI</span><span class="p">)))</span> <span class="o">|</span> <span class="nb">sum</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">DHI</span><span class="p">);</span>
+<span class="n">data_predicate_result</span> <span class="o">=</span> <span class="nb">sum</span> <span class="o">&gt;&gt;</span> <span class="mi">15</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">skip_special_destionation</span> <span class="o">=</span> <span class="n">DDSTSKIP</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The DLOGOP16_I operation has the following semantics:</p>
+<div class="highlight-python"><pre>src = (data_source_1 &gt;&gt; (16 * DHI)) &amp; 0xffff;
+switch (DLOGOP) {
+    case MOV: res = DIMM16; break;
+    case AND: res = src &amp; DIMM16; break;
+    case OR: res = src | DIMM16; break;
+    case XOR: res = src ^ DIMM16; break;
+}
+data_result = (data_source_1 &amp; ~(0xffff &lt;&lt; (16 * DHI))) | res &lt;&lt; (16 * DHI);
+data_predicate_result = (res == 0);
+skip_special_destination = false;</pre>
+</div>
+<p>The DSHIFT_R operation has the following semantics:</p>
+<div class="highlight-python"><pre>shift = command_source_1 &amp; 0x1f;
+if (DSHDIR == 0) /* 0 is left shift, 1 is right arithmetic shift */
+    data_result = data_source_1 &lt;&lt; shift;
+else
+    data_result = (-1 &lt;&lt; 32 | data_source_1) &gt;&gt; shift;
+data_predicate_result = command_predicate_result;
+skip_special_destination = false;</pre>
+</div>
+<p>The DSEXT operation has the following semantics:</p>
+<div class="highlight-python"><pre>bfstart = max(DBFSTART, DSHIFT);
+if (DBFEND &gt;= bfstart) {
+    DBFMASK = (2 &lt;&lt; DBFEND) - (1 &lt;&lt; bfstart); // bits bfstart-DBFEND are 1
+} else {
+    DBFMASK = 0;
+}
+sign = data_source_2 &gt;&gt; DSHIFT &amp; 1;
+data_result = (data_source_2 &amp; ~DBFMASK) | (sign ? DBFMASK : 0);
+if (C2DEN)
+    data_result = (data_result &amp; ~CBFMASK) | (C2D &amp; CBFMASK);
+data_predicate_result = sign;
+skip_special_destination = false;</pre>
+</div>
+<p>The DADD16_R operation has the following semantics:</p>
+<div class="highlight-python"><pre>src1 = (data_source_1 &gt;&gt; (16 * DHI)) &amp; 0xffff;
+src2 = (command_source_1 &gt;&gt; (16 * DHI2)) &amp; 0xffff;
+if (DSUB == 0)
+    sum = (src1 + src2) &amp; 0xffff;
+else
+    sum = (src1 - src2) &amp; 0xffff;
+data_result = (data_source_1 &amp; ~(0xffff &lt;&lt; (16 * DHI))) | sum &lt;&lt; (16 * DHI);
+data_predicate_result = sum &gt;&gt; 15 &amp; 1;
+skip_special_destionation = false;</pre>
+</div>
+</div>
+<div class="section" id="destination-write">
+<h3><a class="toc-backref" href="#id18">Destination write</a><a class="headerlink" href="#destination-write" title="Permalink to this headline">¶</a></h3>
+<p>Once both command and data processing is done, the results are written to the
+destination registers, as follows:</p>
+<ul class="simple">
+<li>command_result is written to command special register selected by CDST.</li>
+<li>data_result is written to data special register selected by DDST, unless
+skip_special_destionation is true.</li>
+<li>data_result is written to GPR selected by DRDST. This can be effectively
+disabled by setting DRDST to $g6.</li>
+<li>data_predicate_result is written to predicate selected by PDST. This can
+be effectively disabled by setting PDST to $p0.</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">VP2 command macro processor</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#control-and-status-registers">Control and status registers</a></li>
+<li><a class="reference internal" href="#interrupts">Interrupts</a></li>
+<li><a class="reference internal" href="#fifos">FIFOs</a></li>
+<li><a class="reference internal" href="#commands">Commands</a></li>
+<li><a class="reference internal" href="#execution-state-and-registers">Execution state and registers</a><ul>
+<li><a class="reference internal" href="#code-ram">Code RAM</a></li>
+<li><a class="reference internal" href="#execution-control">Execution control</a></li>
+<li><a class="reference internal" href="#parameter-registers">Parameter registers</a></li>
+<li><a class="reference internal" href="#global-registers">Global registers</a></li>
+<li><a class="reference internal" href="#special-registers">Special registers</a></li>
+<li><a class="reference internal" href="#the-lut">The LUT</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#opcodes">Opcodes</a><ul>
+<li><a class="reference internal" href="#command-opcodes">Command opcodes</a></li>
+<li><a class="reference internal" href="#data-opcodes">Data opcodes</a></li>
+<li><a class="reference internal" href="#destination-write">Destination write</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vp2/mbring.html"
+                        title="previous chapter">MBRING format</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vp2/pcrypt2.html"
+                        title="next chapter">PCRYPT2: AES encryption engine</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/vdec/vp2/macro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../vp2/pcrypt2.html" title="PCRYPT2: AES encryption engine"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/mbring.html" title="MBRING format"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" >VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

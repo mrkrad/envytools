@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PEEPROM: NV01 configuration/key EEPROM &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="GPU external device I/O units" href="index.html" />
+    <link rel="next" title="PMEDIA: Video capture and external MPEG decoder interface" href="pmedia.html" />
+    <link rel="prev" title="NV50:NVD9 GPIO lines" href="nv50-gpio.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pmedia.html" title="PMEDIA: Video capture and external MPEG decoder interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nv50-gpio.html" title="NV50:NVD9 GPIO lines"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">GPU external device I/O units</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="peeprom-nv01-configuration-key-eeprom">
+<span id="nv01-peeprom"></span><h1><a class="toc-backref" href="#id1">PEEPROM: NV01 configuration/key EEPROM</a><a class="headerlink" href="#peeprom-nv01-configuration-key-eeprom" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#peeprom-nv01-configuration-key-eeprom" id="id1">PEEPROM: NV01 configuration/key EEPROM</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
+<li><a class="reference internal" href="#eeprom-access" id="id4">EEPROM access</a></li>
+<li><a class="reference internal" href="#chip-id-access" id="id5">Chip ID access</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>NV01 cards, in addition to the usual BIOS ROM, have a small Microwire EEPROM
+on board. The EEPROM is organised as 128 8-bit cells. It is used to store
+an unique chip ID as well as driver data. The chipset has a Microwire master
+controller and can natively read and write the EEPROM.</p>
+<p>The user interface to the controller is known as PEEPROM and its MMIO range is
+0x60a000:0x60b0000. It is not affected by any PMC.ENABLE bit.</p>
+<p>Note that only addresses 0x10-0x7f can be accessed by PEEPROM - others are
+reserved for NV01&#8217;s internal operation and PEEPROM will refuse to touch them.
+They will always read as 0.</p>
+<p>The reserved EEPROM range stores a 64-bit unique chip ID. The MMIO range used
+to read this id is known as PCHIPID and located at 0x605000:0x606000. Like
+PEEPROM, it&#8217;s not affected by any PMC.ENABLE bit.</p>
+<p>For details on the EEPROM itself, see the datasheet for Microchip 93C46A.</p>
+</div>
+<div class="section" id="mmio-registers">
+<span id="pchipid-mmio"></span><span id="peeprom-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+<p>The MMIO registers in PCHIPID range are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="9%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x605400</td>
+<td>ID[0]</td>
+<td><a class="reference internal" href="#pchipid-mmio-id"><em>low 32 bits of ID</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x605404</td>
+<td>ID[1]</td>
+<td><a class="reference internal" href="#pchipid-mmio-id"><em>high 32 bits of ID</em></a></td>
+</tr>
+</tbody>
+</table>
+<p>There is only one MMIO register in PEEPROM range:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="8%" />
+<col width="78%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x60a400</td>
+<td>PORT</td>
+<td><a class="reference internal" href="#peeprom-mmio-port"><em>EEPROM port control</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="eeprom-access">
+<span id="peeprom-mmio-port"></span><h2><a class="toc-backref" href="#id4">EEPROM access</a><a class="headerlink" href="#eeprom-access" title="Permalink to this headline">¶</a></h2>
+<p>The EEPROM is accessed by reading and writing the PORT register:</p>
+<dl class="docutils">
+<dt>MMIO 0x60a400: PORT</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: DATA - the data read or written</li>
+<li>bits 8-14: ADDR - the address to read or write</li>
+<li>bit 24: WRITE_TRIGGER - when written as 1, will cause DATA to be written
+to the EEPROM at address ADDR. Does <em>not</em> auto-clear.</li>
+<li>bit 25: READ_TRIGGER - when written as 1, will cause a byte to be read
+from address ADDR into DATA. Does <em>not</em> auto-clear.</li>
+<li>bit 28: BUSY [RO] - reads as 1 when an EEPROM operation is in progress.</li>
+</ul>
+</dd>
+</dl>
+<p>To read a byte:</p>
+<ul class="simple">
+<li>read PORT until BUSY is 0</li>
+<li>write PORT with ADDR set to the address to read, READ_TRIGGER set to 1,
+other fields set to 0</li>
+<li>read PORT until BUSY is 0</li>
+<li>the DATA field now contains the byte that was read</li>
+</ul>
+<p>To write a byte:</p>
+<ul class="simple">
+<li>read PORT until BUSY is 0</li>
+<li>write PORT with ADDR set to the address to write, DATA set to the byte to
+write, WRITE_TRIGGER set to 1, other fields set to 0</li>
+<li>if a wait for completion is desired, read PORT until BUSY is 0</li>
+</ul>
+</div>
+<div class="section" id="chip-id-access">
+<span id="pchipid-mmio-id"></span><h2><a class="toc-backref" href="#id5">Chip ID access</a><a class="headerlink" href="#chip-id-access" title="Permalink to this headline">¶</a></h2>
+<p>The chip ID can be read through the ID registers:</p>
+<dl class="docutils">
+<dt>MMIO 0x605400 + i*4, i &lt; 2: ID[i]</dt>
+<dd>Reads low 32 bits [i == 0] or high 32 bits [i == 1] of the chip ID.</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PEEPROM: NV01 configuration/key EEPROM</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#eeprom-access">EEPROM access</a></li>
+<li><a class="reference internal" href="#chip-id-access">Chip ID access</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nv50-gpio.html"
+                        title="previous chapter">NV50:NVD9 GPIO lines</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pmedia.html"
+                        title="next chapter">PMEDIA: Video capture and external MPEG decoder interface</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/io/nv01-peeprom.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pmedia.html" title="PMEDIA: Video capture and external MPEG decoder interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nv50-gpio.html" title="NV50:NVD9 GPIO lines"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >GPU external device I/O units</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

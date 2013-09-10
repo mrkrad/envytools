@@ -1,0 +1,178 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NVC0+ clocks &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="Clock management" href="clock.html" />
+    <link rel="next" title="PDAEMON: card management microprocesor" href="pdaemon/index.html" />
+    <link rel="prev" title="NVA3:NVC0 clocks" href="nva3-clock.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pdaemon/index.html" title="PDAEMON: card management microprocesor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nva3-clock.html" title="NVA3:NVC0 clocks"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="clock.html" accesskey="U">Clock management</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nvc0-clocks">
+<span id="nvc0-clock"></span><h1><a class="toc-backref" href="#id1">NVC0+ clocks</a><a class="headerlink" href="#nvc0-clocks" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#nvc0-clocks" id="id1">NVC0+ clocks</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
+<li><a class="reference internal" href="#tclk-timer-clock" id="id4">TCLK: timer clock</a></li>
+<li><a class="reference internal" href="#dclk-daemon-clock" id="id5">DCLK: daemon clock</a></li>
+<li><a class="reference internal" href="#vdclk-video-decoding-clock" id="id6">VDCLK: video decoding clock</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>NVC0+ cards have the following clocks:</p>
+<ul class="simple">
+<li>root clocks [RPLL1-4]: used as base for other clocks</li>
+<li>host clock: clocks the host interface parts, like PFIFO</li>
+<li>GPC clock [GPCPLL, clock #0]: used to clock the GPCs</li>
+<li>ROP clock [ROPPLL, clock #1]: used to clock the ROPs - not present on NVC1,
+XBAR clock used instead</li>
+<li>XBAR clock [XBARPLL, clock #2]: used to clock the crossbar between GPCs and
+ROPs, as well as ROPs on NVC1</li>
+<li>core clock [NVPLL, clock #7]: clocks the core card logic</li>
+<li>VM clock [clock #8]: clocks the TLBs and page table lookup circuitry</li>
+<li>HUB clock [clock #9]: clocks the common part of PGRAPH, and the PCOPY engines</li>
+<li>timer clock [TCLK, clock #11]: clocks the PTIMER circuitry</li>
+<li>daemon clock [clock #12]: used to clock PDAEMON</li>
+<li>vdec clock [clock #14]: used to clock the falcon video decoding engines</li>
+<li>memory clock [MPLL, clock M]: used to clock the VRAM, one per memory partition</li>
+<li>video clocks [VPLL1,VPLL2]: used to drive the video outputs</li>
+</ul>
+<p>The root clocks are set up in PNVIO area, VPLLs are set up in PDISPLAY area,
+the MPLLs are set up in PMCLOCK area, and the other clocks are set up in
+PCLOCK area.</p>
+</div>
+<div class="section" id="mmio-registers">
+<span id="nvc0-pioclock-mmio"></span><span id="nvc0-pclock-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tclk-timer-clock">
+<span id="nvc0-clock-tclk"></span><h2><a class="toc-backref" href="#id4">TCLK: timer clock</a><a class="headerlink" href="#tclk-timer-clock" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="dclk-daemon-clock">
+<span id="nvc0-clock-dclk"></span><h2><a class="toc-backref" href="#id5">DCLK: daemon clock</a><a class="headerlink" href="#dclk-daemon-clock" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="vdclk-video-decoding-clock">
+<span id="nvc0-clock-vdclk"></span><h2><a class="toc-backref" href="#id6">VDCLK: video decoding clock</a><a class="headerlink" href="#vdclk-video-decoding-clock" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">NVC0+ clocks</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#tclk-timer-clock">TCLK: timer clock</a></li>
+<li><a class="reference internal" href="#dclk-daemon-clock">DCLK: daemon clock</a></li>
+<li><a class="reference internal" href="#vdclk-video-decoding-clock">VDCLK: video decoding clock</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nva3-clock.html"
+                        title="previous chapter">NVA3:NVC0 clocks</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pdaemon/index.html"
+                        title="next chapter">PDAEMON: card management microprocesor</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/pm/nvc0-clock.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pdaemon/index.html" title="PDAEMON: card management microprocesor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nva3-clock.html" title="NVA3:NVC0 clocks"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="clock.html" >Clock management</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

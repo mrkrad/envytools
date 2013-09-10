@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VLD: variable length decoding &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="VP2 video decoding" href="../vp2/index.html" />
+    <link rel="next" title="MBRING format" href="../vp2/mbring.html" />
+    <link rel="prev" title="PBSP: H.264 bitstream processor" href="../vp2/pbsp.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vp2/mbring.html" title="MBRING format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/pbsp.html" title="PBSP: H.264 bitstream processor"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" accesskey="U">VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="vld-variable-length-decoding">
+<span id="pbsp-vld"></span><h1><a class="toc-backref" href="#id1">VLD: variable length decoding</a><a class="headerlink" href="#vld-variable-length-decoding" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#vld-variable-length-decoding" id="id1">VLD: variable length decoding</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#the-registers" id="id3">The registers</a></li>
+<li><a class="reference internal" href="#reset" id="id4">Reset</a></li>
+<li><a class="reference internal" href="#parameter-and-position-registers" id="id5">Parameter and position registers</a></li>
+<li><a class="reference internal" href="#internal-state-for-context-selection" id="id6">Internal state for context selection</a></li>
+<li><a class="reference internal" href="#interrupts" id="id7">Interrupts</a></li>
+<li><a class="reference internal" href="#stream-input" id="id8">Stream input</a></li>
+<li><a class="reference internal" href="#mbring-output" id="id9">MBRING output</a></li>
+<li><a class="reference internal" href="#command-and-status-registers" id="id10">Command and status registers</a><ul>
+<li><a class="reference internal" href="#command-0-get-ue" id="id11">Command 0: GET_UE</a></li>
+<li><a class="reference internal" href="#command-1-get-se" id="id12">Command 1: GET_SE</a></li>
+<li><a class="reference internal" href="#command-2-getbits" id="id13">Command 2: GETBITS</a></li>
+<li><a class="reference internal" href="#command-3-next-start-code" id="id14">Command 3: NEXT_START_CODE</a></li>
+<li><a class="reference internal" href="#command-4-cabac-start" id="id15">Command 4: CABAC_START</a></li>
+<li><a class="reference internal" href="#command-5-more-rbsp-data" id="id16">Command 5: MORE_RBSP_DATA</a></li>
+<li><a class="reference internal" href="#command-6-mb-skip-flag" id="id17">Command 6: MB_SKIP_FLAG</a></li>
+<li><a class="reference internal" href="#command-7-end-of-slice-flag" id="id18">Command 7: END_OF_SLICE_FLAG</a></li>
+<li><a class="reference internal" href="#command-8-cabac-init-ctx" id="id19">Command 8: CABAC_INIT_CTX</a></li>
+<li><a class="reference internal" href="#command-9-macroblock-skip-mbfdf" id="id20">Command 9: MACROBLOCK_SKIP_MBFDF</a></li>
+<li><a class="reference internal" href="#command-0xa-macroblock-layer-mbfdf" id="id21">Command 0xa: MACROBLOCK_LAYER_MBFDF</a></li>
+<li><a class="reference internal" href="#command-0xb-pred-weight-table" id="id22">Command 0xb: PRED_WEIGHT_TABLE</a></li>
+<li><a class="reference internal" href="#command-0xc-slice-data" id="id23">Command 0xc: SLICE_DATA</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The VLD is the first stage of the VP2 decoding pipeline. It is part of
+PBSP and deals with decoding the H.264 bitstream into syntax elements.</p>
+<p>The input to the VLD is the raw H.264 bitstream. The output of VLD is MBRING,
+a ring buffer structure storing the decoded syntax elements in the form
+of word-aligned packets.</p>
+<p>The VLD only deals with parsing the NALs containing the slice data - the
+remaining NAL types are supposed to be parsed by the host. Further, the
+hardware can only parse pred_weight_table and slice_data elements efficiently
+- the remaining parts of the slice NAL are supposed to be parsed by the
+firmware controlling the VLD in a semi-manual manner: the VLD provides
+commands that parse single syntax elements.</p>
+<p>The following H.264 profiles are supported:</p>
+<ul class="simple">
+<li>Constrained Baseline</li>
+<li>Baseline [only in single-macroblock mode if FMO used - see below]</li>
+<li>Main</li>
+<li>Progressive High</li>
+<li>High</li>
+<li>Multiview High</li>
+<li>Stereo High</li>
+</ul>
+<p>The limitations are:</p>
+<ul class="simple">
+<li>max picture width and height: 128 macroblocks</li>
+<li>max macroblocks in picture: 8192</li>
+</ul>
+<p>There are two modes of operation that VLD can be used with: single-macroblock
+mode and whole-slice mode. In the single-macroblock mode, parsing for each
+macroblock has to be manually triggered by the firmware. In whole-slice mode,
+the firmware triggers processing of a whole slice, and the hardware
+automatically iterates over all macroblocks in the slice. However, whole-slice
+mode doesn&#8217;t support Flexible Macroblock Ordering aka. slice groups. Thus,
+single-macroblock mode has to be used for sequences with non-zero value of
+num_slice_groups_minus1.</p>
+<p>The VLD keeps extensive hidden internal state, including:</p>
+<ul class="simple">
+<li>pred_weight_table data, to be prepended to the next emitted macroblock</li>
+<li>bitstream position, zero byte count [for escaping], and lookahead buffer</li>
+<li>CABAC valMPS, pStateIdx, codIOFfset, codIRange state</li>
+<li>previously decoded parts of macroblock data, used for CABAC and CAVLC
+context selection algorithms</li>
+<li>already queued but not yet written MBRING output data</li>
+</ul>
+</div>
+<div class="section" id="the-registers">
+<span id="pbsp-io-vld"></span><h2><a class="toc-backref" href="#id3">The registers</a><a class="headerlink" href="#the-registers" title="Permalink to this headline">¶</a></h2>
+<p>The VLD registers are located in PBSP XLMI space at addresses 0x00000:0x08000
+[BAR0 addresses 0x103000:0x103200]. They are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="9%" />
+<col width="8%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">XLMI</th>
+<th class="head">MMIO</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x00000</td>
+<td>0x103000</td>
+<td>PARM_0</td>
+<td><a class="reference internal" href="#pbsp-io-vld-parm"><em>parameters from sequence/picture parameter structs and the slice header</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x00100</td>
+<td>0x103004</td>
+<td>PARM_1</td>
+<td><a class="reference internal" href="#pbsp-io-vld-parm"><em>parameters from sequence/picture parameter structs and the slice header</em></a></td>
+</tr>
+<tr class="row-even"><td>0x00200</td>
+<td>0x103008</td>
+<td>MB_POS</td>
+<td><a class="reference internal" href="#pbsp-io-vld-mb-pos"><em>position of the current macroblock</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x00300</td>
+<td>0x10300c</td>
+<td>COMMAND</td>
+<td><a class="reference internal" href="#pbsp-io-vld-command"><em>writing executes a VLD command</em></a></td>
+</tr>
+<tr class="row-even"><td>0x00400</td>
+<td>0x103010</td>
+<td>STATUS</td>
+<td><a class="reference internal" href="#pbsp-io-vld-status"><em>shows busy status of various parts of the VLD</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x00500</td>
+<td>0x103014</td>
+<td>RESULT</td>
+<td><a class="reference internal" href="#pbsp-io-vld-result"><em>result of a command</em></a></td>
+</tr>
+<tr class="row-even"><td>0x00700</td>
+<td>0x10301c</td>
+<td>INTR_EN</td>
+<td><a class="reference internal" href="#pbsp-io-vld-intr"><em>interrupt enable mask</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x00800</td>
+<td>0x103020</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x00900</td>
+<td>0x103024</td>
+<td>INTR</td>
+<td><a class="reference internal" href="#pbsp-io-vld-intr"><em>interrupt status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x00a00</td>
+<td>0x103028</td>
+<td>RESET</td>
+<td><a class="reference internal" href="#pbsp-io-vld-reset"><em>resets the VLD and its registers to initial state</em></a></td>
+</tr>
+<tr class="row-even"><td>0x01000+i*0x100</td>
+<td>0x103040+i*4</td>
+<td>CONF[0:8]</td>
+<td><a class="reference internal" href="#pbsp-io-vld-stream"><em>length and enable bit of stream buffer i</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x01100+i*0x100</td>
+<td>0x103044+i*4</td>
+<td>OFFSET[0:8]</td>
+<td><a class="reference internal" href="#pbsp-io-vld-stream"><em>offset of stream buffer i</em></a></td>
+</tr>
+<tr class="row-even"><td>0x02000</td>
+<td>0x103080</td>
+<td>BITPOS</td>
+<td><a class="reference internal" href="#pbsp-io-vld-stream"><em>the bit position in the stream</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x04000</td>
+<td>0x103100</td>
+<td>OFFSET</td>
+<td><a class="reference internal" href="#pbsp-io-vld-mbring"><em>the MBRING offset</em></a></td>
+</tr>
+<tr class="row-even"><td>0x04100</td>
+<td>0x103104</td>
+<td>HALT_POS</td>
+<td><a class="reference internal" href="#pbsp-io-vld-mbring"><em>the MBRING halt position</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x04200</td>
+<td>0x103108</td>
+<td>WRITE_POS</td>
+<td><a class="reference internal" href="#pbsp-io-vld-mbring"><em>the MBRING write position</em></a></td>
+</tr>
+<tr class="row-even"><td>0x04300</td>
+<td>0x10310c</td>
+<td>SIZE</td>
+<td><a class="reference internal" href="#pbsp-io-vld-mbring"><em>the MBRING size</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x04400</td>
+<td>0x103110</td>
+<td>TRIGGER</td>
+<td><a class="reference internal" href="#pbsp-io-vld-mbring"><em>writing executes MBRING commands</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="reset">
+<span id="pbsp-io-vld-reset"></span><h2><a class="toc-backref" href="#id4">Reset</a><a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h2>
+<p>The engine may be reset at any time by poking the RESET register.</p>
+<dl class="docutils">
+<dt>BAR0 0x103028 / XLMI 0x00a00: RESET</dt>
+<dd>Any write will cause the VLD to be reset. All internal state is reset to
+default values. All user-writable registers are set to 0, except UNK8
+which is set to 0xffffffff.</dd>
+</dl>
+</div>
+<div class="section" id="parameter-and-position-registers">
+<span id="pbsp-io-vld-mb-pos"></span><span id="pbsp-io-vld-parm"></span><h2><a class="toc-backref" href="#id5">Parameter and position registers</a><a class="headerlink" href="#parameter-and-position-registers" title="Permalink to this headline">¶</a></h2>
+<p>The values of these registers are used by some of the VLD commands. PARM
+registers should be initialised with values derived from sequence parameters,
+picture parameters, and slice header. MB_POS should be set to the address of
+currently processed macroblock [for single-macroblock operation] or the first
+macroblock of the slice [for whole-slice operation]. In whole-slice operation,
+MB_POS is updated by the hardware to the position of the last macroblock in
+the parsed slice.</p>
+<p>For details on use of this information by specific commands, see their
+documentation.</p>
+<dl class="docutils">
+<dt>BAR0 0x103000 / XLMI 0x00000: PARM_0</dt>
+<dd><ul class="first last simple">
+<li>bit 0: entropy_coding_mode_flag - set as in picture parameters</li>
+<li>bits 1-8: width_mbs - set to pic_width_in_mbs_minus1 + 1</li>
+<li>bit 9: mbaff_frame_flag - set to (mb_adaptive_frame_field_flag &amp;&amp; !field_pic_flag)</li>
+<li>bits 10-11: picture_structure - one of:<ul>
+<li>0: frame - set if !field_pic_flag</li>
+<li>1: top field - set if field_pic_flag &amp;&amp; !bottom_field_flag</li>
+<li>2: bottom field - set if field_pic_flag &amp;&amp; bottom_field_flag</li>
+</ul>
+</li>
+<li>bits 12-16: nal_unit_type - set as in the slice NAL header [XXX: check]</li>
+<li>bit 17: constrained_intra_pred - set as in picture parameters [XXX: check]</li>
+<li>bits 18-19: cabac_init_idc - set as in slice header, for P and B slices</li>
+<li>bits 20-21: chroma_format_idc - if parsing auxiliary coded picture, set to 0,
+otherwise set as in sequence parameters</li>
+<li>bit 22: direct_8x8_inference_flag - set as in sequence parameters</li>
+<li>bit 23: transform_8x8_mode_flag - set as in picture parameters</li>
+</ul>
+</dd>
+<dt>BAR0 0x103004 / XLMI 0x00100: PARM_1</dt>
+<dd><ul class="first last simple">
+<li>bits 0-1: slice_type - set as in slice header</li>
+<li>bits 2-14: slice_tag - used to tag macroblocks in internal state with their
+slices, for determining availability status in CABAC/CAVLC context
+selection algorithms. See command description.</li>
+<li>bits 15-19: num_ref_idx_l0_active_minus1 - set as in slice header, for P
+and B slices</li>
+<li>bits 20-24: num_ref_idx_l1_active_minus1 - set as in slice header, for B
+slices</li>
+<li>bits 25-30: sliceqpy - set to (pic_init_qp_minus26 + 26 + slice_qp_delta)</li>
+</ul>
+</dd>
+<dt>BAR0 0x103008 / XLMI 0x00200: MB_POS</dt>
+<dd><ul class="first last simple">
+<li>bits 0-12: addr - address of the macroblock</li>
+<li>bits 13-20: x - x coordinate of the macroblock in macroblock units</li>
+<li>bits 21-28: y - y coordinate of the macroblock in macroblock units</li>
+<li>bit 29: first - 1 if the described macroblock is the first macroblock in its
+slice, 0 otherwise</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="internal-state-for-context-selection">
+<h2><a class="toc-backref" href="#id6">Internal state for context selection</a><a class="headerlink" href="#internal-state-for-context-selection" title="Permalink to this headline">¶</a></h2>
+<p>Both CAVLC and CABAC sometimes use decoded data of previous macroblocks in the
+slice to determine the decoding algorithm for syntax elements of the current
+macroblock. The VLD thus stores this data in its internal hidden memory.</p>
+<p>For each macroblock, the following data is stored:</p>
+<ul class="simple">
+<li>slice_tag</li>
+<li>mb_field_decoding_flag</li>
+<li>mb_skip_flag</li>
+<li>mb_type</li>
+<li>coded_block_pattern</li>
+<li>transform_size_8x8_flag</li>
+<li>intra_chroma_pred_mode</li>
+<li>ref_idx_lX[i]</li>
+<li>mvd_lX[i][j]</li>
+<li>coded_block_flag for each block</li>
+<li>total_coeffs for each luma 4x4 / luma AC block</li>
+</ul>
+<p>Additionally, the following data of the previous decoded macroblock [not
+indexed by macroblock address] is stored:</p>
+<ul class="simple">
+<li>mb_qp_delta</li>
+</ul>
+</div>
+<div class="section" id="interrupts">
+<span id="pbsp-io-vld-intr"></span><span id="pbsp-intr-vld"></span><h2><a class="toc-backref" href="#id7">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>BAR0 0x10301c / XLMI 0x00700: INTR_EN</dt>
+<dd><ul class="first last simple">
+<li>bit 0: UNK_INPUT_1</li>
+<li>bit 1: END_OF_STREAM</li>
+<li>bit 2: UNK_INPUT_3</li>
+<li>bit 3: MBRING_HALT</li>
+<li>bit 4: SLICE_DATA_DONE</li>
+</ul>
+</dd>
+<dt>BAR0 0x103024 / XLMI 0x00900: INTR</dt>
+<dd><ul class="first last simple">
+<li>bits 0-3: INPUT
+- 0: no interrupt pending
+- 1: UNK_INPUT_1
+- 2: END_OF_STREAM
+- 3: UNK_INPUT_3
+- 4: SLICE_DATA_DONE</li>
+<li>bit 4: MBRING_FULL</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="stream-input">
+<span id="pbsp-io-vld-stream"></span><h2><a class="toc-backref" href="#id8">Stream input</a><a class="headerlink" href="#stream-input" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="mbring-output">
+<span id="pbsp-io-vld-mbring"></span><h2><a class="toc-backref" href="#id9">MBRING output</a><a class="headerlink" href="#mbring-output" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="command-and-status-registers">
+<span id="pbsp-io-vld-result"></span><span id="pbsp-io-vld-status"></span><span id="pbsp-io-vld-command"></span><h2><a class="toc-backref" href="#id10">Command and status registers</a><a class="headerlink" href="#command-and-status-registers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="command-0-get-ue">
+<h3><a class="toc-backref" href="#id11">Command 0: GET_UE</a><a class="headerlink" href="#command-0-get-ue" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>the decoded value of parsed bitfield, or 0xffffffff if out of range</dd>
+</dl>
+<p>Parses one ue(v) element as defined in H.264 spec. Only elements in range
+0..0xfffe [up to 31 bits in the bitstream] are supported by this command.
+If the next bits of the bitstream are a valid ue(v) element in supported
+range, the element is parsed, the bitstream pointer advances past it, and
+its parsed value is returned as the result. Otherwise, bitstream pointer
+is not modified and 0xffffffff is returned.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>if (nextbits(16) != 0) {
+    int bitcnt = 0;
+    while (getbits(1) == 0)
+        bitcnt++;
+    return (1 &lt;&lt; bitcnt) - 1 + getbits(bitcnt);
+} else {
+    return 0xffffffff;
+}</pre>
+</div>
+</div>
+<div class="section" id="command-1-get-se">
+<h3><a class="toc-backref" href="#id12">Command 1: GET_SE</a><a class="headerlink" href="#command-1-get-se" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>the decoded value of parsed bitfield, or 0x80000000 if out of range</dd>
+</dl>
+<p>Parses one se(v) element as defined in H.264 spec. Only elements in range
+-0x7fff..0x7fff [up to 31 bits in the bitstream] are supported by this command.
+If the next bits of the bitstream are a valid se(v) element in supported
+range, the element is parsed, the bitstream pointer advances past it, and
+its parsed value is returned as the result. Otherwise, bitstream pointer
+is not modified and 0x80000000 is returned.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>if (nextbits(16) != 0) {
+    int bitcnt = 0;
+    while (getbits(1) == 0)
+        bitcnt++;
+    int tmp = (1 &lt;&lt; bitcnt) - 1 + getbits(bitcnt);
+    if (tmp &amp; 1)
+        return (tmp+1) &gt;&gt; 1;
+    else
+        return -(tmp &gt;&gt; 1);
+} else {
+    return 0x80000000;
+}</pre>
+</div>
+</div>
+<div class="section" id="command-2-getbits">
+<h3><a class="toc-backref" href="#id13">Command 2: GETBITS</a><a class="headerlink" href="#command-2-getbits" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>number of bits to read, or 0 to read 32 bits [5 bits]</dd>
+<dt>Result:</dt>
+<dd>the bits from the bitstream</dd>
+</dl>
+<p>Given parameter n, returns the next (n?n:32) bits from the bitstream as an
+unsigned integer.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>return getbits(n?n:32);</pre>
+</div>
+</div>
+<div class="section" id="command-3-next-start-code">
+<h3><a class="toc-backref" href="#id14">Command 3: NEXT_START_CODE</a><a class="headerlink" href="#command-3-next-start-code" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>the next start code found</dd>
+</dl>
+<p>Skips bytes in the raw bitstream until the start code [00 00 01] is found.
+Then, read the byte after the start code and return it as the result. The
+bitstream pointer is advanced to point after the returned byte.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>byte_align();
+while (nextbytes_raw(3) != 1)
+    getbits_raw(8);
+getbits_raw(24);
+return getbits_raw(8);</pre>
+</div>
+</div>
+<div class="section" id="command-4-cabac-start">
+<h3><a class="toc-backref" href="#id15">Command 4: CABAC_START</a><a class="headerlink" href="#command-4-cabac-start" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>none</dd>
+</dl>
+<p>Skips bits in the bitstream until the current bit position is byte-aligned,
+then initialises the arithmetic decoding engine registers codIRange and
+codIOffset, as per H.264.9.3.1.2.</p>
+<p>Oprtation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">byte_align</span><span class="p">();</span>
+<span class="n">cabac_init_engine</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-5-more-rbsp-data">
+<h3><a class="toc-backref" href="#id16">Command 5: MORE_RBSP_DATA</a><a class="headerlink" href="#command-5-more-rbsp-data" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>1 if there&#8217;s more data in RBSP, 0 otherwise</dd>
+</dl>
+<p>Returns 0 if there&#8217;s a valid RBSP trailing bits element at the current bit
+position, 1 otherwise. Does not modify the bitstream pointer.</p>
+<p>Operation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">return</span> <span class="n">more_rbsp_data</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-6-mb-skip-flag">
+<h3><a class="toc-backref" href="#id17">Command 6: MB_SKIP_FLAG</a><a class="headerlink" href="#command-6-mb-skip-flag" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>value of parsed mb_skip_flag</dd>
+</dl>
+<p>Parses the CABAC mb_skip_flag element. The SLICE_POS has to be set to the
+address of the macroblock to which this element applies.</p>
+<p>Operation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">return</span> <span class="n">cabac_mb_skip_flag</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-7-end-of-slice-flag">
+<h3><a class="toc-backref" href="#id18">Command 7: END_OF_SLICE_FLAG</a><a class="headerlink" href="#command-7-end-of-slice-flag" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>value of parsed end_of_slice_flag</dd>
+</dl>
+<p>Parses the CABAC end_of_slice_flag element.</p>
+<p>Operation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">return</span> <span class="n">cabac_terminate</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-8-cabac-init-ctx">
+<h3><a class="toc-backref" href="#id19">Command 8: CABAC_INIT_CTX</a><a class="headerlink" href="#command-8-cabac-init-ctx" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>none</dd>
+</dl>
+<p>Initialises the CABAC context variables, as per H.264.9.3.1.1. slice_type,
+cabac_init_idc [for P/B slices], and sliceqpy have to be set in the PARM
+registers for this command to work properly.</p>
+<p>Operation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">cabac_init_ctx</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-9-macroblock-skip-mbfdf">
+<h3><a class="toc-backref" href="#id20">Command 9: MACROBLOCK_SKIP_MBFDF</a><a class="headerlink" href="#command-9-macroblock-skip-mbfdf" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>mb_field_decoding_flag presence [1 bit]</dd>
+<dt>Result</dt>
+<dd>none</dd>
+</dl>
+<p>If parameter is 1, mb_field_decoding_flag syntax element is parsed. Otherwise,
+the value of mb_field_decoding_flag is inferred from preceding macroblocks.
+A skipped macroblock with thus determined value of mb_field_decoding_flag
+is emitted into the MBRING, and its data stored into internal state. SLICE_POS
+has to be set to the address of this macroblock.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>if (param) {
+    if (entropy_coding_mode_flag)
+        this_mb.mb_field_decoding_flag = cabac_mb_field_decoding_flag();
+    else
+        this_mb.mb_field_decoding_flag = getbits(1);
+} else {
+    this_mb.mb_field_decoding_flag = mb_field_decoding_flag_infer();
+}
+this_mb.mb_skip_flag = 1;
+this_mb.slice_tag = slice_tag;
+mbring_emit_macroblock();</pre>
+</div>
+</div>
+<div class="section" id="command-0xa-macroblock-layer-mbfdf">
+<h3><a class="toc-backref" href="#id21">Command 0xa: MACROBLOCK_LAYER_MBFDF</a><a class="headerlink" href="#command-0xa-macroblock-layer-mbfdf" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>mb_field_decoding_flag presence [1 bit]</dd>
+<dt>Result:</dt>
+<dd>none</dd>
+</dl>
+<p>If parameter is 1, mb_field_decoding_flag syntax element is parsed. Otherwise,
+the value of mb_field_decoding_flag is inferred from preceding macroblocks.
+A macroblock_layer syntax structure is parsed from the bitstream, data for the
+decoded macroblock is emitted into the MBRING, and stored into internal state.
+SLICE_POS has to be set to the address of this macroblock.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>if (param) {
+    if (entropy_coding_mode_flag)
+        this_mb.mb_field_decoding_flag = cabac_mb_field_decoding_flag();
+    else
+        this_mb.mb_field_decoding_flag = getbits(1);
+} else {
+    this_mb.mb_field_decoding_flag = mb_field_decoding_flag_infer();
+}
+this_mb.mb_skip_flag = 0;
+this_mb.slice_tag = slice_tag;
+macroblock_layer();</pre>
+</div>
+</div>
+<div class="section" id="command-0xb-pred-weight-table">
+<h3><a class="toc-backref" href="#id22">Command 0xb: PRED_WEIGHT_TABLE</a><a class="headerlink" href="#command-0xb-pred-weight-table" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>none</dd>
+</dl>
+<p>Parses the pred_weight_table element, stores its contents in internal memory,
+and advances the bitstream to the end of the element.</p>
+<p>Operation:</p>
+</div>
+<div class="section" id="command-0xc-slice-data">
+<h3><a class="toc-backref" href="#id23">Command 0xc: SLICE_DATA</a><a class="headerlink" href="#command-0xc-slice-data" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>Parameter:</dt>
+<dd>none</dd>
+<dt>Result:</dt>
+<dd>none</dd>
+</dl>
+<p>Writes the stored pred_weight_table data to MBRING, parses the slice_data
+element, storing decoded data into MBRING, halting when the RBSP trailing bit
+sequence is encountered. When done, raises the MACROBLOCKS_DONE interrupt.
+Bitstream pointer is updated to point to the RBSP traling bits. SLICE_POS has
+to be set to the address of the first macroblock on slice before this command
+is called. When this command finishes, SLICE_POS is updated to the address of
+the last macroblock in the parsed slice.</p>
+<p>Operation:</p>
+<div class="highlight-python"><pre>if (entropy_coding_mode_flag) {
+    cabac_init_ctx();
+    byte_align();
+    cabac_init_engine();
+}
+mb_pos.first = 1;
+first = 1;
+skip_pending = 0;
+end = 0;
+bottom = 0;
+while (1) {
+    if (slice_type == P || slice_type == B) {
+        if (entropy_coding_mode_flag) {
+            while (1) {
+                tmp = cabac_mb_skip_flag();
+                if (!tmp)
+                    break;
+                skip_pending++;
+                if (!mbaff_frame_flag || bottom) {
+                    end = cabac_terminate();
+                    if (end)
+                        break;
+                }
+                bottom = !bottom;
+            }
+        } else {
+            skip_pending = get_ue();
+            end = !more_rbsp_data();
+            bottom ^= skip_pending &amp; 1;
+        }
+    } else {
+        skip_pending = 0;
+    }
+    while (1) {
+        if (!skip_pending)
+            break;
+        if (mbaff_frame_flag &amp;&amp; bottom &amp;&amp; skip_pending &lt; 2)
+            break;
+        if (first) {
+            first = 0;
+        } else {
+            mb_pos_advance();
+        }
+        macroblock_skip_mbfdf(0);
+        skip_pending--;
+    }
+    if (end)
+        break;
+    if (first) {
+        first = 0;
+    } else {
+        mb_pos_advance();
+    }
+    if (mbaff_frame_flag) {
+        if (skip_pending) {
+            macroblock_skip_mbfdf(1);
+            mb_pos_advance();
+            macroblock_layer_mbfdf(0);
+            skip_pending = 0;
+        } else {
+            if (bottom) {
+                macroblock_layer_mbfdf(0);
+            } else {
+                macroblock_layer_mbfdf(1);
+            }
+        }
+        bottom = !bottom;
+    } else {
+        macroblock_layer_mbfdf(0);
+    }
+    if (entropy_coding_mode) {
+        if (mbaff_frame_flag &amp;&amp; bottom)) {
+            end = 0;
+        } else {
+            end = cabac_terminate();
+        }
+    } else {
+        end = !more_rbsp_data();
+    }
+    if (end) break;
+}
+trigger_intr(SLICE_DATA_DONE);</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">VLD: variable length decoding</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#the-registers">The registers</a></li>
+<li><a class="reference internal" href="#reset">Reset</a></li>
+<li><a class="reference internal" href="#parameter-and-position-registers">Parameter and position registers</a></li>
+<li><a class="reference internal" href="#internal-state-for-context-selection">Internal state for context selection</a></li>
+<li><a class="reference internal" href="#interrupts">Interrupts</a></li>
+<li><a class="reference internal" href="#stream-input">Stream input</a></li>
+<li><a class="reference internal" href="#mbring-output">MBRING output</a></li>
+<li><a class="reference internal" href="#command-and-status-registers">Command and status registers</a><ul>
+<li><a class="reference internal" href="#command-0-get-ue">Command 0: GET_UE</a></li>
+<li><a class="reference internal" href="#command-1-get-se">Command 1: GET_SE</a></li>
+<li><a class="reference internal" href="#command-2-getbits">Command 2: GETBITS</a></li>
+<li><a class="reference internal" href="#command-3-next-start-code">Command 3: NEXT_START_CODE</a></li>
+<li><a class="reference internal" href="#command-4-cabac-start">Command 4: CABAC_START</a></li>
+<li><a class="reference internal" href="#command-5-more-rbsp-data">Command 5: MORE_RBSP_DATA</a></li>
+<li><a class="reference internal" href="#command-6-mb-skip-flag">Command 6: MB_SKIP_FLAG</a></li>
+<li><a class="reference internal" href="#command-7-end-of-slice-flag">Command 7: END_OF_SLICE_FLAG</a></li>
+<li><a class="reference internal" href="#command-8-cabac-init-ctx">Command 8: CABAC_INIT_CTX</a></li>
+<li><a class="reference internal" href="#command-9-macroblock-skip-mbfdf">Command 9: MACROBLOCK_SKIP_MBFDF</a></li>
+<li><a class="reference internal" href="#command-0xa-macroblock-layer-mbfdf">Command 0xa: MACROBLOCK_LAYER_MBFDF</a></li>
+<li><a class="reference internal" href="#command-0xb-pred-weight-table">Command 0xb: PRED_WEIGHT_TABLE</a></li>
+<li><a class="reference internal" href="#command-0xc-slice-data">Command 0xc: SLICE_DATA</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vp2/pbsp.html"
+                        title="previous chapter">PBSP: H.264 bitstream processor</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vp2/mbring.html"
+                        title="next chapter">MBRING format</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/vdec/vp2/vld.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../vp2/mbring.html" title="MBRING format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/pbsp.html" title="PBSP: H.264 bitstream processor"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" >VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

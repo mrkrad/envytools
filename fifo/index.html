@@ -1,0 +1,134 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PFIFO: command submission to execution engines &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="next" title="PGRAPH: 2d/3d graphics and compute engine" href="../graph/index.html" />
+    <link rel="prev" title="PXBAR: NVC0 memory crossbar" href="../memory/pxbar.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../graph/index.html" title="PGRAPH: 2d/3d graphics and compute engine"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../memory/pxbar.html" title="PXBAR: NVC0 memory crossbar"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pfifo-command-submission-to-execution-engines">
+<span id="nv50-pfifo-bg"></span><span id="nv50-pfifo-vm"></span><span id="nv50-pfifo"></span><span id="pcopy-intr"></span><span id="pcopy-mmio"></span><span id="pcopy-io"></span><span id="pcopy-falcon"></span><span id="pcopy"></span><h1>PFIFO: command submission to execution engines<a class="headerlink" href="#pfifo-command-submission-to-execution-engines" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="highlight-python"><pre>FIFO, user perspective
+[**** ] fifo/intro.txt - FIFO overview
+[     ] fifo/pio.txt - PIO submission to FIFOs
+[**** ] fifo/dma-pusher.txt - DMA submission to FIFOs on NV04+
+[***  ] fifo/puller.txt - handling of submitted commands by FIFO
+[***  ] fifo/classes.txt - List and overview of object classes
+
+
+PFIFO, kernel perspective
+[**   ] fifo/nv01-pfifo.txt - NV01:NV04 PFIFO engine
+[     ] fifo/nv04-pfifo.txt - NV04:NV50 PFIFO engine
+[     ] fifo/nv50-pfifo.txt - NV50:NVC0 PFIFO engine
+[     ] fifo/nvc0-pfifo.txt - NVC0+ PFIFO engine
+
+Other FIFO engines:
+[*    ] fifo/pcopy.txt - PCOPY copying engine</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../memory/pxbar.html"
+                        title="previous chapter">PXBAR: NVC0 memory crossbar</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../graph/index.html"
+                        title="next chapter">PGRAPH: 2d/3d graphics and compute engine</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/fifo/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../graph/index.html" title="PGRAPH: 2d/3d graphics and compute engine"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../memory/pxbar.html" title="PXBAR: NVC0 memory crossbar"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

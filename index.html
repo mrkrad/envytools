@@ -88,7 +88,11 @@
 <li class="toctree-l2"><a class="reference internal" href="bus/pci.html">PCI configuration space</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="pm/index.html">Power, thermal, and clock management</a><ul class="simple">
+<li class="toctree-l1"><a class="reference internal" href="pm/index.html">Power, thermal, and clock management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pm/clock.html">Clock management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pm/pdaemon/index.html">PDAEMON: card management microprocesor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pm/nv43-therm.html">NV43:NV50 thermal monitoring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pm/ptherm.html">NV50+ thermal monitoring</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="nv01-paudio.html">NV01 audio engine</a><ul>
@@ -101,7 +105,54 @@
 <li class="toctree-l2"><a class="reference internal" href="nv01-paudio.html#midi">MIDI</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="io/index.html">GPU external device I/O units</a><ul class="simple">
+<li class="toctree-l1"><a class="reference internal" href="io/index.html">GPU external device I/O units</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="io/pstraps.html">PSTRAPS: straps readout and override</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/prom.html">PROM: VBIOS ROM access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/pnvio.html">PNVIO: external device interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/nv10-gpio.html">NV10:NV50 GPIO lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/nv50-gpio.html">NV50:NVD9 GPIO lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/nv01-peeprom.html">PEEPROM: NV01 configuration/key EEPROM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/pmedia.html">PMEDIA: Video capture and external MPEG decoder interface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="memory/index.html">Memory access and structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="memory/vram.html">Memory structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv01-vram.html">NV01 VRAM structure and usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv01-pdma.html">NV01 DMA engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv01-surface.html">NV01:NV50 surface formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv03-vram.html">NV03 VRAM structure and usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv03-dmaobj.html">NV03 DMA objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv03-pfb.html">PFB: NV03:NV10 memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv04-vram.html">NV04:NV50 VRAM structure and usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv04-dmaobj.html">NV04:NV50 DMA objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv10-pfb.html">PFB: NV10:NV40 memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/peephole.html">PEEPHOLE: indirect memory access from host</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv40-pfb.html">PFB: NV44:NV50 TURBOCACHE memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv44-pfb.html">PFB: NV40:NV50 non-TC memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv44-host-mem.html">NV44 host memory interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-surface.html">NV50- surface formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-vm.html">NV50 virtual memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-host-mem.html">NV50:NVC0 host memory interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-vram.html">NV50:NVC0 VRAM structure and usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-comp.html">NV50 VRAM compression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-p2p.html">NV50:NVC0 P2P memory access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-remap.html">NV50:NVC0 BAR1 remapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nv50-pfb.html">PFB: NV50:NVC0 memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nvc0-vm.html">NVC0 virtual memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nvc0-host-mem.html">NVC0- host memory interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nvc0-vram.html">NVC0- VRAM structure and usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nvc0-comp.html">NVC0 VRAM compression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/nvc0-p2p.html">NVC0- P2P memory access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/pffb.html">PFFB: NVC0 front memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/pmfb.html">PFFB: NVC0 middle memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/pbfb.html">PBFB: NVC0 front memory controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memory/pxbar.html">PXBAR: NVC0 memory crossbar</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fifo/index.html">PFIFO: command submission to execution engines</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graph/index.html">PGRAPH: 2d/3d graphics and compute engine</a><ul class="simple">
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="falcon/index.html">falcon microprocessor</a><ul>
@@ -121,6 +172,28 @@
 <li class="toctree-l2"><a class="reference internal" href="falcon/fifo.html">FIFO interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="falcon/memif.html">Memory interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="falcon/crypt.html">Cryptographic coprocessor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vdec/index.html">Video decoding, encoding, and processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vdec/vpe/index.html">VPE video decoding and encoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vdec/vuc/index.html">VP2/VP3 vµc processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vdec/vp2/index.html">VP2 video decoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vdec/vp3/index.html">VP3/VP4/VP5 video decoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vdec/pvcomp.html">PVCOMP: video compositor engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vdec/pvenc.html">PVENC: video encoding engine</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pcounter/index.html">Performance counters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pcounter/intro.html">PCOUNTER: performance counter engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pcounter/nv10.html">NV10:NV40 signals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pcounter/nv40.html">NV40:NVC0 signals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pcounter/nvc0.html">NVC0- signals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="display/index.html">Display subsystem</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="display/nv01/index.html">NV01 display subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="display/nv03/index.html">NV03:NV50 display subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="display/nv50/index.html">NV50- display subsystem</a></li>
 </ul>
 </li>
 </ul>

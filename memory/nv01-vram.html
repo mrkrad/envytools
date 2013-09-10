@@ -25,7 +25,10 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="envytools git documentation" href="../index.html" /> 
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="Memory access and structure" href="index.html" />
+    <link rel="next" title="NV01 DMA engine" href="nv01-pdma.html" />
+    <link rel="prev" title="Memory structure" href="vram.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +37,14 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="nv01-pdma.html" title="NV01 DMA engine"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="vram.html" title="Memory structure"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Memory access and structure</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -50,10 +60,10 @@
 <ul class="simple">
 <li><a class="reference internal" href="#nv01-vram-structure-and-usage" id="id1">NV01 VRAM structure and usage</a><ul>
 <li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
-<li><a class="reference internal" href="#pram-mmio-registers" id="id3">PRAM MMIO registers</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
 <li><a class="reference internal" href="#the-framebuffer" id="id4">The framebuffer</a></li>
 <li><a class="reference internal" href="#ramin" id="id5">RAMIN</a></li>
-<li><a class="reference internal" href="#memory-access-areas" id="id6">Memory access areas</a></li>
+<li><a class="reference internal" href="#ramin-access-areas" id="id6">RAMIN access areas</a></li>
 </ul>
 </li>
 </ul>
@@ -61,7 +71,7 @@
 <div class="section" id="introduction">
 <h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>NV01 cards can have 1MB, 2MB, or 4MB of memory. The memory is handled by the
-PFB unit [see display/nv01/pfb.txt]. It is used for several purposes. While
+<a class="reference internal" href="../display/nv01/pfb.html#nv01-pfb"><em>PFB unit</em></a>. It is used for several purposes. While
 the main function of VRAM is storage of pixel data to display, it is also used
 to contain several control structures for various units of the card.</p>
 <p>The area used for control structures is called RAMIN, uses different
@@ -74,17 +84,16 @@ framebuffer area covers all of VRAM, while RAMIN covers the last 1MB of VRAM.</p
 <p>The RAMIN is further split into several subareas according to one of several
 fixed schemes. The RAMIN layout is set up in a unit known as PRAM, located
 at MMIO range 0x602000:0x603000. PRAM is unaffected by PMC.ENABLE bits.</p>
-<p>To learn the size of VRAM, read the PFB.BOOT_0 register
-[see display/nv01/pfb.txt].</p>
+<p>To learn the size of VRAM, read the <cite>PFB.VRAM_SIZE register &lt;nv01-pfb-mmio-vram-size&gt;</cite>.</p>
 </div>
-<div class="section" id="pram-mmio-registers">
-<span id="nv01-pram-mmio"></span><h2><a class="toc-backref" href="#id3">PRAM MMIO registers</a><a class="headerlink" href="#pram-mmio-registers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mmio-registers">
+<span id="nv01-pram-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
 <p>There is only one MMIO register in PRAM range:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="12%" />
-<col width="11%" />
-<col width="77%" />
+<col width="9%" />
+<col width="7%" />
+<col width="84%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Address</th>
@@ -95,47 +104,54 @@ at MMIO range 0x602000:0x603000. PRAM is unaffected by PMC.ENABLE bits.</p>
 <tbody valign="top">
 <tr class="row-even"><td>0x602200</td>
 <td>CONFIG</td>
-<td><em class="xref std std-ref">Selects RAMIN layout</em></td>
+<td><a class="reference internal" href="#nv01-pram-mmio-config"><em>Selects RAMIN fixed area layout and size</em></a></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="the-framebuffer">
-<h2><a class="toc-backref" href="#id4">The framebuffer</a><a class="headerlink" href="#the-framebuffer" title="Permalink to this headline">¶</a></h2>
+<span id="nv01-fb-mmio"></span><h2><a class="toc-backref" href="#id4">The framebuffer</a><a class="headerlink" href="#the-framebuffer" title="Permalink to this headline">¶</a></h2>
 <p>The framebuffer starts at address 0 of VRAM and continues until its end. The
 framebuffer addresses directly correspond to VRAM addresses. It is accessed
 by four clients:</p>
 <ul class="simple">
-<li>PFB/PDAC scanout hardware [display/nv01/pfb.txt]</li>
+<li><a class="reference internal" href="../display/nv01/pfb.html#nv01-pfb"><em>PFB</em></a>/<a class="reference internal" href="../display/nv01/pdac.html#nv01-pdac"><em>PDAC</em></a> scanout hardware</li>
 <li>PGRAPH rendering [graph/nv01-pgraph.txt]</li>
-<li>the host, through <em class="xref std std-ref">FB map area</em></li>
-<li>PRM [bus/nv01-prm.txt], for:
-- host access through PRMFB to the VGA memory area
-- reading VGA memory area for VGA rendering
-- writing VGA shadow scanout framebuffer for VGA rendering
-- writing ALOG entries
-- VGA and DOS audio registers backing storage</li>
+<li>the host, through FB map area [see below]</li>
+<li><a class="reference internal" href="../bus/nv01-prm.html#nv01-prm"><em>PRM</em></a>, for:<ul>
+<li>host access through PRMFB to the VGA memory area</li>
+<li>reading VGA memory area for VGA rendering</li>
+<li>writing VGA shadow scanout framebuffer for VGA rendering</li>
+<li>writing ALOG entries</li>
+<li>VGA and DOS audio registers backing storage</li>
+</ul>
+</li>
 </ul>
 <p>The host and scanout access the framebuffer simply by an address. PGRAPH,
 however, accesses the framebuffer by X, Y coordinates of a pixel. For this
-reason, the resolution and bpp fields of PFB.CONFIG
-[see display/nv01/pfb.txt] have to be set up properly before rendering.
-Note that it&#8217;s impossible to have PGRAPH rendering and PFB/PDAC scanout
-use different bpp, since they share the bpp configuration register. Having
-PGRAPH and PFB/PDAC use different resolution is possible, but not particularly
-useful if the rendered data is supposed to ever be displayed.</p>
+reason, the resolution and bpp fields of <a class="reference internal" href="../display/nv01/pfb.html#nv01-pfb-mmio-config"><em>PFB.CONFIG</em></a>
+have to be set up properly before rendering. Note that it&#8217;s impossible to have
+PGRAPH rendering and PFB/PDAC scanout use different bpp, since they share the
+bpp configuration register. Having PGRAPH and PFB/PDAC use different
+resolution is possible, but not particularly useful if the rendered data is
+supposed to ever be displayed.</p>
+<p>The framebuffer is mapped straight to MMIO area:</p>
+<dl class="docutils">
+<dt>MMIO 0x1000000:0x2000000</dt>
+<dd>Address range mapped straight to the framebuffer. Can be accessed in
+arbitrarily-sized units.</dd>
+</dl>
 </div>
 <div class="section" id="ramin">
-<h2><a class="toc-backref" href="#id5">RAMIN</a><a class="headerlink" href="#ramin" title="Permalink to this headline">¶</a></h2>
+<span id="nv01-pram-mmio-config"></span><h2><a class="toc-backref" href="#id5">RAMIN</a><a class="headerlink" href="#ramin" title="Permalink to this headline">¶</a></h2>
 <p>The RAMIN contains control structures of the card. RAMIN effectively grows
 from the end of VRAM - RAMIN data is reversed from VRAM data in 4-byte units.
 For example, RAMIN address 0 corresponds to VRAM address 0x1ffffc [assuming
 2MB card], RAMIN address 1 corresponds to VRAM address 0x1ffffd, RAMIN address
 4 corresponds to 0x1ffff8, 0x1234 corresponds to 0x1fedc8. In general, RAMIN
-address X corresponds to VRAM address vram_size + (X ^ (-4)).</p>
+address X corresponds to VRAM address <tt class="docutils literal"><span class="pre">vram_size</span> <span class="pre">+</span> <span class="pre">(X</span> <span class="pre">^</span> <span class="pre">(-4))</span></tt>.</p>
 <p>RAMIN is split into several subareas:</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>RAMHT - PFIFO Hash Table, used by PFIFO to store PGRAPH objects and their
 handles [see fifo/nv01-pfifo.txt]</li>
 <li>RAMRO - PFIFO RunOut area, used by PFIFO to send naughty FIFO accesses to
@@ -145,10 +161,8 @@ inactive channels [see fifo/nv01-pfifo.txt]</li>
 <li>UNK1 - unknown 0x1000-byte long area. Or maybe 0xc00-byte - last 0x400
 bytes seem to conflict with UNK2. Related to PAUDIO.</li>
 <li>UNK2 - unknown 0x400-byte long area.</li>
-<li>RAMIN proper - PDMA INstance memory, used to store
-<a class="reference internal" href="nv01-pdma.html#nv01-dmaobj"><em>DMA objects</em></a></li>
+<li>RAMIN proper - PDMA INstance memory, used to store <a class="reference internal" href="nv01-pdma.html#nv01-dmaobj"><em>DMA objects</em></a></li>
 </ul>
-</div></blockquote>
 <p>Of the above areas, the first 5 have fixed address and size, selected from
 4 possible layout options by software. DMA objects, however, can be located
 anywhere in RAMIN - including space taken up by one of the other areas, but
@@ -156,36 +170,85 @@ that&#8217;s not a particularly good idea. For the fixed areas, the layout is
 selected by PRAM.CONFIG register:</p>
 <dl class="docutils">
 <dt>MMIO 0x602200: CONFIG</dt>
-<dd><p class="first">Selects RAMIN fixed areas layout, one of:</p>
-<ul class="last simple">
-<li>0: 0x1000-byte RAMHT, 0x800-byte RAMRO and RAMFC</li>
-<li>1: 0x2000-byte RAMHT, 0x1000-byte RAMRO and RAMFC</li>
-<li>2: 0x4000-byte RAMHT, 0x2000-byte RAMRO and RAMFC, <em>buggy</em></li>
-<li>3: 0x8000-byte RAMHT, 0x4000-byte RAMRO and RAMFC</li>
-</ul>
+<dd><dl class="first last docutils">
+<dt>Selects RAMIN fixed areas layout, one of:</dt>
+<dd>0: 0x1000-byte RAMHT, 0x800-byte RAMRO and RAMFC
+1: 0x2000-byte RAMHT, 0x1000-byte RAMRO and RAMFC
+2: 0x4000-byte RAMHT, 0x2000-byte RAMRO and RAMFC, <em>buggy</em>
+3: 0x8000-byte RAMHT, 0x4000-byte RAMRO and RAMFC</dd>
+</dl>
 </dd>
 </dl>
 <p>The addresses of fixed RAMIN areas for various configurations are:</p>
-<p>CONFIG       0       1       2       3
-RAMHT  0x00000 0x00000 0x00000 0x00000
-RAMRO  0x01000 0x02000 0x02000 0x08000
-RAMFC  0x01800 0x03000 0x06000 0x0c000
-UNK1   0x02000 0x04000 0x08000 0x10000
-UNK2   0x02c00 0x04c00 0x08c00 0x10c00
-[end]  0x03000 0x05000 0x09000 0x11000</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="21%" />
+<col width="21%" />
+<col width="21%" />
+<col width="21%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">CONFIG</th>
+<th class="head">0</th>
+<th class="head">1</th>
+<th class="head">2</th>
+<th class="head">3</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>RAMHT</td>
+<td>0x00000</td>
+<td>0x00000</td>
+<td>0x00000</td>
+<td>0x00000</td>
+</tr>
+<tr class="row-odd"><td>RAMRO</td>
+<td>0x01000</td>
+<td>0x02000</td>
+<td>0x02000</td>
+<td>0x08000</td>
+</tr>
+<tr class="row-even"><td>RAMFC</td>
+<td>0x01800</td>
+<td>0x03000</td>
+<td>0x06000</td>
+<td>0x0c000</td>
+</tr>
+<tr class="row-odd"><td>UNK1</td>
+<td>0x02000</td>
+<td>0x04000</td>
+<td>0x08000</td>
+<td>0x10000</td>
+</tr>
+<tr class="row-even"><td>UNK2</td>
+<td>0x02c00</td>
+<td>0x04c00</td>
+<td>0x08c00</td>
+<td>0x10c00</td>
+</tr>
+<tr class="row-odd"><td>[end]</td>
+<td>0x03000</td>
+<td>0x05000</td>
+<td>0x09000</td>
+<td>0x11000</td>
+</tr>
+</tbody>
+</table>
 <p>Due to a hardware bug, RAMFC location conflicts with RAMHT for CONFIG=2,
 effectively making it unusable.</p>
 </div>
-<div class="section" id="memory-access-areas">
-<h2><a class="toc-backref" href="#id6">Memory access areas</a><a class="headerlink" href="#memory-access-areas" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ramin-access-areas">
+<span id="nv01-pramin-mmio"></span><span id="nv01-pramunk2-mmio"></span><span id="nv01-pramunk1-mmio"></span><span id="nv01-pramro-mmio"></span><span id="nv01-pramfc-mmio"></span><span id="nv01-pramht-mmio"></span><h2><a class="toc-backref" href="#id6">RAMIN access areas</a><a class="headerlink" href="#ramin-access-areas" title="Permalink to this headline">¶</a></h2>
 <p>The MMIO ranges that are mapped to VRAM areas are:</p>
-<p>640000:648000 PRAMHT - mapped to RAMHT area
-648000:64c000 PRAMFC - mapped to RAMFC area
-650000:654000 PRAMRO - mapped to RAMRO area
-604000:605000 ??? - mapped to UNK1 area
-606000:607000 ??? - mapped to UNK2 area
-700000:800000 PRAMIN - mapped to RAMIN area
-1000000:2000000 FB - mapped to framebuffer area</p>
+<ul class="simple">
+<li>640000:648000 PRAMHT - mapped to RAMHT area</li>
+<li>648000:64c000 PRAMFC - mapped to RAMFC area</li>
+<li>650000:654000 PRAMRO - mapped to RAMRO area</li>
+<li>604000:605000 ??? - mapped to UNK1 area</li>
+<li>606000:607000 ??? - mapped to UNK2 area</li>
+<li>700000:800000 PRAMIN - mapped to RAMIN area</li>
+</ul>
 <p>If any of the above MMIO areas happens to be larger than the underlying VRAM
 area it is mapped to, higher addresses will wrap over to the beginning of
 that area.</p>
@@ -202,14 +265,20 @@ that area.</p>
   <ul>
 <li><a class="reference internal" href="#">NV01 VRAM structure and usage</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
-<li><a class="reference internal" href="#pram-mmio-registers">PRAM MMIO registers</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
 <li><a class="reference internal" href="#the-framebuffer">The framebuffer</a></li>
 <li><a class="reference internal" href="#ramin">RAMIN</a></li>
-<li><a class="reference internal" href="#memory-access-areas">Memory access areas</a></li>
+<li><a class="reference internal" href="#ramin-access-areas">RAMIN access areas</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="vram.html"
+                        title="previous chapter">Memory structure</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nv01-pdma.html"
+                        title="next chapter">NV01 DMA engine</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/memory/nv01-vram.txt"
@@ -238,7 +307,14 @@ that area.</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="nv01-pdma.html" title="NV01 DMA engine"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="vram.html" title="Memory structure"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Memory access and structure</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

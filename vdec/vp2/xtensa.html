@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VP2 xtensa processors &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="VP2 video decoding" href="../vp2/index.html" />
+    <link rel="next" title="PVP2: video processor" href="../vp2/pvp2.html" />
+    <link rel="prev" title="VP2 video decoding" href="../vp2/index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vp2/pvp2.html" title="PVP2: video processor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/index.html" title="VP2 video decoding"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" accesskey="U">VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="vp2-xtensa-processors">
+<h1>VP2 xtensa processors<a class="headerlink" href="#vp2-xtensa-processors" title="Permalink to this headline">¶</a></h1>
+<p>Configured options:</p>
+<ul class="simple">
+<li>Code Density Option</li>
+<li>Loop Option</li>
+<li>16-bit Integer Multiply Option</li>
+<li>Miscellaneous Operations Option:
+- InstructionCLAMPS = 0
+- InstructionMINMAX = 1
+- InstructionNSA = 0
+- InstructionSEXT = 0</li>
+<li>Boolean Option</li>
+<li>Exception Option
+- NDEPC = 1
+- ResetVector = 0xc0000020
+- UserExceptionVector = 0xc0000420
+- KernelExceptionVector = 0xc0000600
+- DoubleExceptionVector = 0xc0000a00</li>
+<li>Interrupt Option
+- NINTERRUPT = 10
+- INTTYPE[0]: Timer
+- INTTYPE[1]: Timer
+- INTTYPE[2]: Level
+- INTTYPE[3]: XXX Level/Edge/WriteErr
+- INTTYPE[4]: NMI
+- INTTYPE[5]: Level
+- INTTYPE[6]: Level
+- INTTYPE[7]: Level
+- INTTYPE[8]: Level
+- INTTYPE[9]: Level</li>
+<li>High-priority Interrupt Option
+- NLEVEL: 6
+- LEVEL[0]: 1
+- LEVEL[1]: 1
+- LEVEL[2]: 2
+- LEVEL[3]: 3
+- LEVEL[4]: 7
+- LEVEL[5]: 4
+- LEVEL[6]: 5
+- LEVEL[7]: 5
+- LEVEL[8]: 5
+- LEVEL[9]: 5
+- EXCMLEVEL: 1
+- NNMI: 1
+- InterruptVector[2] = 0xc0000b40
+- InterruptVector[3] = 0xc0000c00
+- InterruptVector[4] = 0xc0000d20
+- InterruptVector[5] = 0xc0000e00
+- InterruptVector[6] = 0xc0000f00
+- InterruptVector[7] = 0xc0001000</li>
+<li>Timer Interrupt Option
+- NCOMPARE = 2
+- TIMERINT[0]: 0
+- TIMERINT[1]: 1</li>
+<li>Instruction Cache Option
+- InstCacheWayCount: 3
+- InstCacheLineBytes: 0x20
+- InstCacheBytes: 0x3000</li>
+<li>Instruction Cache Test Option</li>
+<li>Instruction Cache Index Lock Option</li>
+<li>Data Cache Option
+- DataCacheWayCount: 2
+- DataCacheLineBytes: 0x20
+- DataCacheBytes: 0x1000
+- IsWriteback: Yes</li>
+<li>Data Cache Test Option</li>
+<li>Data Cache Index Lock Option</li>
+<li>XLMI Option
+- XLMIBytes = 256kB
+- XLMIPAddr = 0xcffc0000</li>
+<li>Region Protection Option</li>
+<li>Windowed Register Option
+- WindowOverflow4 = 0xc0000800
+- WindowUnderflow4 = 0xc0000840
+- WindowOverflow8 = 0xc0000880
+- WindowUnderflow8 = 0xc00008c0
+- WindowOverflow12 = 0xc0000900
+- WindowUnderflow12 = 0xc0000940
+- NAREG = 32</li>
+<li>Processor Interface Option</li>
+<li>Debug Option
+- DEBUGLEVEL = 6
+- NIBREAK = 2
+- NDBREAK = 2
+- SZICOUNT = 32
+- OCD: XXX</li>
+<li>Trace Port Option? [XXX]</li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vp2/index.html"
+                        title="previous chapter">VP2 video decoding</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vp2/pvp2.html"
+                        title="next chapter">PVP2: video processor</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/vdec/vp2/xtensa.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../vp2/pvp2.html" title="PVP2: video processor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/index.html" title="VP2 video decoding"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" >VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

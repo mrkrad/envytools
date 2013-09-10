@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>IO register space &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="PCOUNTER signals" href="../pdaemon/perf.html" />
+    <link rel="prev" title="falcon parameters" href="../pdaemon/falcon.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/perf.html" title="PCOUNTER signals"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/falcon.html" title="falcon parameters"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="io-register-space">
+<span id="pdaemon-io"></span><h1>IO register space<a class="headerlink" href="#io-register-space" title="Permalink to this headline">¶</a></h1>
+<p>On NVA3:NVD9, PDAEMON uses the &#8220;classic&#8221; falcon addressing scheme: I[] space
+addresses are shifted left by 6 wrt the offsets in MMIO window - ie. I[0x12300]
+can be accessed through MMIO address 0x10a48c, and registers are usually 0x100
+bytes apart in the I[] space and aliased over that 0x100-byte range to be
+easily accessible by MMIO. On NVD9+, however, I[] addresses correspond directly
+to offsets in MMIO window - I[0x48c] can be accessed through MMIO 0x10a48c.</p>
+<p>The following registers/register ranges exist on PDAEMON [first number is MMIO
+offset and I[] address on NVD9+, second is I[] address on NVA3:NVD9]:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="11%" />
+<col width="9%" />
+<col width="16%" />
+<col width="55%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Host</th>
+<th class="head">Falcon</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x000:0x400</td>
+<td>0x00000:0x10000</td>
+<td>all</td>
+<td>N/A</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon registers</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x404</td>
+<td>0x10100</td>
+<td>all</td>
+<td>SUBENGINE_RESET_TIME</td>
+<td>selects how long to keep parts in reset after SUBENGINE_RESET</td>
+</tr>
+<tr class="row-even"><td>0x408</td>
+<td>0x10200</td>
+<td>all</td>
+<td>SUBENGINE_RESET_MASK</td>
+<td>selects parts affected by SUBENGINE_RESET</td>
+</tr>
+<tr class="row-odd"><td>0x420</td>
+<td>0x10800</td>
+<td>all</td>
+<td>USER_BUSY - sets the</td>
+<td><a class="reference internal" href="../pdaemon/user.html#pdaemon-io-user"><em>user-controlled busy flag</em></a></td>
+</tr>
+<tr class="row-even"><td>0x424</td>
+<td>0x10900</td>
+<td>v3-</td>
+<td>???</td>
+<td>[0/1/0]</td>
+</tr>
+<tr class="row-odd"><td>0x47c</td>
+<td>0x11f00</td>
+<td>all</td>
+<td>CHSW_REQ</td>
+<td><a class="reference internal" href="../pdaemon/chsw.html#pdaemon-io-chsw"><em>requests a channel switch</em></a></td>
+</tr>
+<tr class="row-even"><td>0x484</td>
+<td>0x12100</td>
+<td>all</td>
+<td>???</td>
+<td>[0/ff07/0]</td>
+</tr>
+<tr class="row-odd"><td>0x488</td>
+<td>0x12200</td>
+<td>all</td>
+<td>TOKEN_ALLOC</td>
+<td><a class="reference internal" href="../pdaemon/mutex.html#pdaemon-io-token"><em>allocates a mutex token</em></a></td>
+</tr>
+<tr class="row-even"><td>0x48c</td>
+<td>0x12300</td>
+<td>all</td>
+<td>TOKEN_FREE</td>
+<td><a class="reference internal" href="../pdaemon/mutex.html#pdaemon-io-token"><em>frees a mutex token</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x490</td>
+<td>0x12400</td>
+<td>all</td>
+<td>CRC_DATA</td>
+<td><a class="reference internal" href="../pdaemon/crc.html#pdaemon-io-crc"><em>the data to compute CRC of</em></a></td>
+</tr>
+<tr class="row-even"><td>0x494</td>
+<td>0x12500</td>
+<td>all</td>
+<td>CRC_STATE</td>
+<td><a class="reference internal" href="../pdaemon/crc.html#pdaemon-io-crc"><em>current CRC state</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4a0:0x4b0</td>
+<td>0x12800:0x12c00</td>
+<td>all</td>
+<td>FIFO_PUT</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-fifo"><em>host to PDAEMON fifo head</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4b0:0x4c0</td>
+<td>0x12c00:0x13000</td>
+<td>all</td>
+<td>FIFO_GET</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-fifo"><em>host to PDAEMON fifo tail</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4c0</td>
+<td>0x13000</td>
+<td>all</td>
+<td>FIFO_INTR</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-fifo-intr"><em>host to PDAEMON fifo interrupt status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4c4</td>
+<td>0x13100</td>
+<td>all</td>
+<td>FIFO_INTR_EN</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-fifo-intr"><em>host to PDAEMON fifo interrupt enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4c8</td>
+<td>0x13200</td>
+<td>all</td>
+<td>RFIFO_PUT</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-rfifo"><em>PDAEMON to host fifo head</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4cc</td>
+<td>0x13300</td>
+<td>all</td>
+<td>RFIFO_GET</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-rfifo"><em>PDAEMON to host fifo tail</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4d0</td>
+<td>0x13400</td>
+<td>all</td>
+<td>H2D</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-h2d"><em>host to PDAEMON scratch reg</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4d4</td>
+<td>0x13500</td>
+<td>all</td>
+<td>H2D_INTR</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-h2d-intr"><em>host to PDAEMON scratch reg interrupt status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4d8</td>
+<td>0x13600</td>
+<td>all</td>
+<td>H2D_INTR_EN</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-h2d-intr"><em>host to PDAEMON scratch reg interrupt enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4dc</td>
+<td>0x13700</td>
+<td>all</td>
+<td>D2H</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-d2h"><em>PDAEMON to host scratch reg</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4e0</td>
+<td>0x13800</td>
+<td>all</td>
+<td>TIMER_START</td>
+<td><a class="reference internal" href="../pdaemon/timer.html#pdaemon-io-timer"><em>timer initial tick count</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4e4</td>
+<td>0x13900</td>
+<td>all</td>
+<td>TIMER_TIME</td>
+<td><a class="reference internal" href="../pdaemon/timer.html#pdaemon-io-timer"><em>timer current remaining tick count</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x4e8</td>
+<td>0x13a00</td>
+<td>all</td>
+<td>TIMER_CTRL</td>
+<td><a class="reference internal" href="../pdaemon/timer.html#pdaemon-io-timer"><em>timer control</em></a></td>
+</tr>
+<tr class="row-even"><td>0x4f0</td>
+<td>0x13c00</td>
+<td>all</td>
+<td>???</td>
+<td>[0/f/0, 0/3f/0]</td>
+</tr>
+<tr class="row-odd"><td>0x4f8</td>
+<td>0x13e00</td>
+<td>all</td>
+<td>???</td>
+<td>[0/11/0, 0/13/0]</td>
+</tr>
+<tr class="row-even"><td>0x500</td>
+<td>0x14000</td>
+<td>all</td>
+<td>COUNTER_SIGNALS</td>
+<td><a class="reference internal" href="../pdaemon/counter.html#pdaemon-io-counter"><em>idle signal status</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x504+i*4</td>
+<td>0x14100+i*0x100</td>
+<td>all</td>
+<td>COUNTER_MASK</td>
+<td><a class="reference internal" href="../pdaemon/counter.html#pdaemon-io-counter"><em>idle counter mask</em></a></td>
+</tr>
+<tr class="row-even"><td>0x508+i*4</td>
+<td>0x14200+i*0x100</td>
+<td>all</td>
+<td>COUNTER_COUNT</td>
+<td><a class="reference internal" href="../pdaemon/counter.html#pdaemon-io-counter"><em>idle counter state</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x50c+i*4</td>
+<td>0x14300+i*0x100</td>
+<td>all</td>
+<td>COUNTER_MODE</td>
+<td><a class="reference internal" href="../pdaemon/counter.html#pdaemon-io-counter"><em>idle counter mode</em></a></td>
+</tr>
+<tr class="row-even"><td>0x580:0x5c0</td>
+<td>0x16000:0x17000</td>
+<td>all</td>
+<td>MUTEX_TOKEN</td>
+<td><a class="reference internal" href="../pdaemon/mutex.html#pdaemon-io-mutex"><em>the current mutex tokens</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x5d0:0x5e0</td>
+<td>0x17400:0x17800</td>
+<td>all</td>
+<td>DSCRATCH</td>
+<td><a class="reference internal" href="../pdaemon/host.html#pdaemon-io-dscratch"><em>scratch registers</em></a></td>
+</tr>
+<tr class="row-even"><td>0x5f0</td>
+<td>0x17c00</td>
+<td>all</td>
+<td>???</td>
+<td>[0/ffffffff/0]</td>
+</tr>
+<tr class="row-odd"><td>0x5f4</td>
+<td>0x17d00</td>
+<td>all</td>
+<td>THERM_BYTE_MASK</td>
+<td><a class="reference internal" href="../pdaemon/therm.html#pdaemon-io-therm"><em>PTHERM register write byte mask</em></a></td>
+</tr>
+<tr class="row-even"><td>0x600:0x640</td>
+<td>0x18000:0x19000</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-io"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x680</td>
+<td>0x1a000</td>
+<td>all</td>
+<td>TIMER_INTR</td>
+<td><a class="reference internal" href="../pdaemon/timer.html#pdaemon-io-timer-intr"><em>timer interrupt status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x684</td>
+<td>0x1a100</td>
+<td>all</td>
+<td>TIMER_INTR_EN</td>
+<td><a class="reference internal" href="../pdaemon/timer.html#pdaemon-io-timer-intr"><em>timer interrupt enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x688</td>
+<td>0x1a200</td>
+<td>all</td>
+<td>SUBINTR</td>
+<td><a class="reference internal" href="../pdaemon/subintr.html#pdaemon-io-subintr"><em>second-level interrupt status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x68c</td>
+<td>0x1a300</td>
+<td>all</td>
+<td>IREDIR_TRIGGER</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir"><em>PMC interrupt redirection trigger</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x690</td>
+<td>0x1a400</td>
+<td>all</td>
+<td>IREDIR_STATUS</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir"><em>PMC interrupt redirection status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x694</td>
+<td>0x1a500</td>
+<td>all</td>
+<td>IREDIR_TIMEOUT</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir-timeout"><em>IREDIR_HOST_REQ timeout</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x698</td>
+<td>0x1a600</td>
+<td>all</td>
+<td>IREDIR_ERR_DETAIL</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir-err"><em>IREDIR detailed error status</em></a></td>
+</tr>
+<tr class="row-even"><td>0x69c</td>
+<td>0x1a700</td>
+<td>all</td>
+<td>IREDIR_ERR_INTR</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir-err"><em>IREDIR error interrupt state</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x6a0</td>
+<td>0x1a800</td>
+<td>all</td>
+<td>IREDIR_ERR_INTR_EN</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir-err"><em>IREDIR error interrupt enable</em></a></td>
+</tr>
+<tr class="row-even"><td>0x6a4</td>
+<td>0x1a900</td>
+<td>all</td>
+<td>IREDIR_TIMEOUT_ENABLE</td>
+<td><a class="reference internal" href="../pdaemon/iredir.html#pdaemon-io-iredir-timeout"><em>IREDIR_HOST_REQ timeout enable</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x800:0xfe0</td>
+<td>0x20000:0x40000</td>
+<td>v0-v2</td>
+<td>THERM</td>
+<td><a class="reference internal" href="../pdaemon/therm.html#pdaemon-io-therm"><em>PTHERM registers</em></a></td>
+</tr>
+<tr class="row-even"><td>0xfe0:0x1000</td>
+<td>-</td>
+<td>v0-v2</td>
+<td>FALCON_HOST</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon host registers</em></a></td>
+</tr>
+<tr class="row-odd"><td>-</td>
+<td>0x10000:0x18000</td>
+<td>v3-</td>
+<td>THERM</td>
+<td><a class="reference internal" href="../pdaemon/therm.html#pdaemon-io-therm"><em>PTHERM registers</em></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The last 0x20 bytes of THERM range on NVA3:NVD9 aren&#8217;t accessible by the
+host, since they&#8217;re hidden by the overlapping falcon host-only control
+registers</p>
+<p>The THERM range on NVD9+ is not accessible at all by the host, since its
+base address is above the end of the MMIO window to falcon&#8217;s I[] space</p>
+<p class="last">Neither is a problem in practice, since the host can just access the same
+registers via the PTHERM range.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/falcon.html"
+                        title="previous chapter">falcon parameters</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/perf.html"
+                        title="next chapter">PCOUNTER signals</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/io.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/perf.html" title="PCOUNTER signals"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/falcon.html" title="falcon parameters"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

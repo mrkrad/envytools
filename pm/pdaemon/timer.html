@@ -1,0 +1,171 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The timer &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="Channel switching" href="../pdaemon/chsw.html" />
+    <link rel="prev" title="CRC computation" href="../pdaemon/crc.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/chsw.html" title="Channel switching"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/crc.html" title="CRC computation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-timer">
+<span id="pdaemon-io-timer-intr"></span><span id="pdaemon-io-timer"></span><span id="pdaemon-intr-timer"></span><span id="pdaemon-timer"></span><h1>The timer<a class="headerlink" href="#the-timer" title="Permalink to this headline">¶</a></h1>
+<p>Aside from the usual <a class="reference internal" href="../../falcon/timer.html#falcon-timer"><em>falcon timers</em></a>, PDAEMON has its own
+timer. The timer can be configured as either one-shot or periodic, can run
+on either daemon clock or PTIMER clock divided by 64, and generates
+interrupts. The following registers deal with the timer:</p>
+<dl class="docutils">
+<dt>MMIO 0x4e0 / I[0x13800]: TIMER_START</dt>
+<dd>The 32-bit count the timer starts counting down from. Read/write. For
+periodic mode, the period will be equal to TIMER_START+1 source cycles.</dd>
+<dt>MMIO 0x4e4 / I[0x13900]: TIMER_TIME</dt>
+<dd>The current value of the timer, read only. If TIMER_CONTROL.RUNNING is set,
+this will decrease by 1 on every rising edge of the source clock. If such
+rising edge causes this register to become 0, the TIMER_INTR bit 8 [TIMER]
+is set. The behavior of rising edge when this register is already 0 depends
+on the timer mode: in ONESHOT mode, nothing will happen. In PERIODIC mode,
+the timer will be reset to the value from TIMER_START. Note that interrupts
+won&#8217;t be generated if the timer becomes 0 when copying the value from
+TIMER_START, whether caused by starting the timer or beginning a new PERIODIC
+period. This means that using PERIODIC mode with TIMER_START of 0 will never
+generate any interrupts.</dd>
+<dt>MMIO 0x4e8 / I[0x13a00]: TIMER_CTRL</dt>
+<dd><ul class="first last simple">
+<li>bit 0: RUNNING - when 0, the timer is stopped, when 1, the timer is runinng.
+Setting this bit to 1 when it was previously 0 will also copy the
+TIMER_START value to TIMER_TIME.</li>
+<li>bit 4: SOURCE - selects the source clock<ul>
+<li>0: DCLK - daemon clock, effectively timer decrements by 1 on every daemon
+cycle</li>
+<li>1: PTIMER_B5 - PTIMER time bit 5 [ie. bit 10 of TIME_LOW]. Since timer
+decrements by 1 on every rising edge of the clock, this effectively
+decrements the counter on every 64th PTIMER clock.</li>
+</ul>
+</li>
+<li>bit 8: MODE - selects the timer mode<ul>
+<li>0: ONESHOT - timer will halt after reaching 0</li>
+<li>1: PERIODIC - timer will restart from TIMER_START after reaching 0</li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt>MMIO 0x680 / I[0x1a000]: TIMER_INTR</dt>
+<dd><ul class="first last simple">
+<li>bit 8: TIMER - set whenever TIMER_TIME becomes 0 except by a copy from
+TIMER_START, write 1 to this bit to clear it. When this and bit 8
+of TIMER_INTR_EN are set at the same time, falcon interrupt line #14 [TIMER]
+is asserted.</li>
+</ul>
+</dd>
+<dt>MMIO 0x684 / I[0x1a100]: TIMER_INTR_EN</dt>
+<dd><ul class="first last simple">
+<li>bit 8: TIMER - when set, timer interupt delivery to falcon interrupt line 14 is
+enabled.</li>
+</ul>
+</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/crc.html"
+                        title="previous chapter">CRC computation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/chsw.html"
+                        title="next chapter">Channel switching</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/timer.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/chsw.html" title="Channel switching"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/crc.html" title="CRC computation"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,519 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PSTRAPS: straps readout and override &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="GPU external device I/O units" href="index.html" />
+    <link rel="next" title="PROM: VBIOS ROM access" href="prom.html" />
+    <link rel="prev" title="GPU external device I/O units" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="prom.html" title="PROM: VBIOS ROM access"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="GPU external device I/O units"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">GPU external device I/O units</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pstraps-straps-readout-and-override">
+<span id="pstraps"></span><h1><a class="toc-backref" href="#id1">PSTRAPS: straps readout and override</a><a class="headerlink" href="#pstraps-straps-readout-and-override" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pstraps-straps-readout-and-override" id="id1">PSTRAPS: straps readout and override</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-register-list" id="id3">MMIO register list</a></li>
+<li><a class="reference internal" href="#nv01-straps" id="id4">NV01 straps</a></li>
+<li><a class="reference internal" href="#nv03-straps-readout-override-registers" id="id5">NV03+ straps readout/override registers</a></li>
+<li><a class="reference internal" href="#nv03-family-straps" id="id6">NV03 family straps</a></li>
+<li><a class="reference internal" href="#nv04-nv40-families-straps" id="id7">NV04-NV40 families straps</a></li>
+<li><a class="reference internal" href="#nv50-and-nvc0-families-straps-sets" id="id8">NV50 and NVC0 families straps sets</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The nvidia GPU chips are used in multiple cards from multiple manufacturers.
+Thus, the a single GPU can end up in many different configurations, with
+varying memory amount, memory type, bus type, TV norm, crystal frequency, and
+many other parameters. Since the GPU often needs to know what configuration
+it is used in, a &#8220;straps&#8221; mechanism was invented to tell it this information.
+On the first few cycles after reset, the memory bus pins are sampled. Since
+nothing else is driving them at that point, their logic state is decided by
+the pull-up or pull-down resistors placed by board manufacturer. The value
+this read is used as the &#8220;straps&#8221; value and is used to configure many aspects
+of GPU operation. Some of the straps are not used by the GPU itself, but are
+intended for use by the BIOS or the driver.</p>
+<p>NV01 has 5 straps bits, NV03 has 10 bits. NV04 bumped this count to 16 straps
+bits, and allowed the driver to override the straps value at runtime. NV11
+bumped the count to 22 bits, NV20 bumped it to 31 bits.</p>
+<p>NV18 introduced a second set of 31 straps, and added another override
+mechanism. Each straps set now consists of 2 31-bit values: primary and
+secondary, and a 31-bit &#8220;select&#8221; mask that chooses which value is the source
+of a given bit in the &#8220;effective&#8221; value used internally by the card. Both
+primary and secondary value and select mask are set on reset from the BIOS
+in ROM, but can be modified later. Straps 0 select, straps 0 secondary,
+straps 1 select and straps 1 secondary are loaded from BIOS ROM offsets
+0x58, 0x5c, 0x60, 0x64, respectively.</p>
+<p>NVD9 introduced a third set.</p>
+<p>When effective straps value changes for any reason, the changed value starts
+being used by the card immediately.</p>
+<p>The straps can be read or overriden by accessing the PSTRAPS area of MMIO,
+which resides at addresses 0x608000-0x608fff [NV01] or 0x101000-0x101fff
+[NV03+] in BAR0. It&#8217;s also known as PEXTDEV by nvidia.</p>
+<p>On NV03:NV17, PSTRAPS is enabled by PMC.ENABLE bit 20 [PFB], on later cards
+and on NV01 it&#8217;s unaffected by <a class="reference internal" href="../bus/pmc.html#pmc-enable"><em>PMC.ENABLE</em></a>.</p>
+<p>On NV03:NV04 cards, the PSTRAPS area is also home to an unrelated register
+controlling ROM timings.</p>
+</div>
+<div class="section" id="mmio-register-list">
+<span id="pstraps-mmio"></span><h2><a class="toc-backref" href="#id3">MMIO register list</a><a class="headerlink" href="#mmio-register-list" title="Permalink to this headline">¶</a></h2>
+<p>NV01 registers:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="10%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x608000</td>
+<td>STRAPS</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv01-straps"><em>straps value</em></a></td>
+</tr>
+</tbody>
+</table>
+<p>NV03+ registers:</p>
+<p>no annotation - available on all NV03+ cards
+[1] - available on NV03:NV04 only
+[2] - available on NV18:NV20 and NV25+ only
+[3] - available on NVD9+ only</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="15%" />
+<col width="17%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x101000</td>
+<td>all</td>
+<td>STRAPS0_PRIMARY</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 0 primary value</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x101004</td>
+<td>NV18:NV20 NV25-</td>
+<td>STRAPS0_SELECT</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 0 select mask</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101008</td>
+<td>NV18:NV20 NV25-</td>
+<td>STRAPS0_SECONDARY</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 0 secondary value</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x10100c</td>
+<td>NV18:NV20 NV25-</td>
+<td>STRAPS1_PRIMARY</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 1 primary value</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101010</td>
+<td>NV18:NV20 NV25-</td>
+<td>STRAPS1_SELECT</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 1 select mask</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x101014</td>
+<td>NV18:NV20 NV25-</td>
+<td>STRAPS1_SECONDARY</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 1 secondary value</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101028</td>
+<td>NVD9-</td>
+<td>???</td>
+<td>RO 0</td>
+</tr>
+<tr class="row-odd"><td>0x10102c</td>
+<td>NVD9-</td>
+<td>???</td>
+<td>RO 0</td>
+</tr>
+<tr class="row-even"><td>0x101030</td>
+<td>NVD9-</td>
+<td>???</td>
+<td>RW mask ff</td>
+</tr>
+<tr class="row-odd"><td>0x101034</td>
+<td>NVD9-</td>
+<td>STRAPS2_PRIMARY</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 2 primary value</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101038</td>
+<td>NVD9-</td>
+<td>STRAPS2_SELECT</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 2 select mask</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x10103c</td>
+<td>NVD9-</td>
+<td>STRAPS2_SECONDARY</td>
+<td><a class="reference internal" href="#pstraps-mmio-nv03-straps"><em>straps set 2 secondary value</em></a></td>
+</tr>
+<tr class="row-even"><td>0x101040</td>
+<td>NVD9-</td>
+<td>???</td>
+<td>RO 0</td>
+</tr>
+<tr class="row-odd"><td>0x101200</td>
+<td>NV03:NV04</td>
+<td>ROM_TIMINGS</td>
+<td><a class="reference internal" href="prom.html#prom-mmio-rom-timings"><em>ROM timing configuration</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="nv01-straps">
+<span id="pstraps-mmio-nv01-straps"></span><h2><a class="toc-backref" href="#id4">NV01 straps</a><a class="headerlink" href="#nv01-straps" title="Permalink to this headline">¶</a></h2>
+<p>On NV01, all straps bits are available in a single register:</p>
+<dl class="docutils">
+<dt>MMIO 0x608000: STRAPS</dt>
+<dd><ul class="first last simple">
+<li>bits 0-1: memory type
+- 0 - VRAM
+- 3 - DRAM</li>
+<li>bits 2-3: board type
+- 0 - motherboard
+- 1 - adapter #1 [normal add-on cards use this value]
+- 2 - adapter #2
+- 3 - adapter #3</li>
+<li>bit 4: bus type
+- 0 - PCI
+- 1 - VESA local bus</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="nv03-straps-readout-override-registers">
+<span id="pstraps-mmio-nv03-straps"></span><h2><a class="toc-backref" href="#id5">NV03+ straps readout/override registers</a><a class="headerlink" href="#nv03-straps-readout-override-registers" title="Permalink to this headline">¶</a></h2>
+<p>MMIO 0x101000: STRAPS0_PRIMARY
+MMIO 0x10100c: STRAPS1_PRIMARY [NV18:NV20 and NV25+ only]
+MMIO 0x101034: STRAPS2_PRIMARY [NVD9+ only]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 0-30: straps primary value</li>
+<li>bit 31: override enable [NV04+ only]</li>
+</ul>
+</div></blockquote>
+<p>When writing, if bit 31 is 0, override is disabled, and the straps register
+is restored to the original straps as read by the card on reset. If bit 31
+is 1, override is enabled, and the straps value is set to the value written
+by host.</p>
+<p>MMIO 0x101004: STRAPS0_SELECT [NV18:NV20 and NV25+ only]
+MMIO 0x101010: STRAPS1_SELECT [NV18:NV20 and NV25+ only]
+MMIO 0x101038: STRAPS2_SELECT [NVD9+ only]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 0-30: strap source selection for strap bit X</li>
+</ul>
+</div></blockquote>
+<p>When corresponding bit is set to 1, the card takes its value from the main
+straps value, when corresponding bit is set to 0, the card takes its value from
+the secondary value. This register is always writable and not affected by
+override enable.</p>
+<p>MMIO 0x101008: STRAPS0_SECONDARY [NV18:NV20 and NV25+ only]
+MMIO 0x101014: STRAPS1_SECONDARY [NV18:NV20 and NV25+ only]
+MMIO 0x10103c: STRAPS2_SECONDARY [NVD9+ only]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bits 0-30: straps secondary value</li>
+</ul>
+</div></blockquote>
+<p>This register is always writable and not affected by override enable.</p>
+</div>
+<div class="section" id="nv03-family-straps">
+<h2><a class="toc-backref" href="#id6">NV03 family straps</a><a class="headerlink" href="#nv03-family-straps" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>bit 0: if set, PCI 66MHz mode is supported</li>
+<li>bit 1: if 0, this GPU is part of a motherboard and ROMless, subsystem device
+id will be initialised to 0x00000000 and should be written with a valid
+value by system bios. if 1, this is a standalone card and has ROM -
+subsystem will be read from 32-bit LE word at address 0x54 in the ROM</li>
+<li>bits 2-3: [original NV03 only]: memory type, apparently useless</li>
+<li>bit 2 [NV03T]: memory type, apparently useless</li>
+<li>bit 3 [NV03T]: if 0, no Power Management capability is exposed and GPU uses
+pci id 0x0018, if 1 Power Management capability exposed and GPU uses
+pci id 0x0019</li>
+<li>bit 4: ram width: 0 64-bit, 1 128-bit. Apparently useless.</li>
+<li>bit 5: host bus type: 0 PCI, 1 AGP</li>
+<li>bit 6: crystal frequency: 0 - 13.500MHz, 1 - 14.31818MHz</li>
+<li>bits 7-8: TV mode: 0 - no TV encoder, 1 - NTSC TV encoder present, 2 - PAL TV
+encoder present</li>
+<li>bit 9 [original NV03]: PCI version: 0 PCI 2.0, 1 PCI 2.1.</li>
+<li>bit 9 [NV03T]: if set, AGP x2 is supported</li>
+</ul>
+</div>
+<div class="section" id="nv04-nv40-families-straps">
+<h2><a class="toc-backref" href="#id7">NV04-NV40 families straps</a><a class="headerlink" href="#nv04-nv40-families-straps" title="Permalink to this headline">¶</a></h2>
+<p>Set 0:</p>
+<ul class="simple">
+<li>bit 0: if 0, PCI AD lines have reversed polarity, if 1 normal</li>
+<li>bit 1: if 0, this GPU is part of a motherboard and ROMless, subsystem device
+id will be initialised to 0x00000000 and should be written with a valid
+value by system bios. if 1, this is a standalone card and has ROM -
+subsystem will be read from 32-bit LE word at address 0x54 in the ROM.
+Same applies to select/secondary values.</li>
+<li>bits 2-5: RAM config, for use by BIOS</li>
+<li>bit 6: crystal type bit 0</li>
+<li>bits 7-8: TV mode: 0 - SECAM, 1 - NTSC, 2 - PAL, 3 - disabled</li>
+<li>bit 9: if 1, AGP x4 disabled [PCI/AGP cards only]</li>
+<li>bit 10: if 1, AGP side band addressing disabled [PCI/AGP cards only]</li>
+<li>bit 11: if 1, AGP fast writes is disabled [PCI/AGP cards only]</li>
+<li>bits 12-13: DEVICE_ID bits 0-1</li>
+<li>bit 14: bus type, 0 - PCI, 1 - AGP [PCI/AGP cards only]</li>
+<li>bit 15: flat panel interface width: 0 - 12 bits, 1 - 24 bits</li>
+<li>bits 16-17 [NV20:NV25 only]: BAR1 size<ul>
+<li>0: 64MB</li>
+<li>1: 128MB</li>
+<li>2: 256MB</li>
+<li>3: 512MB</li>
+</ul>
+</li>
+<li>bit 18 [NV20:NV25 only]: BAR0 size [XXX: I&#8217;m almost sure it does something else too]<ul>
+<li>0: 16MB</li>
+<li>1: 128MB</li>
+</ul>
+</li>
+<li>bits 16-19 [NV17:NV20 and NV25:NV50]: flat panel config [used to select entry from fp mode table]</li>
+<li>bits 20-21: DEVICE_ID bits 2-3 [NV17:NV20 and NV25:NV50]</li>
+<li>bit 22: crystal type bit 1 [NV17:NV20 and NV25:NV50]</li>
+<li>bits 23-24 [NV17:NV20 and NV25:NV50]: BAR1 size<ul>
+<li>0: 64MB</li>
+<li>1: 128MB</li>
+<li>2: 256MB</li>
+<li>3: 512MB</li>
+</ul>
+</li>
+<li>bit 25 [NV17:NV20 and NV25:NV50]: BAR0 size [XXX: I&#8217;m almost sure it does something else too]<ul>
+<li>0: 16MB</li>
+<li>1: 128MB</li>
+</ul>
+</li>
+<li>bits 26-28: ?</li>
+<li>bits 29-30 [NV17:NV20 and NV25:NV50]: bios ROM type<ul>
+<li>0: parallel</li>
+<li>1: serial [SPI]</li>
+<li>2: ???</li>
+</ul>
+</li>
+</ul>
+<p>Crystal type is:</p>
+<ul class="simple">
+<li>0 - 13.500MHz</li>
+<li>1 - 14.31818MHz</li>
+<li>2 - 27.000MHz</li>
+<li>3 - 25.000MHz</li>
+</ul>
+<p>Set 1:</p>
+<ul class="simple">
+<li>bit 0: enables OHCI 1394 controller on PCI function 1 [NV18 only]</li>
+<li>bits 1-3: ?</li>
+<li>bit 4: pci device class<ul>
+<li>0: 0x030200 [3d controller]</li>
+<li>1: 0x030000 [vga controller]</li>
+</ul>
+</li>
+<li>bits 5-30: ?</li>
+</ul>
+</div>
+<div class="section" id="nv50-and-nvc0-families-straps-sets">
+<h2><a class="toc-backref" href="#id8">NV50 and NVC0 families straps sets</a><a class="headerlink" href="#nv50-and-nvc0-families-straps-sets" title="Permalink to this headline">¶</a></h2>
+<p>Set 0:</p>
+<ul class="simple">
+<li>bit 0: ?</li>
+<li>bit 1: if 0, this GPU is part of a motherboard and ROMless, subsystem device
+id will be initialised to 0x00000000 and should be written with a valid
+value by system bios. if 1, this is a standalone card and has ROM -
+subsystem will be read from 32-bit LE word at address 0x54 in the ROM.
+Same applies to select/secondary values.</li>
+<li>bits 2-5: RAM config, for use by BIOS</li>
+<li>bit 6: crystal type<ul>
+<li>0: 27MHz</li>
+<li>1: 25MHz</li>
+</ul>
+</li>
+<li>bits 7-9: ?</li>
+<li>bits 10-13: DEVICE_ID, bits 0-3</li>
+<li>bits 14-15: BAR1 size, part 1</li>
+<li>bits 16-21: ?</li>
+<li>bits 22-23: bios ROM type<ul>
+<li>0: parallel</li>
+<li>1: serial [SPI]</li>
+<li>2: ???</li>
+</ul>
+</li>
+<li>bits 24-27: flat panel config [used to select entry from fp mode table]</li>
+<li>bit 28: DEVICE_ID bit 4 [NV92-]</li>
+<li>bits 29-30: ?</li>
+</ul>
+<p>Set 1:</p>
+<ul class="simple">
+<li>bits 0-3: ?</li>
+<li>bit 4: pci device class<ul>
+<li>0: 0x030200 [3d controller]</li>
+<li>1: 0x030000 [vga controller]</li>
+</ul>
+</li>
+<li>bits 5-15: ?</li>
+<li>bit 16: BAR5 enable</li>
+<li>bits 17-19: BAR0 size<ul>
+<li>0 16MB</li>
+<li>1 32MB</li>
+<li>2 64MB</li>
+<li>3 128MB</li>
+<li>4 256MB</li>
+<li>5 512MB</li>
+<li>6 1GB</li>
+<li>7 2GB</li>
+</ul>
+</li>
+<li>bits 20-22 BAR1 size, part2</li>
+<li>bit 23: BAR3 size
+- 0 BAR0 size * 2
+- 1 BAR0 size</li>
+<li>24-30: ?</li>
+</ul>
+<p>For BAR1 size, the two parts are summed, and BAR1 size is computed as follows:</p>
+<ul class="simple">
+<li>0 64MB</li>
+<li>1 128MB</li>
+<li>2 256MB</li>
+<li>3 512MB</li>
+<li>4 1GB</li>
+<li>5 2GB</li>
+<li>6 4GB</li>
+<li>7 8GB</li>
+<li>8 16GB</li>
+<li>9 32GB</li>
+<li>10 64GB</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PSTRAPS: straps readout and override</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-register-list">MMIO register list</a></li>
+<li><a class="reference internal" href="#nv01-straps">NV01 straps</a></li>
+<li><a class="reference internal" href="#nv03-straps-readout-override-registers">NV03+ straps readout/override registers</a></li>
+<li><a class="reference internal" href="#nv03-family-straps">NV03 family straps</a></li>
+<li><a class="reference internal" href="#nv04-nv40-families-straps">NV04-NV40 families straps</a></li>
+<li><a class="reference internal" href="#nv50-and-nvc0-families-straps-sets">NV50 and NVC0 families straps sets</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">GPU external device I/O units</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="prom.html"
+                        title="next chapter">PROM: VBIOS ROM access</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/io/pstraps.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="prom.html" title="PROM: VBIOS ROM access"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="GPU external device I/O units"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >GPU external device I/O units</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -101,7 +101,7 @@ HOST_IO_INDEX is specified in the host-only MMIO register falcon_base + 0xffc:</
 Low 2 bits of addresses should be 0 at all times.</p>
 </div>
 <div class="section" id="common-io-register-list">
-<h2><a class="toc-backref" href="#id3">Common IO register list</a><a class="headerlink" href="#common-io-register-list" title="Permalink to this headline">¶</a></h2>
+<span id="falcon-io-common"></span><h2><a class="toc-backref" href="#id3">Common IO register list</a><a class="headerlink" href="#common-io-register-list" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="docutils">
 <colgroup>
 <col width="5%" />
@@ -704,7 +704,7 @@ MMIO 0x084 / I[0x02100]: SCRATCH3</p>
 <div>Scratch 32-bit registers, meant for host &lt;-&gt; falcon communication.</div></blockquote>
 </div>
 <div class="section" id="engine-status-and-control-registers">
-<h2><a class="toc-backref" href="#id5">Engine status and control registers</a><a class="headerlink" href="#engine-status-and-control-registers" title="Permalink to this headline">¶</a></h2>
+<span id="falcon-status"></span><h2><a class="toc-backref" href="#id5">Engine status and control registers</a><a class="headerlink" href="#engine-status-and-control-registers" title="Permalink to this headline">¶</a></h2>
 <dl class="docutils">
 <dt>MMIO 0x04c / I[0x01300]: STATUS</dt>
 <dd>Status of various parts of the engine. For each bit, 1 means busy, 0 means
@@ -716,6 +716,8 @@ Further bits are engine-specific.</dd>
 <dd>A bitmask of nonexistent status bits. Each of bits 0-15 is set to 0 if
 corresponding STATUS line is tied to anything in this particular engine, 1
 if it&#8217;s unused. [?]</dd>
+</dl>
+<dl class="docutils">
 <dt>MMIO 0x07c / I[0x01f00]: SUBENGINE_RESET</dt>
 <dd>When written with value 1, resets all subengines that this falcon engine
 controls - that is, everything in IO space addresses 0x10000:0x20000. Note

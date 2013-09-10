@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VGA stack &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="NV03:NV50 display subsystem" href="../nv03/index.html" />
+    <link rel="next" title="NV50- display subsystem" href="../nv50/index.html" />
+    <link rel="prev" title="PTV: on-chip tv encoder" href="../nv03/ptv.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../nv50/index.html" title="NV50- display subsystem"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../nv03/ptv.html" title="PTV: on-chip tv encoder"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Display subsystem</a> &raquo;</li>
+          <li><a href="../nv03/index.html" accesskey="U">NV03:NV50 display subsystem</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="vga-stack">
+<span id="id1"></span><h1><a class="toc-backref" href="#id2">VGA stack</a><a class="headerlink" href="#vga-stack" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#vga-stack" id="id2">VGA stack</a><ul>
+<li><a class="reference internal" href="#introduction" id="id3">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id4">MMIO registers</a></li>
+<li><a class="reference internal" href="#description" id="id5">Description</a></li>
+<li><a class="reference internal" href="#stack-access-registers" id="id6">Stack access registers</a></li>
+<li><a class="reference internal" href="#internal-operation" id="id7">Internal operation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id3">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>A dedicated RAM made of 0x200 8-bit cells arranged into a hw stack. NFI what
+it is for, apparently related to VGA. Present on NV41+ cards.</p>
+</div>
+<div class="section" id="mmio-registers">
+<span id="nv50-cr-vga-stack"></span><span id="nv03-cr-vga-stack"></span><span id="pdisplay-mmio-vga-stack"></span><span id="pbus-mmio-vga-stack"></span><h2><a class="toc-backref" href="#id4">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+<p>On NV41:NV50, the registers are located in PBUS area:</p>
+<ul class="simple">
+<li>001380 VAL</li>
+<li>001384 CTRL</li>
+<li>001388 CONFIG</li>
+<li>00138c SP</li>
+</ul>
+<p>They are also aliased in the VGA CRTC register space:</p>
+<ul class="simple">
+<li>CR90 VAL</li>
+<li>CR91 CTRL</li>
+</ul>
+<p>On NV50+, the registers are located in PDISPLAY.VGA area:</p>
+<ul class="simple">
+<li>619e40 VAL</li>
+<li>619e44 CTRL</li>
+<li>619e48 CONFIG</li>
+<li>619e4c SP</li>
+</ul>
+<p>And aliased in VGA CRTC register space, but in a different place:</p>
+<ul class="simple">
+<li>CRA2 VAL</li>
+<li>CRA3 CTRL</li>
+</ul>
+</div>
+<div class="section" id="description">
+<h2><a class="toc-backref" href="#id5">Description</a><a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>The stack is made of the following data:</p>
+<ul class="simple">
+<li>an array of 0x200 bytes [the actual stack]</li>
+<li>a write shadow byte, WVAL [NV50+ only]</li>
+<li>a read shadow byte, RVAL [NV50+ only]</li>
+<li>a 10-bit stack pointer [SP]</li>
+<li>3 config bits:
+- push mode: auto or manual
+- pop mode: auto or manual
+- manual pop mode: read before pop or read after pop</li>
+<li>2 sticky error bits:
+- stack underflow
+- stack overflow</li>
+</ul>
+<p>The stack grows upwards. The stack pointer points to the cell that would be
+written by a push. The valid values for stack pointer are thus 0-0x200, with
+0 corresponding to an empty stack and 0x200 to a full stack. If stack is ever
+accessed at position &gt;= 0x200 [which is usually an error], the address wraps
+modulo 0x200.</p>
+<p>There are two major modes the stack can be operated in: auto mode and manual
+mode. The mode settings are independent for push and pop accesses - one can
+use automatic pushes and manual pops, for example. In automatic mode, the
+read/write access to the VAL register automatically performs the push/pop
+operation. In manual mode, the push/pop needs to be manually triggered in
+addition to accessing the VAL reg. For manual pushes, the push should be
+triggered after writing the value. For pops, the pop should be triggered
+before or after reading the value, depending on selected manual pop mode.</p>
+<p>The stack also keeps track of overflow and underflow errors. On NV41:NV50,
+while these error conditions are detected, the offending access is still
+executed [and the stack pointer wraps]. On NV50+, the offending access is
+discarded. The error status is sticky. On NV41:NV50, it can only be cleared
+by poking the CONFIG register clear bits. On NV50+, the overflow status
+is cleared by executing a pop, and the underflow status is cleared by
+executing a push.</p>
+</div>
+<div class="section" id="stack-access-registers">
+<h2><a class="toc-backref" href="#id6">Stack access registers</a><a class="headerlink" href="#stack-access-registers" title="Permalink to this headline">¶</a></h2>
+<p>The stack data is read or written through the VAL register:</p>
+<p>MMIO 0x001380 / CR 0x90: VAL [NV41:NV50]
+MMIO 0x619e40 / CR 0xa2: VAL [NV50-]</p>
+<blockquote>
+<div>Accesses a stack entry. A write to this register stored the low 8 bits
+of written data as a byte to be pushed. If automatic push mode is set,
+the value is pushed immediately. Otherwise, it is pushed after PUSH_TRIGGER
+is set. A read from this register returns popped data [causing a pop in
+the process if automatic pop mode is set]. If manual read-before-pop mode
+is in use, the returned byte is the byte that the next POP_TRIGGER would
+pop. In manual pop-before-read, it is the byte that the last POP_TRIGGER
+popped.</div></blockquote>
+<p>The CTRL register is used to manually push/pop the stack and check its status:</p>
+<p>MMIO 0x001384 / CR 0x91: CTRL [NV41:NV50]
+MMIO 0x619e44 / CR 0xa3: CTRL [NV50-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bit 0: PUSH_TRIGGER - when written as 1, executes a push. Always reads as 0.</li>
+<li>bit 1: POP_TRIGGER - like above, for pop.</li>
+<li>bit 4: EMPTY - read-only, reads as 1 when SP == 0.</li>
+<li>bit 5: FULL - read-only, reads as 1 when SP &gt;= 0x200.</li>
+<li>bit 6: OVERFLOW - read-only, the sticky overflow error bit</li>
+<li>bit 7: UNDERFLOW - read-only, the sticky underflow error bit</li>
+</ul>
+</div></blockquote>
+<p>= Stack configuration registers =</p>
+<p>To configure the stack, the CONFIG register is used:</p>
+<p>MMIO 0x001388: CONFIG [NV41:NV50]
+MMIO 0x619e48: CONFIG [NV50-]</p>
+<blockquote>
+<div><ul class="simple">
+<li>bit 0: PUSH_MODE - selects push mode [see above]<ul>
+<li>0: MANUAL</li>
+<li>1: AUTO</li>
+</ul>
+</li>
+<li>bit 1: POP_MODE - selects pop mode [see above]<ul>
+<li>0: MANUAL</li>
+<li>1: AUTO</li>
+</ul>
+</li>
+<li>bit 2: MANUAL_POP_MODE - for manual pop mode, selects manual pop submode.
+Unused for auto pop mode.<ul>
+<li>0: POP_READ - pop before read</li>
+<li>1: READ_POP - read before pop</li>
+</ul>
+</li>
+<li>bit 6: OVERFLOW_CLEAR [NV41:NV50] - when written as 1, clears CTRL.OVERFLOW
+to 0. Always reads as 0.</li>
+<li>bit 7: UNDERFLOW_CLEAR [NV41:NV50] - like above, for CTRL.UNDERFLOW</li>
+</ul>
+</div></blockquote>
+<p>The stack pointer can be accessed directly by the SP register:</p>
+<p>MMIO 0x00138c: SP [NV41:NV50]
+MMIO 0x619e4c: SP [NV50-]</p>
+<blockquote>
+<div>The stack pointer. Only low 10 bits are valid.</div></blockquote>
+</div>
+<div class="section" id="internal-operation">
+<h2><a class="toc-backref" href="#id7">Internal operation</a><a class="headerlink" href="#internal-operation" title="Permalink to this headline">¶</a></h2>
+<p>NV41:NV50 VAL write:</p>
+<div class="highlight-python"><pre>if (SP &gt;= 0x200)
+        CTRL.OVERFLOW = 1;
+STACK[SP] = val;
+if (CONFIG.PUSH_MODE == AUTO)
+        PUSH();</pre>
+</div>
+<p>NV41:NV50 PUSH:</p>
+<div class="highlight-python"><pre>SP++;</pre>
+</div>
+<p>NV41:NV50 VAL read:</p>
+<div class="highlight-python"><pre>if (SP == 0)
+        CTRL.UNDERFLOW = 1;
+if (CONFIG.POP_MODE == AUTO) {
+        POP();
+        res = STACK[SP];
+} else {
+        if (CONFIG.MANUAL_POP_MODE == POP_READ)
+                res = STACK[SP];
+        else
+                res = STACK[SP-1];
+}</pre>
+</div>
+<p>NV41:NV50 POP:</p>
+<div class="highlight-python"><pre>SP--;</pre>
+</div>
+<p>NV50+ VAL write:</p>
+<div class="highlight-python"><pre>WVAL = val;
+if (CONFIG.PUSH_MODE == AUTO)
+        PUSH();</pre>
+</div>
+<p>NV50+ PUSH:</p>
+<div class="highlight-python"><pre>if (SP &gt;= 0x200)
+        CTRL.OVERFLOW = 1;
+else
+        STACK[SP++] = WVAL;
+CTRL.UNDERFLOW = 0;</pre>
+</div>
+<p>NV50+ VAL read:</p>
+<div class="highlight-python"><pre>if (CONFIG.POP_MODE == AUTO) {
+        POP();
+        res = RVAL;
+} else {
+        if (CONFIG.MANUAL_POP_MODE == POP_READ || SP == 0)
+                res = RVAL;
+        else
+                res = STACK[SP-1];
+}</pre>
+</div>
+<p>NV50+ POP:</p>
+<div class="highlight-python"><pre>if (SP == 0)
+        CTRL.UNDERFLOW = 1;
+else
+        RVAL = STACK[--SP];
+CTRL.OVERFLOW = 0;</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">VGA stack</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#description">Description</a></li>
+<li><a class="reference internal" href="#stack-access-registers">Stack access registers</a></li>
+<li><a class="reference internal" href="#internal-operation">Internal operation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../nv03/ptv.html"
+                        title="previous chapter">PTV: on-chip tv encoder</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../nv50/index.html"
+                        title="next chapter">NV50- display subsystem</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/display/nv03/vga-stack.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../nv50/index.html" title="NV50- display subsystem"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../nv03/ptv.html" title="PTV: on-chip tv encoder"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Display subsystem</a> &raquo;</li>
+          <li><a href="../nv03/index.html" >NV03:NV50 display subsystem</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

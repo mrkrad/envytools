@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PVLD: variable length decoding engine &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="VP3/VP4/VP5 video decoding" href="../vp3/index.html" />
+    <link rel="next" title="PVDEC: video decoding engine" href="../vp3/pvdec.html" />
+    <link rel="prev" title="VP3/VP4/VP5 video decoding" href="../vp3/index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vp3/pvdec.html" title="PVDEC: video decoding engine"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vp3/index.html" title="VP3/VP4/VP5 video decoding"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp3/index.html" accesskey="U">VP3/VP4/VP5 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pvld-variable-length-decoding-engine">
+<span id="pvld"></span><h1><a class="toc-backref" href="#id2">PVLD: variable length decoding engine</a><a class="headerlink" href="#pvld-variable-length-decoding-engine" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pvld-variable-length-decoding-engine" id="id2">PVLD: variable length decoding engine</a><ul>
+<li><a class="reference internal" href="#introduction" id="id3">Introduction</a></li>
+<li><a class="reference internal" href="#falcon-parameters" id="id4">falcon parameters</a></li>
+<li><a class="reference internal" href="#io-registers" id="id5">IO registers</a></li>
+<li><a class="reference internal" href="#vld-unit" id="id6">VLD unit</a><ul>
+<li><a class="reference internal" href="#pvld-io-vld" id="id7">IO registers</a></li>
+<li><a class="reference internal" href="#interrupts" id="id8">Interrupts</a></li>
+<li><a class="reference internal" href="#status-report" id="id9">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bucket-format" id="id10">Bucket format</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id3">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="falcon-parameters">
+<span id="pvld-falcon"></span><h2><a class="toc-backref" href="#id4">falcon parameters</a><a class="headerlink" href="#falcon-parameters" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Present on:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd>NV98, NVAA, NVAC</dd>
+<dt>v1:</dt>
+<dd>NVA3:NVAF</dd>
+<dt>v2:</dt>
+<dd>NVAF</dd>
+<dt>v3:</dt>
+<dd>NVC0:NVD9</dd>
+<dt>v4:</dt>
+<dd>NVD9+</dd>
+</dl>
+</dd>
+<dt>BAR0 address:</dt>
+<dd>0x084000</dd>
+<dt>PMC interrupt line:</dt>
+<dd>15</dd>
+<dt>PMC enable bit:</dt>
+<dd>15</dd>
+<dt>Secretful:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd>no</dd>
+<dt>v1+:</dt>
+<dd>yes</dd>
+</dl>
+</dd>
+<dt>Version:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd>0</dd>
+<dt>v1-v3:</dt>
+<dd>3</dd>
+<dt>v4:</dt>
+<dd>4</dd>
+</dl>
+</dd>
+<dt>Code segment size:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd>0x1000</dd>
+<dt>v1:</dt>
+<dd>0x1800</dd>
+<dt>v2+:</dt>
+<dd>0x2000</dd>
+</dl>
+</dd>
+<dt>Data segment size:</dt>
+<dd><dl class="first last docutils">
+<dt>v0-v1:</dt>
+<dd>0x1000</dd>
+<dt>v2-v3:</dt>
+<dd>0x2000</dd>
+<dt>v4:</dt>
+<dd>0x1000</dd>
+</dl>
+</dd>
+<dt>Fifo size:</dt>
+<dd>0x10</dd>
+<dt>Xfer slots:</dt>
+<dd>8</dd>
+<dt>Code TLB index bits:</dt>
+<dd>8</dd>
+<dt>Code ports:</dt>
+<dd>1</dd>
+<dt>Data ports:</dt>
+<dd>1</dd>
+<dt>Version 4 unknown caps:</dt>
+<dd>31</dd>
+<dt>Unified address space:</dt>
+<dd>no</dd>
+<dt>IO addressing type:</dt>
+<dd>indexed</dd>
+<dt>Core clock:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd><a class="reference internal" href="../../pm/nv50-clock.html#nv98-clock-vdclk"><em>VDCLK: video decoding clock</em></a></dd>
+<dt>v1-v2:</dt>
+<dd><a class="reference internal" href="../../pm/nva3-clock.html#nva3-clock-vdclk"><em>VDCLK: video decoding clock</em></a></dd>
+<dt>v3-v4:</dt>
+<dd><a class="reference internal" href="../../pm/nvc0-clock.html#nvc0-clock-vdclk"><em>VDCLK: video decoding clock</em></a></dd>
+</dl>
+</dd>
+<dt>NV50 VM engine:</dt>
+<dd>0x9</dd>
+<dt>NV50 VM client:</dt>
+<dd>0x0d</dd>
+<dt>NV50 context DMA:</dt>
+<dd>0x8</dd>
+<dt>NVC0 VM engine:</dt>
+<dd>0x10</dd>
+<dt>NVC0 VM client:</dt>
+<dd>HUB 0x0d</dd>
+<dt>Interrupts:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="5%" />
+<col width="5%" />
+<col width="10%" />
+<col width="17%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Line</th>
+<th class="head">Type</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>8</td>
+<td>edge</td>
+<td>NVA3:NVC0</td>
+<td>MEMIF_PORT_INVALID</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-port-invalid"><em>MEMIF port not initialised</em></a></td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>edge</td>
+<td>NVA3:NVC0</td>
+<td>MEMIF_FAULT</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-fault"><em>MEMIF VM fault</em></a></td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>edge</td>
+<td>NVC0-</td>
+<td>MEMIF_BREAK</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-break"><em>MEMIF breakpoint</em></a></td>
+</tr>
+<tr class="row-odd"><td>10</td>
+<td>level</td>
+<td>all</td>
+<td>VLD</td>
+<td><a class="reference internal" href="#pvld-intr-vld"><em>VLD interrupt</em></a></td>
+</tr>
+<tr class="row-even"><td>11</td>
+<td>level</td>
+<td>v1-</td>
+<td>CRYPT</td>
+<td><a class="reference internal" href="../../falcon/crypt.html#falcon-crypt-intr"><em>crypto coprocessor</em></a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Status bits:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="7%" />
+<col width="14%" />
+<col width="14%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Bit</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>all</td>
+<td>FALCON</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-status"><em>Falcon unit</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-status"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>all</td>
+<td>VLD</td>
+<td><a class="reference internal" href="#pvld-status-vld"><em>VLD unit</em></a></td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>v1-</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>v2-</td>
+<td>???</td>
+<td>???</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>IO registers:</dt>
+<dd><a class="reference internal" href="#pvld-io"><em>IO registers</em></a></dd>
+<dt>MEMIF ports:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="15%" />
+<col width="27%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Port</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>1</td>
+<td>STREAM</td>
+<td>bitstream input</td>
+</tr>
+<tr class="row-odd"><td>2</td>
+<td>MBRING</td>
+<td>MBRING output</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>BUCKET</td>
+<td>temp bucket</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
+<div class="section" id="io-registers">
+<span id="pvld-io"></span><h2><a class="toc-backref" href="#id5">IO registers</a><a class="headerlink" href="#io-registers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="16%" />
+<col width="11%" />
+<col width="12%" />
+<col width="49%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Host</th>
+<th class="head">Falcon</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x000:0x400</td>
+<td>0x00000:0x10000</td>
+<td>all</td>
+<td>N/A</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon registers</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x400:0x600</td>
+<td>0x10000:0x18000</td>
+<td>all</td>
+<td>VLD</td>
+<td><a class="reference internal" href="#pvld-io-vld"><em>VLD registers</em></a></td>
+</tr>
+<tr class="row-even"><td>0x600:0x640</td>
+<td>0x18000:0x19000</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-io"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x640:0x680</td>
+<td>0x19000:0x1a000</td>
+<td>v1-</td>
+<td>JOE</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0x680:0x700</td>
+<td>0x1a000:0x1c000</td>
+<td>???</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x800:0x900</td>
+<td>0x20000:0x24000</td>
+<td>v1-</td>
+<td>CRYPT</td>
+<td><a class="reference internal" href="../../falcon/crypt.html#falcon-crypt-io"><em>Crypto coprocessor</em></a></td>
+</tr>
+<tr class="row-even"><td>0x900:0xa00</td>
+<td>0x24000:0x28000</td>
+<td>v1-</td>
+<td>???</td>
+<td><a class="reference internal" href="../../falcon/crypt.html#falcon-crypt-io"><em>???</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xc00:0xc40</td>
+<td>0x30000:0x31000</td>
+<td>v1-</td>
+<td>???</td>
+<td><a class="reference internal" href="../../falcon/crypt.html#falcon-crypt-io"><em>???</em></a></td>
+</tr>
+<tr class="row-even"><td>0xd00:0xd40</td>
+<td>0x31000:0x32000</td>
+<td>v1-</td>
+<td>???</td>
+<td><a class="reference internal" href="../../falcon/crypt.html#falcon-crypt-io"><em>???</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xfe0:0x1000</td>
+<td>-</td>
+<td>v0:v4</td>
+<td>FALCON_HOST</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon host registers</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="vld-unit">
+<span id="pvld-vld"></span><h2><a class="toc-backref" href="#id6">VLD unit</a><a class="headerlink" href="#vld-unit" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pvld-io-vld">
+<span id="id1"></span><h3><a class="toc-backref" href="#id7">IO registers</a><a class="headerlink" href="#pvld-io-vld" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="interrupts">
+<span id="pvld-intr-vld"></span><h3><a class="toc-backref" href="#id8">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="status-report">
+<span id="pvld-status-vld"></span><h3><a class="toc-backref" href="#id9">Status report</a><a class="headerlink" href="#status-report" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="bucket-format">
+<span id="pvpd-bucket"></span><h2><a class="toc-backref" href="#id10">Bucket format</a><a class="headerlink" href="#bucket-format" title="Permalink to this headline">¶</a></h2>
+<p>0x34 bytes long.</p>
+<ul class="simple">
+<li>word 0:<ul>
+<li>bits 4-7: MV_L0[???]</li>
+</ul>
+</li>
+<li>word 1:<ul>
+<li>bits 0-12: SLICE_TAG</li>
+<li>bits 13-18: CODED_BLOCK_PATTERN</li>
+<li>bit 19: MB_SKIP_FLAG</li>
+<li>bit 20: MB_FIELD_DECODING_FLAG</li>
+<li>bit 21: PCM</li>
+<li>bit 22: INTER</li>
+<li>bits 23-27: MB_TYPE</li>
+<li>bit 28: ???</li>
+<li>bits 29-30: INTRA_CHROMA_PRED_MODE</li>
+<li>bit 31: TRANSFORM_8X8_FLAG</li>
+</ul>
+</li>
+<li>word 2: ???</li>
+<li>word 3: ??? luma blocks</li>
+<li>word 4: ??? chroma blocks</li>
+<li>word 5: MV_L0[10]</li>
+<li>word 6: MV_L0[11]</li>
+<li>word 7: MV_L0[14]</li>
+<li>word 8: MV_L0[15]</li>
+<li>word 9: MV_L1[10]</li>
+<li>word 10: MV_L1[11]</li>
+<li>word 11: MV_L1[14]</li>
+<li>word 12: MV_L1[15]</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PVLD: variable length decoding engine</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#falcon-parameters">falcon parameters</a></li>
+<li><a class="reference internal" href="#io-registers">IO registers</a></li>
+<li><a class="reference internal" href="#vld-unit">VLD unit</a><ul>
+<li><a class="reference internal" href="#pvld-io-vld">IO registers</a></li>
+<li><a class="reference internal" href="#interrupts">Interrupts</a></li>
+<li><a class="reference internal" href="#status-report">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bucket-format">Bucket format</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vp3/index.html"
+                        title="previous chapter">VP3/VP4/VP5 video decoding</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vp3/pvdec.html"
+                        title="next chapter">PVDEC: video decoding engine</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/vdec/vp3/pvld.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../vp3/pvdec.html" title="PVDEC: video decoding engine"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vp3/index.html" title="VP3/VP4/VP5 video decoding"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp3/index.html" >VP3/VP4/VP5 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

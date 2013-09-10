@@ -1,0 +1,920 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NV50 virtual memory &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="Memory access and structure" href="index.html" />
+    <link rel="next" title="NV50:NVC0 host memory interface" href="nv50-host-mem.html" />
+    <link rel="prev" title="NV50- surface formats" href="nv50-surface.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="nv50-host-mem.html" title="NV50:NVC0 host memory interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nv50-surface.html" title="NV50- surface formats"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Memory access and structure</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nv50-virtual-memory">
+<span id="nv50-vm"></span><h1><a class="toc-backref" href="#id1">NV50 virtual memory</a><a class="headerlink" href="#nv50-virtual-memory" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#nv50-virtual-memory" id="id1">NV50 virtual memory</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#vm-users" id="id3">VM users</a></li>
+<li><a class="reference internal" href="#channels" id="id4">Channels</a></li>
+<li><a class="reference internal" href="#dma-objects" id="id5">DMA objects</a></li>
+<li><a class="reference internal" href="#page-tables" id="id6">Page tables</a></li>
+<li><a class="reference internal" href="#tlb-flushes" id="id7">TLB flushes</a></li>
+<li><a class="reference internal" href="#user-vs-supervisor-accesses" id="id8">User vs supervisor accesses</a></li>
+<li><a class="reference internal" href="#storage-types" id="id9">Storage types</a></li>
+<li><a class="reference internal" href="#compression-modes" id="id10">Compression modes</a></li>
+<li><a class="reference internal" href="#vm-faults" id="id11">VM faults</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<ol class="arabic simple" start="0">
+<li>Introduction</li>
+<li>VM users</li>
+<li>Channels</li>
+<li>DMA objects</li>
+<li>Page tables</li>
+<li>TLB flushes</li>
+<li>User vs supervisor accesses</li>
+<li>Storage types</li>
+<li>Compression modes</li>
+<li>VM faults</li>
+<li>BAR1, BAR3, and the PEEPHOLE</li>
+</ol>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>NV50 generation cards feature an MMU that translates user-visible logical
+addresses to physical ones. The translation has two levels: DMA objects,
+which behave like x86 segments, and page tables. The translation involves
+the following address spaces:</p>
+<ul>
+<li><p class="first">physical addresses: 40-bit physical address + target specifier, which
+can be VRAM, SYSRAM_SNOOP, or SYSRAM_NOSNOOP. They can refer to:</p>
+<ul class="simple">
+<li>VRAM: 32-bit physical addresses - high 8 bits are ignored - on-board
+memory of the card. Supports LSR and compression. See <a class="reference internal" href="nv50-vram.html#nv50-vram"><em>NV50:NVC0 VRAM structure and usage</em></a></li>
+<li>SYSRAM: 40-bit physical addresses - accessing this space will cause
+the card to invoke PCIE read/write transactions to the given bus
+address, allowing it to access system RAM or other PCI devices&#8217; memory.
+SYSRAM_SNOOP uses normal PCIE transactions, SYSRAM_NOSNOOP uses PCIE
+transactions with the &#8220;no snoop&#8221; bit set.</li>
+</ul>
+<p>Mostly, physical addresses are a result of logical address translation,
+but some memory areas are specified directly by their physical addresses.</p>
+</li>
+<li><p class="first">12-bit tag addresses: select a cell in hidden compression tag RAM, used
+for compressed areas of VRAM. See <a class="reference internal" href="nv50-comp.html#nv50-comp"><em>NV50 VRAM compression</em></a></p>
+</li>
+<li><p class="first">virtual addresses: 40-bit virtual address + channel descriptor address,
+specifies an address that will be looked up in the page tables of the
+relevant channel. Virtual addresses are always a result of logical address
+translation and can never be specified directly.</p>
+</li>
+<li><p class="first">logical addresses: 40-bit logical address + channel descriptor address +
+DMAobj address. Specifies an address that will be translated by the
+relevant DMAobj, and then by the page tables if DMAobj says so. All
+addresses appearing in FIFO command streams are logical addresses, or
+eventually translated to logical addresses</p>
+</li>
+</ul>
+<p>The VM&#8217;s job is to translate a logical address into its associated data:</p>
+<ul class="simple">
+<li>physical address</li>
+<li>target: VRAM, SYSRAM_SNOOP, or SYSRAM_NOSNOOP</li>
+<li>read-only flag</li>
+<li>supervisor-only flag</li>
+<li>storage type: a special value that selects the internal structure of
+contained data and enables more efficient accesses by increasing cache
+locality</li>
+<li>compression mode: if set, write accesses will attempt to compress the
+written data and, if successful, write only a fraction of the original
+write size to memory and mark the tile as compressed in the hidden
+tag memory. Read accesses will transparently uncompress the data. Can only
+be used on VRAM.</li>
+<li>compression tag address: the address of tag cell to be used if compression
+is enabled. Tag memory is addressed by &#8220;cells&#8221;. Each cell is actually
+0x200 tag bits. For SINGLE compression mode, every 0x10000 bytes of
+compressed VRAM require 1 tag cell. For DOUBLE compression mode, every
+0x10000 bytes of VRAM require 2 tag cells.</li>
+</ul>
+<p>A VM access can also end unsuccessfully due to multiple reasons, like a non
+present page. When that happens, a VM fault is triggered. The faulting access
+data is stored, and fault condition is reported to the requesting engine.
+Consequences of a faulted access depend on the engine.</p>
+</div>
+<div class="section" id="vm-users">
+<h2><a class="toc-backref" href="#id3">VM users</a><a class="headerlink" href="#vm-users" title="Permalink to this headline">¶</a></h2>
+<p>VM is used by several clients, which are identified by VM client id:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="3%" />
+<col width="8%" />
+<col width="9%" />
+<col width="12%" />
+<col width="68%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Id</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Engines</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>all</td>
+<td>STRMOUT</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-strmout"><em>PGRAPH streamout writes</em></a></td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>all</td>
+<td>DISPATCH</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-dispatch"><em>PGRAPH context save/restore, NOTIFY, QUERY, COND, and m2mf</em></a></td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>all</td>
+<td>PFIFO_WRITE</td>
+<td>PFIFO, PFIFO_BG,
+PEEPHOLE, BAR</td>
+<td><a class="reference internal" href="../fifo/index.html#nv50-pfifo-vm"><em>non-blocking write accesses by PFIFO, for FIFOs and BARs</em></a></td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>all</td>
+<td>CCACHE</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-ccache"><em>PGRAPH c[], code, TIC, and TSC accesses</em></a></td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>VP1-VP2</td>
+<td>PVPE</td>
+<td>PMPEG, PME, PVP1</td>
+<td><a class="reference internal" href="../vdec/vpe/pvpe.html#pvpe"><em>VM front-end for PMPEG + PME [NV50 only] + PVP1 [NV50 only]</em></a></td>
+</tr>
+<tr class="row-odd"><td>6</td>
+<td>VP3</td>
+<td>PPPP</td>
+<td>PPPP</td>
+<td><a class="reference internal" href="../vdec/vp3/pppp.html#pppp"><em>PPPP: video post-processing engine</em></a></td>
+</tr>
+<tr class="row-even"><td>7</td>
+<td>all</td>
+<td>CLIPID</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-clipid"><em>PGRAPH window clip id reads/writes</em></a></td>
+</tr>
+<tr class="row-odd"><td>8</td>
+<td>all</td>
+<td>PFIFO_READ</td>
+<td>PFIFO, PFIFO_BG
+PEEPHOLE, BAR</td>
+<td><a class="reference internal" href="../fifo/index.html#nv50-pfifo-vm"><em>reads by PFIFO, for FIFOs and BARs</em></a></td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>all</td>
+<td>VFETCH</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-vfetch"><em>PGRAPH vertex array fetch</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xa</td>
+<td>all</td>
+<td>TEXTURE</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-texture"><em>PGRAPH texture fetches</em></a></td>
+</tr>
+<tr class="row-even"><td>0xb</td>
+<td>all</td>
+<td>ROP</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph-rop"><em>PGRAPH raster output and CUDA global/local memory accesses</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xc</td>
+<td>VP2</td>
+<td>PVP2</td>
+<td>PVP2</td>
+<td><a class="reference internal" href="../vdec/vp2/pvp2.html#pvp2"><em>PVP2: video processor</em></a></td>
+</tr>
+<tr class="row-even"><td>0xc</td>
+<td>VP3-</td>
+<td>PVDEC</td>
+<td>PVDEC</td>
+<td><a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec"><em>PVDEC: video decoding engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xd</td>
+<td>VP2</td>
+<td>PBSP</td>
+<td>PBSP</td>
+<td><a class="reference internal" href="../vdec/vp2/pbsp.html#pbsp"><em>PBSP: H.264 bitstream processor</em></a></td>
+</tr>
+<tr class="row-even"><td>0xd</td>
+<td>VP3-</td>
+<td>PVLD</td>
+<td>PVLD</td>
+<td><a class="reference internal" href="../vdec/vp3/pvld.html#pvld"><em>PVLD: variable length decoding engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xe</td>
+<td>VP2</td>
+<td>PCRYPT2</td>
+<td>PCRYPT2</td>
+<td><a class="reference internal" href="../vdec/vp2/pcrypt2.html#pcrypt2"><em>PCRYPT2: AES encryption engine</em></a></td>
+</tr>
+<tr class="row-even"><td>0xe</td>
+<td>VP3</td>
+<td>PCRYPT3</td>
+<td>PCRYPT3</td>
+<td><a class="reference internal" href="../vdec/vp3/pcrypt3.html#pcrypt3"><em>PCRYPT3: AES cryptographic engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xf</td>
+<td>NV84-</td>
+<td>PCOUNTER</td>
+<td>PCOUNTER</td>
+<td><a class="reference internal" href="../pcounter/intro.html#pcounter"><em>PCOUNTER: performance counter engine</em></a></td>
+</tr>
+<tr class="row-even"><td>0x11</td>
+<td>NVA3-</td>
+<td>PDAEMON</td>
+<td>PDAEMON</td>
+<td><a class="reference internal" href="../pm/pdaemon/index.html#pdaemon"><em>PDAEMON: card management microprocesor</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x13</td>
+<td>NVA3-</td>
+<td>PCOPY</td>
+<td>PCOPY</td>
+<td><a class="reference internal" href="../fifo/index.html#pcopy"><em>PFIFO: command submission to execution engines</em></a></td>
+</tr>
+<tr class="row-even"><td>0x14</td>
+<td>NVAF-</td>
+<td>PVCOMP</td>
+<td>PVCOMP</td>
+<td><a class="reference internal" href="../vdec/pvcomp.html#pvcomp"><em>PVCOMP: video compositor engine</em></a></td>
+</tr>
+</tbody>
+</table>
+<p>A related concept is VM engine, which is a group of clients that share TLBs
+and stay on the same channel at any single moment. It&#8217;s possible for a client
+to be part of several VM engines. The engines are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="4%" />
+<col width="10%" />
+<col width="16%" />
+<col width="70%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Id</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>all</td>
+<td>PGRAPH</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph"><em>PGRAPH: 2d/3d graphics and compute engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>VP1</td>
+<td>PVP1</td>
+<td><a class="reference internal" href="../vdec/vpe/pvp1.html#pvp1"><em>PVP1: video processor</em></a></td>
+</tr>
+<tr class="row-even"><td>1</td>
+<td>VP2</td>
+<td>PVP2</td>
+<td><a class="reference internal" href="../vdec/vp2/pvp2.html#pvp2"><em>PVP2: video processor</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>VP3-</td>
+<td>PVDEC</td>
+<td><a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec"><em>PVDEC: video decoding engine</em></a></td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>all</td>
+<td>PEEPHOLE</td>
+<td><a class="reference internal" href="peephole.html#peephole"><em>PEEPHOLE: indirect memory access from host</em></a></td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>all</td>
+<td>PFIFO</td>
+<td><a class="reference internal" href="../fifo/index.html#nv50-pfifo"><em>PFIFO: command submission to execution engines</em></a></td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>all</td>
+<td>BAR</td>
+<td><a class="reference internal" href="nv50-host-mem.html#nv50-host-mem"><em>NV50:NVC0 host memory interface</em></a></td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>VP1</td>
+<td>PME</td>
+<td><a class="reference internal" href="../vdec/vpe/pme.html#pme"><em>PME: motion estimation engine</em></a></td>
+</tr>
+<tr class="row-even"><td>7</td>
+<td>NVAF-</td>
+<td>PVCOMP</td>
+<td><a class="reference internal" href="../vdec/pvcomp.html#pvcomp"><em>PVCOMP: video compositor engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>8</td>
+<td>VP1-VP2</td>
+<td>PMPEG</td>
+<td><a class="reference internal" href="../vdec/vpe/pmpeg.html#pmpeg"><em>PMPEG: MPEG1/MPEG2 video decoding engine</em></a></td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>VP3-</td>
+<td>PPPP</td>
+<td><a class="reference internal" href="../vdec/vp3/pppp.html#pppp"><em>PPPP: video post-processing engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>VP2</td>
+<td>PBSP</td>
+<td><a class="reference internal" href="../vdec/vp2/pbsp.html#pbsp"><em>PBSP: H.264 bitstream processor</em></a></td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>VP3-</td>
+<td>PVLD</td>
+<td><a class="reference internal" href="../vdec/vp3/pvld.html#pvld"><em>PVLD: variable length decoding engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xa</td>
+<td>VP2</td>
+<td>PCRYPT2</td>
+<td><a class="reference internal" href="../vdec/vp2/pcrypt2.html#pcrypt2"><em>PCRYPT2: AES encryption engine</em></a></td>
+</tr>
+<tr class="row-even"><td>0xa</td>
+<td>VP3</td>
+<td>PCRYPT3</td>
+<td><a class="reference internal" href="../vdec/vp3/pcrypt3.html#pcrypt3"><em>PCRYPT3: AES cryptographic engine</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xb</td>
+<td>NV84-</td>
+<td>PCOUNTER</td>
+<td><a class="reference internal" href="../pcounter/intro.html#pcounter"><em>PCOUNTER: performance counter engine</em></a></td>
+</tr>
+<tr class="row-even"><td>0xc</td>
+<td>NV84-</td>
+<td>PFIFO_BG</td>
+<td><a class="reference internal" href="../fifo/index.html#nv50-pfifo-bg"><em>handles background semaphore acquire polling</em></a></td>
+</tr>
+<tr class="row-odd"><td>0xd</td>
+<td>NVA3-</td>
+<td>PCOPY</td>
+<td><a class="reference internal" href="../fifo/index.html#pcopy"><em>PFIFO: command submission to execution engines</em></a></td>
+</tr>
+<tr class="row-even"><td>0xe</td>
+<td>NVA3-</td>
+<td>PDAEMON</td>
+<td><a class="reference internal" href="../pm/pdaemon/index.html#pdaemon"><em>PDAEMON: card management microprocesor</em></a></td>
+</tr>
+</tbody>
+</table>
+<p>Client+engine combination doesn&#8217;t, however, fully identify the source of the
+access - to disambiguate that, DMA slot ids are used. The set of DMA slot
+ids depends on both engine and client id. The DMA slots are
+[engine/client/slot]:</p>
+<ul class="simple">
+<li>0/0/0: PGRAPH STRMOUT</li>
+<li>0/3/0: PGRAPH context</li>
+<li>0/3/1: PGRAPH NOTIFY</li>
+<li>0/3/2: PGRAPH QUERY</li>
+<li>0/3/3: PGRAPH COND</li>
+<li>0/3/4: PGRAPH m2mf BUFFER_IN</li>
+<li>0/3/5: PGRAPH m2mf BUFFER_OUT</li>
+<li>0/3/6: PGRAPH m2mf BUFFER_NOTIFY</li>
+<li>0/5/0: PGRAPH CODE_CB</li>
+<li>0/5/1: PGRAPH TIC</li>
+<li>0/5/2: PGRAPH TSC</li>
+<li>0/7/0: PGRAPH CLIPID</li>
+<li>0/9/0: PGRAPH VERTEX</li>
+<li>0/a/0: PGRAPH TEXTURE / SRC2D</li>
+<li>0/b/0-7: PGRAPH RT 0-7</li>
+<li>0/b/8: PGRAPH ZETA</li>
+<li>0/b/9: PGRAPH LOCAL</li>
+<li>0/b/a: PGRAPH GLOBAL</li>
+<li>0/b/b: PGRAPH STACK</li>
+<li>0/b/c: PGRAPH DST2D</li>
+<li>4/4/0: PEEPHOLE write</li>
+<li>4/8/0: PEEPHOLE read</li>
+<li>6/4/0: BAR1 write</li>
+<li>6/8/0: BAR1 read</li>
+<li>6/4/1: BAR3 write</li>
+<li>6/8/1: BAR3 read</li>
+<li>5/8/0: FIFO pushbuf read</li>
+<li>5/4/1: FIFO semaphore write</li>
+<li>5/8/1: FIFO semaphore read</li>
+<li>c/8/1: FIFO background semaphore read</li>
+<li>1/6/8: PVP1 context [NV50:NV84]</li>
+<li>7/6/4: PME context [NV50:NV84]</li>
+<li>8/6/1: PMPEG CMD [NV50:NV98 NVA0:NVAA]</li>
+<li>8/6/2: PMPEG DATA [NV50:NV98 NVA0:NVAA]</li>
+<li>8/6/3: PMPEG IMAGE [NV50:NV98 NVA0:NVAA]</li>
+<li>8/6/4: PMPEG context [NV50:NV98 NVA0:NVAA]</li>
+<li>8/6/5: PMPEG QUERY [NV84:NV98 NVA0:NVAA]</li>
+<li>b/f/0: PCOUNTER record buffer [NV84:NVC0]</li>
+<li>1/c/0-f: PVP2 DMA ports 0-0xf [NV84:NV98 NVA0:NVAA]</li>
+<li>9/d/0-f: PBSP DMA ports 0-0xf [NV84:NV98 NVA0:NVAA]</li>
+<li>a/e/0: PCRYPT2 context [NV84:NV98 NVA0:NVAA]</li>
+<li>a/e/1: PCRYPT2 SRC [NV84:NV98 NVA0:NVAA]</li>
+<li>a/e/2: PCRYPT2 DST [NV84:NV98 NVA0:NVAA]</li>
+<li>a/e/3: PCRYPT2 QUERY [NV84:NV98 NVA0:NVAA]</li>
+<li>1/c/0-7: PVDEC falcon ports 0-7 [NV98:NVA0 NVAA-]</li>
+<li>8/6/0-7: PPPP falcon ports 0-7 [NV98:NVA0 NVAA-]</li>
+<li>9/d/0-7: PVLD falcon ports 0-7 [NV98:NVA0 NVAA-]</li>
+<li>a/e/0-7: PCRYPT3 falcon ports 0-7 [NV98:NVA3]</li>
+<li>d/13/0-7: PCOPY falcon ports 0-7 [NVA3-]</li>
+<li>e/11/0-7: PDAEMON falcon ports 0-7 [NVA3-]</li>
+<li>7/14/0-7: PVCOMP falcon ports 0-7 [NVAF-]</li>
+</ul>
+</div>
+<div class="section" id="channels">
+<h2><a class="toc-backref" href="#id4">Channels</a><a class="headerlink" href="#channels" title="Permalink to this headline">¶</a></h2>
+<p>All VM accesses are done on behalf of some &#8220;channel&#8221;. A VM channel is just
+a memory structure that contains the DMA objects and page directory. VM
+channel can be also a FIFO channel, for use by PFIFO and fifo engines and
+containing other data structures, or just a &#8220;bare&#8221; VM channel for use with
+non-fifo engines.</p>
+<p>A channel is identified by a &#8220;channel descriptor&#8221;, which is a 30-bit number
+that points to the base of the channel memory structure:</p>
+<ul class="simple">
+<li>bits 0-27: bits 12-39 of channel memory structure physical address</li>
+<li>bits 28-29: the target specifier for channel memory structure
+- 0: VRAM
+- 1: invalid, do not use
+- 2: SYSRAM_SNOOP
+- 3: SYSRAM_NOSNOOP</li>
+</ul>
+<p>The channel memory structure contains a few fixed-offset elements, as well
+as serving as a container for channel objects, such as DMA objects, that
+can be placed anywhere inside the structure. Due to the channel objects
+inside it, the channel structure has no fixed size, although the maximal
+address of channel objects is 0xffff0. Channel structure has to be aligned
+to 0x1000 bytes.</p>
+<p>The original NV50 channel structure has the following fixed elements:</p>
+<ul class="simple">
+<li>0x000-0x200: RAMFC [fifo channels only]</li>
+<li>0x200-0x400: DMA objects for fifo engines&#8217; contexts [fifo channels only]</li>
+<li>0x400-0x1400: PFIFO CACHE [fifo channels only]</li>
+<li>0x1400-0x5400: page directory</li>
+</ul>
+<p>NV84+ cards instead use the following structure:</p>
+<ul class="simple">
+<li>0x000-0x200: DMA objects for fifo engines&#8217; contexts [fifo channels only]</li>
+<li>0x200-0x4200: page directory</li>
+</ul>
+<p>The channel objects are specified by 16-bit offsets from start of the channel
+structure in 0x10-byte units.</p>
+</div>
+<div class="section" id="dma-objects">
+<span id="nv50-dmaobj"></span><h2><a class="toc-backref" href="#id5">DMA objects</a><a class="headerlink" href="#dma-objects" title="Permalink to this headline">¶</a></h2>
+<p>The only channel object type that VM subsystem cares about is DMA objects.
+DMA objects represent contiguous segments of either virtual or physical
+memory and are the first stage of VM address translation. DMA objects can
+be paged or unpaged. Unpaged DMA objects directly specify the target space
+and all attributes, merely adding the base address and checking the limit.
+Paged DMA objects add the base address, then look it up in the page tables.
+Attributes can either come from page tables, or be individually overriden
+by the DMA object.</p>
+<p>DMA objects are specifid by 16-bit &#8220;selectors&#8221;. In case of fifo engines,
+the RAMHT is used to translate from user-visible 32-bit handles to the
+selectors [see fifo/puller.txt]. The selector is shifted left by 4 bits
+and added to channel structure base to obtain address of DMAobj structure,
+which is 0x18 bytes long and made of 32-bit LE words:</p>
+<dl class="docutils">
+<dt>word 0:</dt>
+<dd><ul class="first last">
+<li><p class="first">bits 0-15: object class. Ignored by VM, but usually validated by fifo
+engines - should be 0x2 [read-only], 0x3 [write-only], or 0x3d [read-write]</p>
+</li>
+<li><p class="first">bits 16-17: target specifier:</p>
+<ul class="simple">
+<li>0: VM - paged object - the logical address is to be added to the base
+address to obtain a virtual address, then the virtual address should
+be translated via the page tables</li>
+<li>1: VRAM - unpaged object - the logical address should be added to the
+base address to directly obtain the physical address in VRAM</li>
+<li>2: SYSRAM_SNOOP - like VRAM, but gives SYSRAM address</li>
+<li>3: SYSRAM_NOSNOOP - like VRAM, but gives SYSRAM address and uses nosnoop
+transactions</li>
+</ul>
+</li>
+<li><p class="first">bits 18-19: read-only flag</p>
+<ul class="simple">
+<li>0: use read-only flag from page tables [paged objects only]</li>
+<li>1: read-only</li>
+<li>2: read-write</li>
+</ul>
+</li>
+<li><p class="first">bits 20-21: supervisor-only flag</p>
+<ul class="simple">
+<li>0: use supervisor-only flag from page tables [paged objects only]</li>
+<li>1: user-supervisor</li>
+<li>2: supervisor-only</li>
+</ul>
+</li>
+<li><dl class="first docutils">
+<dt>bits 22-28: storage type. If the value is 0x7f, use storage type from page</dt>
+<dd><p class="first last">tables, otherwise directly specifies the storage type</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">bits 29-30: compression mode</p>
+<ul class="simple">
+<li>0: no compression</li>
+<li>1: SINGLE compression</li>
+<li>2: DOUBLE compression</li>
+<li>3: use compression mode from page tables</li>
+</ul>
+</li>
+<li><p class="first">bit 31: if set, is a supervisor DMA object, user DMA object otherwise</p>
+</li>
+</ul>
+</dd>
+<dt>word 1:</dt>
+<dd>bits 0-31 of limit address</dd>
+<dt>word 2:</dt>
+<dd>bits 0-31 of base address</dd>
+<dt>word 3:</dt>
+<dd><ul class="first last simple">
+<li>bits 0-7: bits 32-39 of base address</li>
+<li>bits 24-31: bits 32-39 of limit address</li>
+</ul>
+</dd>
+<dt>word 4:</dt>
+<dd><ul class="first last simple">
+<li>bits 0-11: base tag address</li>
+<li>bits 16-27: limit tag address</li>
+</ul>
+</dd>
+<dt>word 5:</dt>
+<dd><ul class="first last simple">
+<li>bits 0-15: compression base address bits 16-31 [bits 0-15 are forced to 0]</li>
+<li>bits 16-19: ??? [XXX: figure this out]</li>
+</ul>
+</dd>
+</dl>
+<p>First, DMA object selector is compared with 0. If the selector is 0,
+NULL_DMAOBJ fault happens. Then, the logical address is added to the base
+address from DMA object. The resulting address is compared with the limit
+address from DMA object and, if larger or equal, DMAOBJ_LIMIT fault happens.
+If DMA object is paged, the address is looked up in the page tables, with
+read-only flag, supervisor-only flag, storage type, and compression mode
+optionally overriden as specified by the DMA object. Otherwise, the address
+directly becomes the physical address. For compressed unpaged VRAM objects,
+the tag address is computed as follows:</p>
+<ul class="simple">
+<li>take the computed VRAM physical address and substract compression base
+address from it. if result is negative, force compression mode to none</li>
+<li>shift result right by 16 bits</li>
+<li>add base tag address to the result</li>
+<li>if result &lt;= limit tag addres, this is the tag address to use. Else,
+force compression mode to none.</li>
+</ul>
+<p>Places where DMA objects are bound, that is MMIO registers or FIFO methods,
+are commonly called &#8220;DMA slots&#8221;.</p>
+<p>Most engines cache the most recently bound DMA object. To flush the caches,
+it&#8217;s usually enough to rewrite the selector register, or resubmit the selector
+method.</p>
+<p>It should be noted that many engines require the DMA object&#8217;s base address
+to be of some specific alignment. The alignment depends on the engine and
+slot.</p>
+<p>The fifo engine context dmaobjs are a special set of DMA objects worth
+mentioning. They&#8217;re used by the fifo engines to store per-channel state
+while given channel is inactive on the relevant engine. Their size and
+structure depend on the engine. They have fixed selectors, and hence reside
+at fixed positions inside the channel structure. On the original NV50, the
+objects are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="17%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Selector</th>
+<th class="head">Address</th>
+<th class="head">Engine</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x0020</td>
+<td>0x00200</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph"><em>PGRAPH</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x0022</td>
+<td>0x00220</td>
+<td><a class="reference internal" href="../vdec/vpe/pvp1.html#pvp1"><em>PVP1</em></a></td>
+</tr>
+<tr class="row-even"><td>0x0024</td>
+<td>0x00240</td>
+<td><a class="reference internal" href="../vdec/vpe/pme.html#pme"><em>PME</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x0026</td>
+<td>0x00260</td>
+<td><a class="reference internal" href="../vdec/vpe/pmpeg.html#pmpeg"><em>PMPEG</em></a></td>
+</tr>
+</tbody>
+</table>
+<p>On NV84+ cards, they are:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="13%" />
+<col width="19%" />
+<col width="52%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Selector</th>
+<th class="head">Address</th>
+<th class="head">Present on</th>
+<th class="head">Engine</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x0002</td>
+<td>0x00020</td>
+<td>all</td>
+<td><a class="reference internal" href="../graph/index.html#nv50-pgraph"><em>PGRAPH</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x0004</td>
+<td>0x00040</td>
+<td>VP2</td>
+<td><a class="reference internal" href="../vdec/vp2/pvp2.html#pvp2"><em>PVP2</em></a></td>
+</tr>
+<tr class="row-even"><td>0x0004</td>
+<td>0x00040</td>
+<td>VP3-</td>
+<td><a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec"><em>PVDEC</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x0006</td>
+<td>0x00060</td>
+<td>VP2</td>
+<td><a class="reference internal" href="../vdec/vpe/pmpeg.html#pmpeg"><em>PMPEG</em></a></td>
+</tr>
+<tr class="row-even"><td>0x0006</td>
+<td>0x00060</td>
+<td>VP3-</td>
+<td><a class="reference internal" href="../vdec/vp3/pppp.html#pppp"><em>PPPP</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x0008</td>
+<td>0x00080</td>
+<td>VP2</td>
+<td><a class="reference internal" href="../vdec/vp2/pbsp.html#pbsp"><em>PBSP</em></a></td>
+</tr>
+<tr class="row-even"><td>0x0008</td>
+<td>0x00080</td>
+<td>VP3-</td>
+<td><a class="reference internal" href="../vdec/vp3/pvld.html#pvld"><em>PVLD</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x000a</td>
+<td>0x000a0</td>
+<td>VP2</td>
+<td><a class="reference internal" href="../vdec/vp2/pcrypt2.html#pcrypt2"><em>PCRYPT2</em></a></td>
+</tr>
+<tr class="row-even"><td>0x000a</td>
+<td>0x000a0</td>
+<td>VP3</td>
+<td><a class="reference internal" href="../vdec/vp3/pcrypt3.html#pcrypt3"><em>PCRYPT3</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x000a</td>
+<td>0x000a0</td>
+<td>NVAF-</td>
+<td><a class="reference internal" href="../vdec/pvcomp.html#pvcomp"><em>PVCOMP</em></a></td>
+</tr>
+<tr class="row-even"><td>0x000c</td>
+<td>0x000c0</td>
+<td>NVA3-</td>
+<td><a class="reference internal" href="../fifo/index.html#pcopy"><em>PCOPY</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="page-tables">
+<h2><a class="toc-backref" href="#id6">Page tables</a><a class="headerlink" href="#page-tables" title="Permalink to this headline">¶</a></h2>
+<p>If paged DMA object is used, the virtual address is further looked up in page
+tables. The page tables are two-level. Top level is 0x800-entry page
+directory, where each entry covers 0x20000000 bytes of virtual address space.
+The page directory is embedded in the channel structure. It starts at offset
+0x1400 on the original NV50, at 0x200 on nv84+. Each page directory entry, or
+PDE, is 8 bytes long. The PDEs point to page tables and specify the page table
+attributes. Each page table can use either small or large pages. Small pages
+are 0x1000 bytes long, large pages are 0x10000 bytes long. For small-page
+page tables, the size of page table can be artificially limitted to cover
+only 0x2000, 0x4000, or 0x8000 pages instead of full 0x20000 pages - the
+pages over this limit will fault. Large-page page tables always cover full
+0x2000 entries. Page tables of both kinds are made of 8-byte page table
+entries, or PTEs.</p>
+<p>The PDEs are made of two 32-bit LE words, and have the following format:</p>
+<p>word 0:</p>
+<ul class="simple">
+<li>bit 0: page table present</li>
+<li>bit 1: page size<ul>
+<li>0: large pages</li>
+<li>1: small pages</li>
+</ul>
+</li>
+<li>bits 2-3: target specifier for the page table itself<ul>
+<li>0: VRAM</li>
+<li>1: invalid, do not use</li>
+<li>2: SYSRAM_SNOOP</li>
+<li>3: SYSRAM_NOSNOOP</li>
+</ul>
+</li>
+<li>bit 4: ??? [XXX: figure this out]</li>
+<li>bits 5-6: page table size [small pages only]<ul>
+<li>0: 0x20000 entries [full]</li>
+<li>1: 0x8000 entries</li>
+<li>2: 0x4000 entries</li>
+<li>3: 0x2000 entries</li>
+</ul>
+</li>
+<li>bits 12-31: page table physical address bits 12-31</li>
+</ul>
+<p>word 1:</p>
+<ul class="simple">
+<li>bits 32-39: page table physical address bits 32-39</li>
+</ul>
+<p>The page table start address has to be aligned to 0x1000 bytes.</p>
+<p>The PTEs are made of two 32-bit LE words, and have the following format:</p>
+<p>word 0:</p>
+<ul class="simple">
+<li>bit 0: page present</li>
+<li>bits 1-2: ??? [XXX: figure this out]</li>
+<li>bit 3: read-only flag</li>
+<li>bits 4-5: target specifier<ul>
+<li>0: VRAM</li>
+<li>1: invalid, do not use</li>
+<li>2: SYSRAM_SNOOP</li>
+<li>3: SYSRAM_NOSNOOP</li>
+</ul>
+</li>
+<li>bit 6: supervisor-only flag</li>
+<li>bits 7-9: log2 of contig block size in pages [see below]</li>
+<li>bits 12-31: bits 12-31 of physical address [small pages]</li>
+<li>bits 16-31: bits 16-31 of physical address [large pages]</li>
+</ul>
+<p>word 1:</p>
+<ul class="simple">
+<li>bits 32-39: bits 32-39 of physical address</li>
+<li>bits 40-46: storage type</li>
+<li>bits 47-48: compression mode</li>
+<li>bits 49-60: compression tag address</li>
+</ul>
+<p>Contig blocks are a special feature of PTEs used to save TLB space. When 2^o
+adjacent pages starting on 2^o page aligned bounduary map to contiguous
+physical addresses [and, if appropriate, contiguous tag addresses] and have
+identical other attributes, they can be marked as a contig block of order o,
+where o is 0-7. To do this, all PTEs for that range should have bits 7-9 set
+equal to o, and physical/tag address fields set to the physical/tag address
+of the <em>first</em> page in the contig block [ie. all PTEs belonging to contig
+block should be identical]. The starting physical address need not be aligned
+to contig block size, but virtual address has to be.</p>
+</div>
+<div class="section" id="tlb-flushes">
+<h2><a class="toc-backref" href="#id7">TLB flushes</a><a class="headerlink" href="#tlb-flushes" title="Permalink to this headline">¶</a></h2>
+<p>The page table contents are cached in per-engine TLBs. To flush TLB contents,
+the TLB flush register 0x100c80 should be used:</p>
+<dl class="docutils">
+<dt>MMIO 0x100c80:</dt>
+<dd><ul class="first last simple">
+<li>bit 0: trigger. When set, triggers the TLB flush. Will auto-reset to 0
+when flush is complete.</li>
+<li>bits 16-19: VM engine to flush</li>
+</ul>
+</dd>
+</dl>
+<p>A flush consists of writing engine &lt;&lt; 16 | 1 to this register and waiting
+until bit 0 becomes 0. However, note that NV86 PGRAPH has a bug that can
+result in a lockup if PGRAPH TLB flush is initiated while PGRAPH is running,
+see graph/nv50-pgraph.txt for details.</p>
+</div>
+<div class="section" id="user-vs-supervisor-accesses">
+<h2><a class="toc-backref" href="#id8">User vs supervisor accesses</a><a class="headerlink" href="#user-vs-supervisor-accesses" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="storage-types">
+<h2><a class="toc-backref" href="#id9">Storage types</a><a class="headerlink" href="#storage-types" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="compression-modes">
+<h2><a class="toc-backref" href="#id10">Compression modes</a><a class="headerlink" href="#compression-modes" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="vm-faults">
+<h2><a class="toc-backref" href="#id11">VM faults</a><a class="headerlink" href="#vm-faults" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">NV50 virtual memory</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#vm-users">VM users</a></li>
+<li><a class="reference internal" href="#channels">Channels</a></li>
+<li><a class="reference internal" href="#dma-objects">DMA objects</a></li>
+<li><a class="reference internal" href="#page-tables">Page tables</a></li>
+<li><a class="reference internal" href="#tlb-flushes">TLB flushes</a></li>
+<li><a class="reference internal" href="#user-vs-supervisor-accesses">User vs supervisor accesses</a></li>
+<li><a class="reference internal" href="#storage-types">Storage types</a></li>
+<li><a class="reference internal" href="#compression-modes">Compression modes</a></li>
+<li><a class="reference internal" href="#vm-faults">VM faults</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nv50-surface.html"
+                        title="previous chapter">NV50- surface formats</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nv50-host-mem.html"
+                        title="next chapter">NV50:NVC0 host memory interface</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/memory/nv50-vm.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="nv50-host-mem.html" title="NV50:NVC0 host memory interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nv50-surface.html" title="NV50- surface formats"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Memory access and structure</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

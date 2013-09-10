@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="envytools git documentation" href="../index.html" />
-    <link rel="next" title="falcon microprocessor" href="../falcon/index.html" />
+    <link rel="next" title="PSTRAPS: straps readout and override" href="pstraps.html" />
     <link rel="prev" title="NV01 audio engine" href="../nv01-paudio.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../falcon/index.html" title="falcon microprocessor"
+          <a href="pstraps.html" title="PSTRAPS: straps readout and override"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="../nv01-paudio.html" title="NV01 audio engine"
@@ -55,7 +55,60 @@
 <h1>GPU external device I/O units<a class="headerlink" href="#gpu-external-device-i-o-units" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
-<ul class="simple">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pstraps.html">PSTRAPS: straps readout and override</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#mmio-register-list">MMIO register list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#nv01-straps">NV01 straps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#nv03-straps-readout-override-registers">NV03+ straps readout/override registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#nv03-family-straps">NV03 family straps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#nv04-nv40-families-straps">NV04-NV40 families straps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pstraps.html#nv50-and-nvc0-families-straps-sets">NV50 and NVC0 families straps sets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prom.html">PROM: VBIOS ROM access</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prom.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prom.html#prom-read-access">PROM read access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prom.html#prom-timings">PROM timings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prom.html#prom-write-access-parallel">PROM write access - parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prom.html#prom-write-access-spi">PROM write access - SPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prom.html#palt-space">PALT space</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pnvio.html">PNVIO: external device interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pnvio.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pnvio.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv10-gpio.html">NV10:NV50 GPIO lines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv10-gpio.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv10-gpio.html#gpio-lines">GPIO lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv10-gpio.html#pwm-output">PWM output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv10-gpio.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-gpio.html">NV50:NVD9 GPIO lines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-gpio.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-gpio.html#interrupts">Interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-gpio.html#nv50-gpio-nvio-specials">NV50 GPIO NVIO specials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-gpio.html#nv84-gpio-nvio-specials">NV84 GPIO NVIO specials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-gpio.html#nv94-gpio-nvio-specials">NV94 GPIO NVIO specials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-gpio.html#nva3-gpio-nvio-specials">NVA3 GPIO NVIO specials</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv01-peeprom.html">PEEPROM: NV01 configuration/key EEPROM</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv01-peeprom.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-peeprom.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-peeprom.html#eeprom-access">EEPROM access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-peeprom.html#chip-id-access">Chip ID access</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pmedia.html">PMEDIA: Video capture and external MPEG decoder interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pmedia.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pmedia.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pmedia.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -70,8 +123,8 @@
   <p class="topless"><a href="../nv01-paudio.html"
                         title="previous chapter">NV01 audio engine</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../falcon/index.html"
-                        title="next chapter">falcon microprocessor</a></p>
+  <p class="topless"><a href="pstraps.html"
+                        title="next chapter">PSTRAPS: straps readout and override</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/io/index.txt"
@@ -101,7 +154,7 @@
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../falcon/index.html" title="falcon microprocessor"
+          <a href="pstraps.html" title="PSTRAPS: straps readout and override"
              >next</a> |</li>
         <li class="right" >
           <a href="../nv01-paudio.html" title="NV01 audio engine"

@@ -1,0 +1,157 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NV01:NV40 clocks &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="Clock management" href="clock.html" />
+    <link rel="next" title="NV40:NV50 clocks" href="nv40-clock.html" />
+    <link rel="prev" title="Clock management" href="clock.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="nv40-clock.html" title="NV40:NV50 clocks"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="clock.html" title="Clock management"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="clock.html" accesskey="U">Clock management</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nv01-nv40-clocks">
+<span id="nv01-clock"></span><h1><a class="toc-backref" href="#id1">NV01:NV40 clocks</a><a class="headerlink" href="#nv01-nv40-clocks" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#nv01-nv40-clocks" id="id1">NV01:NV40 clocks</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#nvclk-core-clock" id="id3">NVCLK: core clock</a></li>
+<li><a class="reference internal" href="#mclk-memory-clock" id="id4">MCLK: memory clock</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>NV01:NV40 chipsets have the following clocks:</p>
+<ul class="simple">
+<li>core clock [NVPLL]: used to clock the graphics engine - on NV04+ cards only</li>
+<li>memory clock [MPLL]: used to clock memory and, before NV04, the graphics
+engine - not present on IGPs</li>
+<li>video clock 1 [VPLL]: used to drive first/only video output</li>
+<li>video clock 2 [VPLL2]: used to drive second video output - only on NV11+
+cards</li>
+</ul>
+<p>These clocks are set in PDAC [NV01] or PRAMDAC [NV03 and up] areas.</p>
+</div>
+<div class="section" id="nvclk-core-clock">
+<span id="nv01-clock-nvclk"></span><h2><a class="toc-backref" href="#id3">NVCLK: core clock</a><a class="headerlink" href="#nvclk-core-clock" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="mclk-memory-clock">
+<span id="nv01-clock-mclk"></span><h2><a class="toc-backref" href="#id4">MCLK: memory clock</a><a class="headerlink" href="#mclk-memory-clock" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">NV01:NV40 clocks</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#nvclk-core-clock">NVCLK: core clock</a></li>
+<li><a class="reference internal" href="#mclk-memory-clock">MCLK: memory clock</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="clock.html"
+                        title="previous chapter">Clock management</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nv40-clock.html"
+                        title="next chapter">NV40:NV50 clocks</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/pm/nv01-clock.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="nv40-clock.html" title="NV40:NV50 clocks"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="clock.html" title="Clock management"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="clock.html" >Clock management</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

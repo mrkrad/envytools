@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="envytools git documentation" href="../index.html" />
-    <link rel="next" title="NV01 audio engine" href="../nv01-paudio.html" />
+    <link rel="next" title="Clock management" href="clock.html" />
     <link rel="prev" title="PCI configuration space" href="../bus/pci.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../nv01-paudio.html" title="NV01 audio engine"
+          <a href="clock.html" title="Clock management"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="../bus/pci.html" title="PCI configuration space"
@@ -55,7 +55,98 @@
 <h1>Power, thermal, and clock management<a class="headerlink" href="#power-thermal-and-clock-management" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
-<ul class="simple">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="clock.html">Clock management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv01-clock.html">NV01:NV40 clocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nv01-clock.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv01-clock.html#nvclk-core-clock">NVCLK: core clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv01-clock.html#mclk-memory-clock">MCLK: memory clock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nv40-clock.html">NV40:NV50 clocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nv40-clock.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv40-clock.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv40-clock.html#hclk-host-clock">HCLK: host clock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-clock.html">NV50:NVA3 clocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nv50-clock.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-clock.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-clock.html#hclk-host-clock">HCLK: host clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-clock.html#nvclk-core-clock">NVCLK: core clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-clock.html#tclk-timer-clock">TCLK: timer clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-clock.html#vdclk-video-decoding-clock">VDCLK: video decoding clock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nva3-clock.html">NVA3:NVC0 clocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nva3-clock.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nva3-clock.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nva3-clock.html#tclk-timer-clock">TCLK: timer clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nva3-clock.html#dclk-daemon-clock">DCLK: daemon clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nva3-clock.html#vdclk-video-decoding-clock">VDCLK: video decoding clock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-clock.html">NVC0+ clocks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nvc0-clock.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nvc0-clock.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nvc0-clock.html#tclk-timer-clock">TCLK: timer clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nvc0-clock.html#dclk-daemon-clock">DCLK: daemon clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nvc0-clock.html#vdclk-video-decoding-clock">VDCLK: video decoding clock</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pdaemon/index.html">PDAEMON: card management microprocesor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/falcon.html">falcon parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/io.html">IO register space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/perf.html">PCOUNTER signals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/subintr.html">Second-level interrupts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/user.html">User busy indication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/host.html">Host &lt;-&gt; PDAEMON communication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/host.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/host.html#submitting-data-to-pdaemon-fifo">Submitting data to PDAEMON: FIFO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/host.html#submitting-data-to-host-rfifo">Submitting data to host: RFIFO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/host.html#host-to-pdaemon-scratch-register-h2d">Host to PDAEMON scratch register: H2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/host.html#pdaemon-to-host-scratch-register-d2h">PDAEMON to host scratch register: D2H</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/host.html#scratch-registers-dscratch">Scratch registers: DSCRATCH</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/mutex.html">Hardware mutexes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/crc.html">CRC computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/timer.html">The timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/chsw.html">Channel switching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/iredir.html">PMC interrupt redirection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/therm.html">PTHERM interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/counter.html">Idle counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/mmio.html">General MMIO register access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/epwr.html">Engine power gating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/signal.html">Input/output signals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/signal.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pdaemon/signal.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pdaemon/index.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv43-therm.html">NV43:NV50 thermal monitoring</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv43-therm.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv43-therm.html#mmio-register-list">MMIO register list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv43-therm.html#the-adc-clock">The ADC clock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv43-therm.html#reading-temperature">Reading temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv43-therm.html#setting-up-thresholds-and-interrupts">Setting up thresholds and interrupts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nv43-therm.html#alarm">Alarm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv43-therm.html#temperature-range">Temperature range</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nv43-therm.html#extended-configuration">Extended configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ptherm.html">NV50+ thermal monitoring</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ptherm.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ptherm.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ptherm.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -70,8 +161,8 @@
   <p class="topless"><a href="../bus/pci.html"
                         title="previous chapter">PCI configuration space</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../nv01-paudio.html"
-                        title="next chapter">NV01 audio engine</a></p>
+  <p class="topless"><a href="clock.html"
+                        title="next chapter">Clock management</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/pm/index.txt"
@@ -101,7 +192,7 @@
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../nv01-paudio.html" title="NV01 audio engine"
+          <a href="clock.html" title="Clock management"
              >next</a> |</li>
         <li class="right" >
           <a href="../bus/pci.html" title="PCI configuration space"

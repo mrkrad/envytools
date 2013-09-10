@@ -1,0 +1,234 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Host &lt;-&gt; PDAEMON communication &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="Hardware mutexes" href="../pdaemon/mutex.html" />
+    <link rel="prev" title="User busy indication" href="../pdaemon/user.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/mutex.html" title="Hardware mutexes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/user.html" title="User busy indication"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="host-pdaemon-communication">
+<span id="pdaemon-host"></span><h1><a class="toc-backref" href="#id1">Host &lt;-&gt; PDAEMON communication</a><a class="headerlink" href="#host-pdaemon-communication" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#host-pdaemon-communication" id="id1">Host &lt;-&gt; PDAEMON communication</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#submitting-data-to-pdaemon-fifo" id="id3">Submitting data to PDAEMON: FIFO</a></li>
+<li><a class="reference internal" href="#submitting-data-to-host-rfifo" id="id4">Submitting data to host: RFIFO</a></li>
+<li><a class="reference internal" href="#host-to-pdaemon-scratch-register-h2d" id="id5">Host to PDAEMON scratch register: H2D</a></li>
+<li><a class="reference internal" href="#pdaemon-to-host-scratch-register-d2h" id="id6">PDAEMON to host scratch register: D2H</a></li>
+<li><a class="reference internal" href="#scratch-registers-dscratch" id="id7">Scratch registers: DSCRATCH</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>There are 4 PDAEMON-specific channels that can be used for communication
+between the host and PDAEMON:</p>
+<ul class="simple">
+<li>FIFO: data submission from host to PDAEMON on 4 independent FIFOs in data
+segment, with interrupts generated whenever the PUT register is written</li>
+<li>RFIFO: data submission from PDAEMON to host on through a FIFO in data
+segment</li>
+<li>H2D: a single scratch register for host -&gt; PDAEMON communication, with
+interrupts generated whenever it&#8217;s written</li>
+<li>D2H: a single scratch register for PDAEMON -&gt; host communication</li>
+<li>DSCRATCH: 4 scratch registers</li>
+</ul>
+</div>
+<div class="section" id="submitting-data-to-pdaemon-fifo">
+<span id="pdaemon-io-fifo-intr"></span><span id="pdaemon-io-fifo"></span><span id="pdaemon-perf-fifo"></span><span id="pdaemon-subintr-fifo"></span><span id="pdaemon-fifo"></span><h2><a class="toc-backref" href="#id3">Submitting data to PDAEMON: FIFO</a><a class="headerlink" href="#submitting-data-to-pdaemon-fifo" title="Permalink to this headline">¶</a></h2>
+<p>These registers are meant to be used for submitting data from host to PDAEMON.
+The PUT register is FIFO head, written by host, and GET register is FIFO tail,
+written by PDAEMON. Interrupts can be generated whenever the PUT register is
+written. How exactly the data buffer works is software&#8217;s business. Note that
+due to very limitted special semantics for FIFO uage, these registers may as
+well be used as [possibly interruptful] scratch registers.</p>
+<dl class="docutils">
+<dt>MMIO 0x4a0+i*4 / I[0x12800+i*0x100], i&lt;4: FIFO_PUT[i]</dt>
+<dd>The FIFO head pointer, effectively a 32-bit scratch register. Writing it
+causes bit i of FIFO_INTR to be set.</dd>
+<dt>MMIO 0x4b0+i*4 / I[0x12c00+i*0x100], i&lt;4: FIFO_GET[i]</dt>
+<dd>The FIFO tail pointer, effectively a 32-bit scratch register.</dd>
+<dt>MMIO 0x4c0 / I[0x13000]: FIFO_INTR</dt>
+<dd>The status register for FIFO_PUT write interrupts. Write a bit with 1 to
+clear it. Whenever a bit is set both in FIFO_INTR and FIFO_INTR_EN, the FIFO
+[#1] second-level interrupt line to SUBINTR is asserted. Bit i corresponds to
+FIFO #i, and only bits 0-3 are valid.</dd>
+<dt>MMIO 0x4c4 / I[0x13100]: FIFO_INTR_EN</dt>
+<dd>The enable register for FIFO_PUT write interrupts. Read/write, only 4 low
+bits are valid. Bit assignment is the same as in FIFO_INTR.</dd>
+</dl>
+<p>In addition, the FIFO circuitry exports four signals to PCOUNTER:</p>
+<ul class="simple">
+<li>FIFO_PUT_0_WRITE: pulses for one cycle whenever FIFO_PUT[0] is written</li>
+<li>FIFO_PUT_1_WRITE: pulses for one cycle whenever FIFO_PUT[1] is written</li>
+<li>FIFO_PUT_2_WRITE: pulses for one cycle whenever FIFO_PUT[2] is written</li>
+<li>FIFO_PUT_3_WRITE: pulses for one cycle whenever FIFO_PUT[3] is written</li>
+</ul>
+</div>
+<div class="section" id="submitting-data-to-host-rfifo">
+<span id="pdaemon-io-rfifo"></span><span id="pdaemon-rfifo"></span><h2><a class="toc-backref" href="#id4">Submitting data to host: RFIFO</a><a class="headerlink" href="#submitting-data-to-host-rfifo" title="Permalink to this headline">¶</a></h2>
+<p>The RFIFO is like one of the 4 FIFOs, except it&#8217;s supposed to go from PDAEMON
+to the host and doesn&#8217;t have the interupt generation powers.</p>
+<p>MMIO 0x4c8 / I[0x13200]: RFIFO_PUT
+MMIO 0x4cc / I[0x13300]: RFIFO_GET</p>
+<blockquote>
+<div>The RFIFO head and tail pointers. Both are effectively 32-bit scratch
+registers.</div></blockquote>
+</div>
+<div class="section" id="host-to-pdaemon-scratch-register-h2d">
+<span id="pdaemon-io-h2d-intr"></span><span id="pdaemon-io-h2d"></span><span id="pdaemon-subintr-h2d"></span><span id="pdaemon-h2d"></span><h2><a class="toc-backref" href="#id5">Host to PDAEMON scratch register: H2D</a><a class="headerlink" href="#host-to-pdaemon-scratch-register-h2d" title="Permalink to this headline">¶</a></h2>
+<p>H2D is a scratch register supposed to be written by the host and read by
+PDAEMON. It generates an interrupt when written.</p>
+<dl class="docutils">
+<dt>MMIO 0x4d0 / I[0x13400]: H2D</dt>
+<dd>A 32-bit scratch register. Sets H2D_INTR when written.</dd>
+<dt>MMIO 0x4d4 / I[0x13500]: H2D_INTR</dt>
+<dd>The status register for H2D write interrupt. Only bit 0 is valid. Set when
+H2D register is written, cleared when 1 is written to bit 0. When this and
+H2D_INTR_EN are both set, the H2D [#0] second-level interrupt line to
+SUBINTR is asserted.</dd>
+<dt>MMIO 0x4d8 / I[0x13600]: H2D_INTR_EN</dt>
+<dd>The enable register for H2D write interrupt. Only bit 0 is valid.</dd>
+</dl>
+</div>
+<div class="section" id="pdaemon-to-host-scratch-register-d2h">
+<span id="pdaemon-io-d2h"></span><span id="pdaemon-d2h"></span><h2><a class="toc-backref" href="#id6">PDAEMON to host scratch register: D2H</a><a class="headerlink" href="#pdaemon-to-host-scratch-register-d2h" title="Permalink to this headline">¶</a></h2>
+<p>D2H is just a scratch register supposed to be written by PDAEMON and read by
+the host. It has no interrupt genration powers.</p>
+<dl class="docutils">
+<dt>MMIO 0x4dc / I[0x13700]: D2H</dt>
+<dd>A 32-bit scratch register.</dd>
+</dl>
+</div>
+<div class="section" id="scratch-registers-dscratch">
+<span id="pdaemon-io-dscratch"></span><span id="pdaemon-dscratch"></span><h2><a class="toc-backref" href="#id7">Scratch registers: DSCRATCH</a><a class="headerlink" href="#scratch-registers-dscratch" title="Permalink to this headline">¶</a></h2>
+<p>DSCRATCH[] are just 4 32-bit scratch registers usable for PDAEMON&lt;-&gt;HOST
+communication or any other purposes.</p>
+<dl class="docutils">
+<dt>MMIO 0x5d0+i*4 / I[0x17400+i*0x100], i&lt;4: DSCRATCH[i]</dt>
+<dd>A 32-bit scratch register.</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Host &lt;-&gt; PDAEMON communication</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#submitting-data-to-pdaemon-fifo">Submitting data to PDAEMON: FIFO</a></li>
+<li><a class="reference internal" href="#submitting-data-to-host-rfifo">Submitting data to host: RFIFO</a></li>
+<li><a class="reference internal" href="#host-to-pdaemon-scratch-register-h2d">Host to PDAEMON scratch register: H2D</a></li>
+<li><a class="reference internal" href="#pdaemon-to-host-scratch-register-d2h">PDAEMON to host scratch register: D2H</a></li>
+<li><a class="reference internal" href="#scratch-registers-dscratch">Scratch registers: DSCRATCH</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/user.html"
+                        title="previous chapter">User busy indication</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/mutex.html"
+                        title="next chapter">Hardware mutexes</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/host.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/mutex.html" title="Hardware mutexes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/user.html" title="User busy indication"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -26,8 +26,8 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="envytools git documentation" href="../index.html" />
-    <link rel="next" title="NV01 DMA engine" href="nv01-pdma.html" />
-    <link rel="prev" title="GPU external device I/O units" href="../io/index.html" /> 
+    <link rel="next" title="Memory structure" href="vram.html" />
+    <link rel="prev" title="PMEDIA: Video capture and external MPEG decoder interface" href="../io/pmedia.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,10 +37,10 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="nv01-pdma.html" title="NV01 DMA engine"
+          <a href="vram.html" title="Memory structure"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../io/index.html" title="GPU external device I/O units"
+          <a href="../io/pmedia.html" title="PMEDIA: Video capture and external MPEG decoder interface"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
       </ul>
@@ -56,12 +56,192 @@
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="vram.html">Memory structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vram.html#memory-planes-and-banks">Memory planes and banks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vram.html#memory-banks-ranks-and-subpartitions">Memory banks, ranks, and subpartitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vram.html#memory-partitions-and-subpartitions">Memory partitions and subpartitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vram.html#memory-addressing">Memory addressing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv01-vram.html">NV01 VRAM structure and usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv01-vram.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-vram.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-vram.html#the-framebuffer">The framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-vram.html#ramin">RAMIN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv01-vram.html#ramin-access-areas">RAMIN access areas</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="nv01-pdma.html">NV01 DMA engine</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="nv01-pdma.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nv01-pdma.html#mmio-registers">MMIO registers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nv01-pdma.html#interrupts">Interrupts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nv01-pdma.html#the-dma-objects">The DMA objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nv01-pdma.html#operation">Operation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv01-surface.html">NV01:NV50 surface formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv01-surface.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv03-vram.html">NV03 VRAM structure and usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv03-vram.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv03-dmaobj.html">NV03 DMA objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv03-dmaobj.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv03-pfb.html">PFB: NV03:NV10 memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv03-pfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv03-pfb.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv04-vram.html">NV04:NV50 VRAM structure and usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv04-vram.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv04-vram.html#ramin">RAMIN</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv04-dmaobj.html">NV04:NV50 DMA objects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv04-dmaobj.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv10-pfb.html">PFB: NV10:NV40 memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv10-pfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv10-pfb.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="peephole.html">PEEPHOLE: indirect memory access from host</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="peephole.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peephole.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peephole.html#write-port">Write port</a></li>
+<li class="toctree-l2"><a class="reference internal" href="peephole.html#rw-port-operation">RW port operation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv40-pfb.html">PFB: NV44:NV50 TURBOCACHE memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv40-pfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv40-pfb.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv44-pfb.html">PFB: NV40:NV50 non-TC memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv44-pfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv44-pfb.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv44-host-mem.html">NV44 host memory interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv44-host-mem.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv44-host-mem.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-surface.html">NV50- surface formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#surface-elements">Surface elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#linear-surfaces">Linear surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#tiled-surfaces">Tiled surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#textures-mipmapping-and-arrays">Textures, mipmapping and arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#multisampled-surfaces">Multisampled surfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#surface-formats">Surface formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#simple-color-surface-formats">Simple color surface formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#shared-exponent-color-format">Shared exponent color format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#yuv-color-formats">YUV color formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#zeta-surface-format">Zeta surface format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#compressed-texture-formats">Compressed texture formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#bitmap-surface-format">Bitmap surface format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#nv50-storage-types">NV50 storage types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#tiled-color-storage-types">Tiled color storage types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nv50-surface.html#zeta-storage-types">Zeta storage types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-surface.html#nvc0-storage-types">NVC0 storage types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-vm.html">NV50 virtual memory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#vm-users">VM users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#channels">Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#dma-objects">DMA objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#page-tables">Page tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#tlb-flushes">TLB flushes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#user-vs-supervisor-accesses">User vs supervisor accesses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#storage-types">Storage types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#compression-modes">Compression modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vm.html#vm-faults">VM faults</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-host-mem.html">NV50:NVC0 host memory interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-host-mem.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-host-mem.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-host-mem.html#pmem-range">PMEM range</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-vram.html">NV50:NVC0 VRAM structure and usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-vram.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-comp.html">NV50 VRAM compression</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-comp.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-p2p.html">NV50:NVC0 P2P memory access</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-p2p.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-p2p.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-remap.html">NV50:NVC0 BAR1 remapper</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-remap.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-remap.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nv50-pfb.html">PFB: NV50:NVC0 memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nv50-pfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nv50-pfb.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nvc0-vm.html">NVC0 virtual memory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-vm.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nvc0-host-mem.html">NVC0- host memory interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-host-mem.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-host-mem.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-host-mem.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nvc0-vram.html">NVC0- VRAM structure and usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-vram.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nvc0-comp.html">NVC0 VRAM compression</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-comp.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nvc0-p2p.html">NVC0- P2P memory access</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-p2p.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nvc0-p2p.html#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pffb.html">PFFB: NVC0 front memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pffb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pffb.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pffb.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pmfb.html">PFFB: NVC0 middle memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pmfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pmfb.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pmfb.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pbfb.html">PBFB: NVC0 front memory controller</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pbfb.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pbfb.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pbfb.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pxbar.html">PXBAR: NVC0 memory crossbar</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pxbar.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pxbar.html#mmio-registers">MMIO registers</a></li>
 </ul>
 </li>
 </ul>
@@ -75,11 +255,11 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../io/index.html"
-                        title="previous chapter">GPU external device I/O units</a></p>
+  <p class="topless"><a href="../io/pmedia.html"
+                        title="previous chapter">PMEDIA: Video capture and external MPEG decoder interface</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="nv01-pdma.html"
-                        title="next chapter">NV01 DMA engine</a></p>
+  <p class="topless"><a href="vram.html"
+                        title="next chapter">Memory structure</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/memory/index.txt"
@@ -109,10 +289,10 @@
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="nv01-pdma.html" title="NV01 DMA engine"
+          <a href="vram.html" title="Memory structure"
              >next</a> |</li>
         <li class="right" >
-          <a href="../io/index.html" title="GPU external device I/O units"
+          <a href="../io/pmedia.html" title="PMEDIA: Video capture and external MPEG decoder interface"
              >previous</a> |</li>
         <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
       </ul>

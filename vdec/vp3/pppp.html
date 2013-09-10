@@ -1,0 +1,582 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PPPP: video post-processing engine &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="VP3/VP4/VP5 video decoding" href="../vp3/index.html" />
+    <link rel="next" title="PCRYPT3: AES cryptographic engine" href="../vp3/pcrypt3.html" />
+    <link rel="prev" title="PVDEC: video decoding engine" href="../vp3/pvdec.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vp3/pcrypt3.html" title="PCRYPT3: AES cryptographic engine"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vp3/pvdec.html" title="PVDEC: video decoding engine"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp3/index.html" accesskey="U">VP3/VP4/VP5 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pppp-video-post-processing-engine">
+<span id="pppp"></span><h1><a class="toc-backref" href="#id12">PPPP: video post-processing engine</a><a class="headerlink" href="#pppp-video-post-processing-engine" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pppp-video-post-processing-engine" id="id12">PPPP: video post-processing engine</a><ul>
+<li><a class="reference internal" href="#introduction" id="id13">Introduction</a></li>
+<li><a class="reference internal" href="#falcon-parameters" id="id14">falcon parameters</a></li>
+<li><a class="reference internal" href="#io-registers" id="id15">IO registers</a></li>
+<li><a class="reference internal" href="#front-end" id="id16">Front end</a><ul>
+<li><a class="reference internal" href="#pppp-io-fe" id="id17">IO registers</a></li>
+<li><a class="reference internal" href="#interrupts" id="id18">Interrupts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#film-grain-synthesis" id="id19">Film grain synthesis</a><ul>
+<li><a class="reference internal" href="#pppp-io-fg" id="id20">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-intr-fg-err" id="id21">Interrupts</a></li>
+<li><a class="reference internal" href="#status-report" id="id22">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vc-1-post-processing" id="id23">VC-1 post-processing</a><ul>
+<li><a class="reference internal" href="#pppp-io-vc1" id="id24">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-intr-vc1-err" id="id25">Interrupts</a></li>
+<li><a class="reference internal" href="#pppp-status-vc1" id="id26">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#picture-output" id="id27">Picture output</a><ul>
+<li><a class="reference internal" href="#pppp-io-pout" id="id28">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-intr-pout-done" id="id29">Interrupts</a></li>
+<li><a class="reference internal" href="#pppp-status-pout" id="id30">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#histogram" id="id31">Histogram</a><ul>
+<li><a class="reference internal" href="#pppp-io-hist" id="id32">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-status-hist" id="id33">Status report</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id13">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="falcon-parameters">
+<span id="pppp-falcon"></span><h2><a class="toc-backref" href="#id14">falcon parameters</a><a class="headerlink" href="#falcon-parameters" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Present on:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd>NV98, NVAA, NVAC</dd>
+<dt>v1:</dt>
+<dd>NVA3:NVC0</dd>
+<dt>v2:</dt>
+<dd>NVC0:NVD9</dd>
+<dt>v3:</dt>
+<dd>NVD9+</dd>
+</dl>
+</dd>
+<dt>BAR0 address:</dt>
+<dd>0x086000</dd>
+<dt>PMC interrupt line:</dt>
+<dd>0</dd>
+<dt>PMC enable bit:</dt>
+<dd>1</dd>
+<dt>Version:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd>0</dd>
+<dt>v1-v2:</dt>
+<dd>3</dd>
+<dt>v3:</dt>
+<dd>4</dd>
+</dl>
+</dd>
+<dt>Code segment size:</dt>
+<dd>0xa00</dd>
+<dt>Data segment size:</dt>
+<dd>0x800</dd>
+<dt>Fifo size:</dt>
+<dd>0x10</dd>
+<dt>Xfer slots:</dt>
+<dd>8</dd>
+<dt>Secretful:</dt>
+<dd>no</dd>
+<dt>Code TLB index bits:</dt>
+<dd>6</dd>
+<dt>Code ports:</dt>
+<dd>1</dd>
+<dt>Data ports:</dt>
+<dd>1</dd>
+<dt>Version 4 unknown caps:</dt>
+<dd>31</dd>
+<dt>Unified address space:</dt>
+<dd>no</dd>
+<dt>IO addressing type:</dt>
+<dd>indexed</dd>
+<dt>Core clock:</dt>
+<dd><dl class="first last docutils">
+<dt>v0:</dt>
+<dd><a class="reference internal" href="../../pm/nv50-clock.html#nv98-clock-vdclk"><em>VDCLK: video decoding clock</em></a></dd>
+<dt>v1:</dt>
+<dd><a class="reference internal" href="../../pm/nva3-clock.html#nva3-clock-vdclk"><em>VDCLK: video decoding clock</em></a></dd>
+<dt>v2-v3:</dt>
+<dd><a class="reference internal" href="../../pm/nvc0-clock.html#nvc0-clock-vdclk"><em>VDCLK: video decoding clock</em></a></dd>
+</dl>
+</dd>
+<dt>NV50 VM engine:</dt>
+<dd>0x8</dd>
+<dt>NV50 VM client:</dt>
+<dd>0x06</dd>
+<dt>NV50 context DMA:</dt>
+<dd>0x6</dd>
+<dt>NVC0 VM engine:</dt>
+<dd>0x11</dd>
+<dt>NVC0 VM client:</dt>
+<dd>HUB 0x0c</dd>
+<dt>Interrupts:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="5%" />
+<col width="5%" />
+<col width="10%" />
+<col width="17%" />
+<col width="63%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Line</th>
+<th class="head">Type</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>8</td>
+<td>edge</td>
+<td>NVA3:NVC0</td>
+<td>MEMIF_PORT_INVALID</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-port-invalid"><em>MEMIF port not initialised</em></a></td>
+</tr>
+<tr class="row-odd"><td>9</td>
+<td>edge</td>
+<td>NVA3:NVC0</td>
+<td>MEMIF_FAULT</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-fault"><em>MEMIF VM fault</em></a></td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>edge</td>
+<td>NVC0-</td>
+<td>MEMIF_BREAK</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-intr-break"><em>MEMIF breakpoint</em></a></td>
+</tr>
+<tr class="row-odd"><td>10</td>
+<td>level</td>
+<td>all</td>
+<td>POUT_DONE</td>
+<td><a class="reference internal" href="#pppp-intr-pout-done"><em>Picture output finished</em></a></td>
+</tr>
+<tr class="row-even"><td>11</td>
+<td>level</td>
+<td>all</td>
+<td>POUT_ERR</td>
+<td><a class="reference internal" href="#pppp-intr-pout-err"><em>Picture output error</em></a></td>
+</tr>
+<tr class="row-odd"><td>12</td>
+<td>level</td>
+<td>all</td>
+<td>FE_ERR</td>
+<td><a class="reference internal" href="#pppp-intr-fe-err"><em>Frontend error</em></a></td>
+</tr>
+<tr class="row-even"><td>13</td>
+<td>level</td>
+<td>all</td>
+<td>VC1_ERR</td>
+<td><a class="reference internal" href="#pppp-intr-vc1-err"><em>VC1 error</em></a></td>
+</tr>
+<tr class="row-odd"><td>14</td>
+<td>level</td>
+<td>all</td>
+<td>FG_ERR</td>
+<td><a class="reference internal" href="#pppp-intr-fg-err"><em>Film grain error</em></a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Status bits:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="7%" />
+<col width="14%" />
+<col width="14%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Bit</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>all</td>
+<td>FALCON</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-status"><em>Falcon unit</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-status"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>all</td>
+<td>POUT</td>
+<td><a class="reference internal" href="#pppp-status-pout"><em>Picture output</em></a></td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>all</td>
+<td>UNKE4</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>all</td>
+<td>VC1</td>
+<td><a class="reference internal" href="#pppp-status-vc1"><em>VC1</em></a></td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>all</td>
+<td>FG</td>
+<td><a class="reference internal" href="#pppp-status-fg"><em>Film grain</em></a></td>
+</tr>
+<tr class="row-even"><td>6</td>
+<td>all</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>7</td>
+<td>all</td>
+<td>HIST</td>
+<td><a class="reference internal" href="#pppp-status-hist"><em>Histogram</em></a></td>
+</tr>
+<tr class="row-even"><td>8</td>
+<td>v1-v2</td>
+<td>UNK480</td>
+<td>???</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>IO registers:</dt>
+<dd><a class="reference internal" href="#pppp-io"><em>IO registers</em></a></dd>
+<dt>MEMIF ports:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="15%" />
+<col width="27%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Port</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>1</td>
+<td>PIN</td>
+<td>picture input</td>
+</tr>
+<tr class="row-odd"><td>2</td>
+<td>POUT</td>
+<td>picture output</td>
+</tr>
+<tr class="row-even"><td>3</td>
+<td>FG</td>
+<td>??? read [XXX]</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>UNK480</td>
+<td>??? write [XXX]</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
+<div class="section" id="io-registers">
+<span id="pppp-io"></span><h2><a class="toc-backref" href="#id15">IO registers</a><a class="headerlink" href="#io-registers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="16%" />
+<col width="11%" />
+<col width="12%" />
+<col width="49%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Host</th>
+<th class="head">Falcon</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x000:0x400</td>
+<td>0x00000:0x10000</td>
+<td>all</td>
+<td>N/A</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon registers</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x400:0x480</td>
+<td>0x10000:0x12000</td>
+<td>all</td>
+<td>FE</td>
+<td><a class="reference internal" href="#pppp-io-fe"><em>Front end</em></a></td>
+</tr>
+<tr class="row-even"><td>0x480:0x500</td>
+<td>0x12000:0x14000</td>
+<td>v1-v2</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x500:0x5c0</td>
+<td>0x14000:0x17000</td>
+<td>all</td>
+<td>FG</td>
+<td><a class="reference internal" href="#pppp-io-fg"><em>Film grain effect</em></a></td>
+</tr>
+<tr class="row-even"><td>0x5c0:0x600</td>
+<td>0x17000:0x18000</td>
+<td>all</td>
+<td>VC1</td>
+<td><a class="reference internal" href="#pppp-io-vc1"><em>VC-1 postprocessing</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x600:0x640</td>
+<td>0x18000:0x19000</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-io"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-even"><td>0x640:0x680</td>
+<td>0x19000:0x1a000</td>
+<td>all</td>
+<td>POUT</td>
+<td><a class="reference internal" href="#pppp-io-pout"><em>Picture output</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x680:0x740</td>
+<td>0x1a000:0x1d000</td>
+<td>all</td>
+<td>HIST</td>
+<td><a class="reference internal" href="#pppp-io-hist"><em>Histogram</em></a></td>
+</tr>
+<tr class="row-even"><td>0x740:0x780</td>
+<td>0x1d000:0x1e000</td>
+<td>v1-</td>
+<td>JOE</td>
+<td>???</td>
+</tr>
+<tr class="row-odd"><td>0x780:0x7c0</td>
+<td>0x1e000:0x1f000</td>
+<td>v2-</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="row-even"><td>0xfe0:0x1000</td>
+<td>-</td>
+<td>v0:v3</td>
+<td>FALCON_HOST</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon host registers</em></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="front-end">
+<h2><a class="toc-backref" href="#id16">Front end</a><a class="headerlink" href="#front-end" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pppp-io-fe">
+<span id="id1"></span><h3><a class="toc-backref" href="#id17">IO registers</a><a class="headerlink" href="#pppp-io-fe" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="interrupts">
+<span id="pppp-intr-fe-err"></span><h3><a class="toc-backref" href="#id18">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="film-grain-synthesis">
+<h2><a class="toc-backref" href="#id19">Film grain synthesis</a><a class="headerlink" href="#film-grain-synthesis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pppp-io-fg">
+<span id="id2"></span><h3><a class="toc-backref" href="#id20">IO registers</a><a class="headerlink" href="#pppp-io-fg" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pppp-intr-fg-err">
+<span id="id3"></span><h3><a class="toc-backref" href="#id21">Interrupts</a><a class="headerlink" href="#pppp-intr-fg-err" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="status-report">
+<span id="pppp-status-fg"></span><h3><a class="toc-backref" href="#id22">Status report</a><a class="headerlink" href="#status-report" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="vc-1-post-processing">
+<h2><a class="toc-backref" href="#id23">VC-1 post-processing</a><a class="headerlink" href="#vc-1-post-processing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pppp-io-vc1">
+<span id="id4"></span><h3><a class="toc-backref" href="#id24">IO registers</a><a class="headerlink" href="#pppp-io-vc1" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pppp-intr-vc1-err">
+<span id="id5"></span><h3><a class="toc-backref" href="#id25">Interrupts</a><a class="headerlink" href="#pppp-intr-vc1-err" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pppp-status-vc1">
+<span id="id6"></span><h3><a class="toc-backref" href="#id26">Status report</a><a class="headerlink" href="#pppp-status-vc1" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="picture-output">
+<h2><a class="toc-backref" href="#id27">Picture output</a><a class="headerlink" href="#picture-output" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pppp-io-pout">
+<span id="id7"></span><h3><a class="toc-backref" href="#id28">IO registers</a><a class="headerlink" href="#pppp-io-pout" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pppp-intr-pout-done">
+<span id="pppp-intr-pout-err"></span><span id="id8"></span><h3><a class="toc-backref" href="#id29">Interrupts</a><a class="headerlink" href="#pppp-intr-pout-done" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pppp-status-pout">
+<span id="id9"></span><h3><a class="toc-backref" href="#id30">Status report</a><a class="headerlink" href="#pppp-status-pout" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="histogram">
+<h2><a class="toc-backref" href="#id31">Histogram</a><a class="headerlink" href="#histogram" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="pppp-io-hist">
+<span id="id10"></span><h3><a class="toc-backref" href="#id32">IO registers</a><a class="headerlink" href="#pppp-io-hist" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="pppp-status-hist">
+<span id="id11"></span><h3><a class="toc-backref" href="#id33">Status report</a><a class="headerlink" href="#pppp-status-hist" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PPPP: video post-processing engine</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#falcon-parameters">falcon parameters</a></li>
+<li><a class="reference internal" href="#io-registers">IO registers</a></li>
+<li><a class="reference internal" href="#front-end">Front end</a><ul>
+<li><a class="reference internal" href="#pppp-io-fe">IO registers</a></li>
+<li><a class="reference internal" href="#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#film-grain-synthesis">Film grain synthesis</a><ul>
+<li><a class="reference internal" href="#pppp-io-fg">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-intr-fg-err">Interrupts</a></li>
+<li><a class="reference internal" href="#status-report">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vc-1-post-processing">VC-1 post-processing</a><ul>
+<li><a class="reference internal" href="#pppp-io-vc1">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-intr-vc1-err">Interrupts</a></li>
+<li><a class="reference internal" href="#pppp-status-vc1">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#picture-output">Picture output</a><ul>
+<li><a class="reference internal" href="#pppp-io-pout">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-intr-pout-done">Interrupts</a></li>
+<li><a class="reference internal" href="#pppp-status-pout">Status report</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#histogram">Histogram</a><ul>
+<li><a class="reference internal" href="#pppp-io-hist">IO registers</a></li>
+<li><a class="reference internal" href="#pppp-status-hist">Status report</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vp3/pvdec.html"
+                        title="previous chapter">PVDEC: video decoding engine</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vp3/pcrypt3.html"
+                        title="next chapter">PCRYPT3: AES cryptographic engine</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/vdec/vp3/pppp.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../vp3/pcrypt3.html" title="PCRYPT3: AES cryptographic engine"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vp3/pvdec.html" title="PVDEC: video decoding engine"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp3/index.html" >VP3/VP4/VP5 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

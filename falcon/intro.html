@@ -94,23 +94,24 @@ adds support for 24-bit code addressing, debugging and ???</li>
 <p>The falcon units present on nvidia cards are:</p>
 <ul class="simple">
 <li>The VP3/VP4/VP5 engines [NV98 and NVAA+]:<ul>
-<li>PVLD, the variable length decoder                   <a class="reference external" href="../vdec/vp3/pvld.txt">../vdec/vp3/pvld.txt</a></li>
-<li>PVDEC, the video decoder                            <a class="reference external" href="../vdec/vp3/pvdec.txt">../vdec/vp3/pvdec.txt</a></li>
-<li>PPPP, the video post-processor                      <a class="reference external" href="../vdec/vp3/pppp.txt">../vdec/vp3/pppp.txt</a></li>
+<li><a class="reference internal" href="../vdec/vp3/pvld.html#pvld-falcon"><em>PVLD</em></a>, the variable length decoder</li>
+<li><a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec-falcon"><em>PVDEC</em></a>, the video decoder</li>
+<li><a class="reference internal" href="../vdec/vp3/pppp.html#pppp-falcon"><em>PPPP</em></a>, the video post-processor</li>
 </ul>
 </li>
 <li>The VP3 cryptographic engine [NV98, NVAA, NVAC]:<ul>
-<li>PCRYPT3, the cryptographic engine                   <a class="reference external" href="../vdec/vp3/pcrypt3.txt">../vdec/vp3/pcrypt3.txt</a></li>
+<li><a class="reference internal" href="../vdec/vp3/pcrypt3.html#pcrypt3-falcon"><em>PCRYPT3</em></a>, the cryptographic engine</li>
 </ul>
 </li>
 <li>The NVA3:NVE4 copy engines:<ul>
-<li>PCOPY0 [NVA3:NVE4]                                  <a class="reference external" href="../fifo/pcopy.txt">../fifo/pcopy.txt</a></li>
-<li>PCOPY1 [NVC0:NVE4]                                  <a class="reference external" href="../fifo/pcopy.txt">../fifo/pcopy.txt</a></li>
+<li><a class="reference internal" href="../fifo/index.html#pcopy-falcon"><em>PCOPY[0]</em></a> [NVA3:NVE4]</li>
+<li><a class="reference internal" href="../fifo/index.html#pcopy-falcon"><em>PCOPY[1]</em></a> [NVC0:NVE4]</li>
 </ul>
 </li>
 <li>The NVA3+ daemon engines:<ul>
-<li>PDAEMON [NVA3+]                                     <a class="reference external" href="../pm/pdaemon.txt">../pm/pdaemon.txt</a></li>
-<li>PDISPLAY.DAEMON [NVD9+]                             <a class="reference external" href="../display/nv50/pdisplay-daemon.txt">../display/nv50/pdisplay-daemon.txt</a></li>
+<li><a class="reference internal" href="../pm/pdaemon/falcon.html#pdaemon-falcon"><em>PDAEMON [NVA3+]</em></a></li>
+<li><a class="reference internal" href="../display/nv50/pdisplay-daemon.html#pdisplay-daemon-falcon"><em>PDISPLAY.DAEMON [NVD9+]</em></a></li>
+<li><a class="reference internal" href="../display/nv50/punk1c3.html#punk1c3-falcon"><em>PUNK1C3 [NVD9+]</em></a></li>
 </ul>
 </li>
 <li>The NVC0 PGRAPH CTXCTL engines:<ul>
@@ -118,9 +119,8 @@ adds support for 24-bit code addressing, debugging and ???</li>
 <li>PGRAPH.GPC[*].CTXCTL                                <a class="reference external" href="../graph/nvc0-ctxctl/intro.txt">../graph/nvc0-ctxctl/intro.txt</a></li>
 </ul>
 </li>
-<li>The video compositing engine, PVCOMP [NVAF:NVC0]      <a class="reference external" href="../vdec/pvcomp.txt">../vdec/pvcomp.txt</a></li>
-<li>The unknown NVD9 PUNK1C3 engine                       <a class="reference external" href="../display/nv50/punk1c3.txt">../display/nv50/punk1c3.txt</a></li>
-<li>The H.264 encoding engine, PVENC [NVE4+]              <a class="reference external" href="../vdec/pvenc.txt">../vdec/pvenc.txt</a></li>
+<li><a class="reference internal" href="../vdec/pvcomp.html#pvcomp-falcon"><em>PVCOMP</em></a>, the video compositing engine [NVAF:NVC0]</li>
+<li><a class="reference internal" href="../vdec/pvenc.html#pvenc-falcon"><em>PVENC</em></a>, the H.264 encoding engine [NVE4+]</li>
 </ul>
 </div>
 

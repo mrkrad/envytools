@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Video decoding, encoding, and processing &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="next" title="VPE video decoding and encoding" href="vpe/index.html" />
+    <link rel="prev" title="Cryptographic coprocessor" href="../falcon/crypt.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="vpe/index.html" title="VPE video decoding and encoding"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../falcon/crypt.html" title="Cryptographic coprocessor"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="video-decoding-encoding-and-processing">
+<h1>Video decoding, encoding, and processing<a class="headerlink" href="#video-decoding-encoding-and-processing" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vpe/index.html">VPE video decoding and encoding</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vpe/pvpe.html">PVPE: video decoding/encoding engine control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pvpe.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pvpe.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pvpe.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vpe/pmpeg.html">PMPEG: MPEG1/MPEG2 video decoding engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pmpeg.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pmpeg.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pmpeg.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vpe/pme.html">PME: motion estimation engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pme.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pme.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pme.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vpe/pvp1.html">PVP1: video processor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pvp1.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pvp1.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vpe/pvp1.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vpe/index.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vuc/index.html">VP2/VP3 vµc processor</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vp2/index.html">VP2 video decoding</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vp2/xtensa.html">VP2 xtensa processors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/pvp2.html">PVP2: video processor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pvp2.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pvp2.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pvp2.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/pbsp.html">PBSP: H.264 bitstream processor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pbsp.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pbsp.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pbsp.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/vld.html">VLD: variable length decoding</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#the-registers">The registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#reset">Reset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#parameter-and-position-registers">Parameter and position registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#internal-state-for-context-selection">Internal state for context selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#interrupts">Interrupts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#stream-input">Stream input</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#mbring-output">MBRING output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/vld.html#command-and-status-registers">Command and status registers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-0-get-ue">Command 0: GET_UE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-1-get-se">Command 1: GET_SE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-2-getbits">Command 2: GETBITS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-3-next-start-code">Command 3: NEXT_START_CODE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-4-cabac-start">Command 4: CABAC_START</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-5-more-rbsp-data">Command 5: MORE_RBSP_DATA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-6-mb-skip-flag">Command 6: MB_SKIP_FLAG</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-7-end-of-slice-flag">Command 7: END_OF_SLICE_FLAG</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-8-cabac-init-ctx">Command 8: CABAC_INIT_CTX</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-9-macroblock-skip-mbfdf">Command 9: MACROBLOCK_SKIP_MBFDF</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-0xa-macroblock-layer-mbfdf">Command 0xa: MACROBLOCK_LAYER_MBFDF</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-0xb-pred-weight-table">Command 0xb: PRED_WEIGHT_TABLE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/vld.html#command-0xc-slice-data">Command 0xc: SLICE_DATA</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/mbring.html">MBRING format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp2/mbring.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/mbring.html#packet-type-0-macroblock-info">Packet type 0: macroblock info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/mbring.html#packet-type-1-motion-vectors">Packet type 1: motion vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/mbring.html#packet-type-2-residual-data">Packet type 2: residual data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/mbring.html#packet-type-3-coded-block-mask">Packet type 3: coded block mask</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/mbring.html#packet-type-4-pred-weight-table">Packet type 4: pred weight table</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/macro.html">VP2 command macro processor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#control-and-status-registers">Control and status registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#interrupts">Interrupts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#fifos">FIFOs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#execution-state-and-registers">Execution state and registers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#code-ram">Code RAM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#execution-control">Execution control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#parameter-registers">Parameter registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#global-registers">Global registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#special-registers">Special registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#the-lut">The LUT</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/macro.html#opcodes">Opcodes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#command-opcodes">Command opcodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#data-opcodes">Data opcodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp2/macro.html#destination-write">Destination write</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/pcrypt2.html">PCRYPT2: AES encryption engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pcrypt2.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pcrypt2.html#mmio-registers">MMIO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp2/pcrypt2.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp2/index.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vp3/index.html">VP3/VP4/VP5 video decoding</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vp3/pvld.html">PVLD: variable length decoding engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvld.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvld.html#falcon-parameters">falcon parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvld.html#io-registers">IO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvld.html#vld-unit">VLD unit</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pvld.html#pvld-io-vld">IO registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pvld.html#interrupts">Interrupts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pvld.html#status-report">Status report</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvld.html#bucket-format">Bucket format</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp3/pvdec.html">PVDEC: video decoding engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvdec.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvdec.html#falcon-parameters">falcon parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvdec.html#io-registers">IO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pvdec.html#block-transform">Block transform</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pvdec.html#pvdec-io-xfrm">IO registers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp3/pppp.html">PPPP: video post-processing engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#falcon-parameters">falcon parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#io-registers">IO registers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#front-end">Front end</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-io-fe">IO registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#film-grain-synthesis">Film grain synthesis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-io-fg">IO registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-intr-fg-err">Interrupts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#status-report">Status report</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#vc-1-post-processing">VC-1 post-processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-io-vc1">IO registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-intr-vc1-err">Interrupts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-status-vc1">Status report</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#picture-output">Picture output</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-io-pout">IO registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-intr-pout-done">Interrupts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-status-pout">Status report</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pppp.html#histogram">Histogram</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-io-hist">IO registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/pppp.html#pppp-status-hist">Status report</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp3/pcrypt3.html">PCRYPT3: AES cryptographic engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pcrypt3.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pcrypt3.html#falcon-parameters">falcon parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/pcrypt3.html#io-registers">IO registers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp3/mbring.html">VP3 MBRING format</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-00-macro-block-header">type 00: Macro block header</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#mpeg2">MPEG2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#h-264">H.264</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#error">Error</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-01-motion-vector">type 01: Motion vector</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#id1">MPEG2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#id2">H.264</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-02-dct-coordinates">type 02: DCT coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-03-pcm-data">type 03: PCM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-04-coded-block-pattern">type 04: Coded block pattern</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#id3">MPEG2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="vp3/mbring.html#id4">H.264</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-05-pred-weight-table">type 05: Pred weight table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#type-06-end-of-stream">type 06: End of stream</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vp3/mbring.html#macroblock">Macroblock</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vp3/index.html#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pvcomp.html">PVCOMP: video compositor engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pvcomp.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pvcomp.html#falcon-parameters">falcon parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pvcomp.html#io-registers">IO registers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pvcomp.html#interrupts">Interrupts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pvenc.html">PVENC: video encoding engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pvenc.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pvenc.html#falcon-parameters">falcon parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pvenc.html#io-registers">IO registers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../falcon/crypt.html"
+                        title="previous chapter">Cryptographic coprocessor</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="vpe/index.html"
+                        title="next chapter">VPE video decoding and encoding</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/vdec/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="vpe/index.html" title="VPE video decoding and encoding"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../falcon/crypt.html" title="Cryptographic coprocessor"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

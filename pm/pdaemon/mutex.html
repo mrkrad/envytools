@@ -1,0 +1,162 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Hardware mutexes &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="CRC computation" href="../pdaemon/crc.html" />
+    <link rel="prev" title="Host &lt;-&gt; PDAEMON communication" href="../pdaemon/host.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/crc.html" title="CRC computation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/host.html" title="Host &lt;-&gt; PDAEMON communication"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="hardware-mutexes">
+<span id="pdaemon-io-token"></span><span id="pdaemon-io-mutex"></span><span id="pdaemon-perf-mutex"></span><span id="pdaemon-mutex"></span><h1>Hardware mutexes<a class="headerlink" href="#hardware-mutexes" title="Permalink to this headline">¶</a></h1>
+<p>The PDAEMON has hardware support for 16 busy-waiting mutexes accessed by up to
+254 clients simultanously. The clients may be anything able to read and write
+the PDAEMON registers - code running on host, on PDAEMON, or on any other falcon
+engine with MMIO access powers.</p>
+<p>The clients are identified by tokens. Tokens are 8-bit numbers in 0x01-0xfe
+range. Tokens may be assigned to clients statically by software, or dynamically
+by hardware. Only tokens 0x08-0xfe will be dynamically allocated by hardware
+- software may use statically assigned tokens 0x01-0x07 even if dynamic tokens
+are in use at the same time. The registers used for dynamic token allocation
+are:</p>
+<dl class="docutils">
+<dt>MMIO 0x488 / I[0x12200]: TOKEN_ALLOC</dt>
+<dd>Read-only, each to this register allocates a free token and gives it as the
+read result. If there are no free tokens, 0xff is returned.</dd>
+<dt>MMIO 0x48c / I[0x12300]: TOKEN_FREE</dt>
+<dd>A write to this register will free a token, ie. return it back to the pool
+used by TOKEN_ALLOC. Only low 8 bits of the written value are used.
+Attempting to free a token outside of the dynamic allocation range
+[0x08-0xff] or a token already in the free queue will have no effect.
+Reading this register will show the last written value, invalid or not.</dd>
+</dl>
+<p>The free tokens are stored in a FIFO - the freed tokens will be used by
+TOKEN_ALLOC in the order of freeing. After reset, the free token FIFO will
+contain tokens 0x08-0xfe in ascending order.</p>
+<p>The actual mutex locking and unlocking is done by the MUTEX_TOKEN registers:</p>
+<dl class="docutils">
+<dt>MMIO 0x580+i*4 / I[0x16000+i*0x100], i&lt;16: MUTEX_TOKEN[i]</dt>
+<dd>The 16 mutices. A value of 0 means unlocked, any other value means locked
+by the client holding the corresponding token. Only low 8 bits of the written
+value are used. A write of 0 will unlock the mutex and will always succeed.
+A write of 0x01-0xfe will succeed only if the mutex is currently unlocked.
+A write of 0xff is invalid and will always fail. A failed write has no
+effect.</dd>
+</dl>
+<p>The token allocation circuitry additionally exports four signals to PCOUNTER:</p>
+<ul class="simple">
+<li>TOKEN_ALL_USED: 1 iff all tokens are currently allocated [ie. a read from
+TOKEN_ALLOC would return 0xff]</li>
+<li>TOKEN_NONE_USED: 1 iff no tokens are currently allocated [ie. tokens
+0x08-0xfe are all in free tokens queue]</li>
+<li>TOKEN_FREE: pulses for 1 cycle whenever TOKEN_FREE is written, even if with
+invalid value</li>
+<li>TOKEN_ALLOC: pulses for 1 cycle whenever TOKEN_ALLOC is read, even if
+allocation fails</li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/host.html"
+                        title="previous chapter">Host &lt;-&gt; PDAEMON communication</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/crc.html"
+                        title="next chapter">CRC computation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/mutex.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/crc.html" title="CRC computation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/host.html" title="Host &lt;-&gt; PDAEMON communication"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

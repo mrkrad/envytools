@@ -250,10 +250,10 @@ These two bitfields together are also visible as PCI revision.</li>
 <li>bits 12-19: device id [NVD9-]
 The value of this bitfield is equal to low 4, 5, or 6 bits of the PCI
 device id. The bitfield size and position changed between cards due to
-varying amount of changeable bits. See <a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a> and
+varying amount of changeable bits. See <a class="reference internal" href="../io/pstraps.html#pstraps"><em>PSTRAPS: straps readout and override</em></a> and
 <a class="reference internal" href="../chipsets.html#chipsets"><em>Chipsets</em></a> for more details.</li>
 <li>bits 20-27: chipset id.
-This is THE chipset id that comes after &#8220;NV&#8221;. See chipsets.txt for the
+This is THE chipset id that comes after &#8220;NV&#8221;. See <a class="reference internal" href="../chipsets.html#chipsets"><em>Chipsets</em></a> for the
 list.</li>
 <li>bits 28-31: ???</li>
 </ul>
@@ -281,7 +281,7 @@ purpose:</p>
 <span id="pmc-mmio-endian"></span><h2><a class="toc-backref" href="#id5">Endian switch</a><a class="headerlink" href="#endian-switch" title="Permalink to this headline">¶</a></h2>
 <p>PMC also contains the endian switch register. The endian switch can be set to
 either little or big endian, and affects all accesses to BAR0 and, if present,
-BAR2/BAR3 - see bus/bars.txt for more details. It is controlled by the ENDIAN
+BAR2/BAR3 - see <a class="reference internal" href="bars.html#bars"><em>PCI BARs and other means of accessing the GPU</em></a> for more details. It is controlled by the ENDIAN
 register:</p>
 <dl class="docutils">
 <dt>MMIO 0x000004: ENDIAN [NV11-]</dt>
@@ -301,7 +301,7 @@ always little-endian.</p>
 this switch, despite being in BAR0.</p>
 </div>
 <div class="section" id="engine-enables">
-<span id="pmc-mmio-enable"></span><h2><a class="toc-backref" href="#id6">Engine enables</a><a class="headerlink" href="#engine-enables" title="Permalink to this headline">¶</a></h2>
+<span id="pmc-enable"></span><span id="pmc-mmio-enable"></span><h2><a class="toc-backref" href="#id6">Engine enables</a><a class="headerlink" href="#engine-enables" title="Permalink to this headline">¶</a></h2>
 <p>PMC contains the main engine enable register, which is used to turn whole
 engines on and off:</p>
 <dl class="docutils">
@@ -313,57 +313,57 @@ default state when disabled.</dd>
 <p>On NV01, the bits are:</p>
 <ul class="simple">
 <li>0: <a class="reference internal" href="../nv01-paudio.html#nv01-paudio"><em>PAUDIO</em></a></li>
-<li>4: PDMA [memory/nv01-pdma.txt] and <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
+<li>4: <a class="reference internal" href="../memory/nv01-pdma.html#nv01-pdma"><em>PDMA</em></a> and <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
 <li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv01-pgraph.txt]</li>
 <li>16: <a class="reference internal" href="nv01-prm.html#nv01-prm"><em>PRM</em></a></li>
-<li>24: PFB [display/nv01/pfb.txt]</li>
+<li>24: <a class="reference internal" href="../display/nv01/pfb.html#nv01-pfb"><em>PFB</em></a></li>
 </ul>
 <p>On NV03:NV04, the bits are:</p>
 <ul class="simple">
 <li>0: ??? [XXX]</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia"><em>PMEDIA</em></a></li>
 <li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv03-pgraph.txt] and PDMA [graph/nv03-pdma.txt]</li>
 <li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
-<li>20: PFB [memory/nv03-pfb.txt]</li>
-<li>24: CRTC [display/nv03/vga.txt]</li>
-<li>28: PRAMDAC.VIDEO [display/nv03/pramdac.txt]</li>
+<li>20: <a class="reference internal" href="../memory/nv03-pfb.html#nv03-pfb"><em>PFB</em></a></li>
+<li>24: <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc"><em>PCRTC</em></a></li>
+<li>28: <a class="reference internal" href="../display/nv03/pvideo.html#pvideo"><em>PRAMDAC.VIDEO</em></a></li>
 </ul>
 <p>On NV04:NV50, the bits are:</p>
 <ul class="simple">
 <li>0: ??? - alleged to be related to I2C [NV10-] [XXX]</li>
-<li>1: VPE [vdec/vpe/intro.txt] [NV17-]</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>1: <a class="reference internal" href="../vdec/vpe/pvpe.html#pvpe"><em>PVPE</em></a> [NV17-]</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia"><em>PMEDIA</em></a></li>
 <li>8: PFIFO [fifo/nv04-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv04-pgraph.txt, graph/nv10-pgraph.txt, graph/nv20-pgraph.txt, graph/nv40-pgraph.txt]</li>
 <li>13: PGRAPH CS??? apparently exists on some late NV4x... [graph/nv40-pgraph.txt] [NV4?-]</li>
 <li>[XXX: figure out the CS thing, figure out the variants. Known not to exist on NV40, NV43, NV44, NV49]</li>
 <li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
-<li>20: PFB [memory/nv03-pfb.txt, memory/nv10-pfb.txt, memory/nv40-pfb.txt, memory/nv44-pfb.txt]</li>
-<li>24: PCRTC [display/nv03/vga.txt]</li>
-<li>25: PCRTC2 [display/nv03/vga.txt] [NV11-]</li>
-<li>26: PTV [display/nv03/ptv.txt] [NV17:NV20, NV25:NV50]</li>
-<li>28: PRAMDAC.VIDEO [display/nv03/pramdac.txt] [NV04:NV10] or PVIDEO [display/nv03/pvideo.txt] [NV10:NV50]</li>
+<li>20: PFB [<a class="reference internal" href="../memory/nv03-pfb.html#nv03-pfb"><em>NV03</em></a>, <a class="reference internal" href="../memory/nv10-pfb.html#nv10-pfb"><em>NV10</em></a>, <a class="reference internal" href="../memory/nv44-pfb.html#nv40-pfb"><em>NV40</em></a>, <a class="reference internal" href="../memory/nv40-pfb.html#nv44-pfb"><em>NV44</em></a>]</li>
+<li>24: <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc"><em>PCRTC</em></a></li>
+<li>25: <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc"><em>PCRTC2</em></a> [NV11-]</li>
+<li>26: <a class="reference internal" href="../display/nv03/ptv.html#ptv"><em>PTV</em></a> [NV17:NV20, NV25:NV50]</li>
+<li>28: <a class="reference internal" href="../display/nv03/pvideo.html#pvideo"><em>PRAMDAC.VIDEO</em></a> [NV04:NV10] or <a class="reference internal" href="../display/nv03/pvideo.html#pvideo"><em>PVIDEO</em></a> [NV10:NV50]</li>
 </ul>
 <p>On NV50:NVC0, the bits are:</p>
 <ul class="simple">
 <li>0: ??? - alleged to be related to I2C</li>
-<li>1: VPE [vdec/vpe/intro.txt] [NV50:NV98 NVA0:NVAA]</li>
-<li>1: PPPP [vdec/vp3/pppp.txt] [NV98:NVA0 NVAA-]</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>1: <a class="reference internal" href="../vdec/vpe/pvpe.html#pvpe"><em>PVPE</em></a> [NV50:NV98 NVA0:NVAA]</li>
+<li>1: <a class="reference internal" href="../vdec/vp3/pppp.html#pppp"><em>PPPP</em></a> [NV98:NVA0 NVAA-]</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia"><em>PMEDIA</em></a></li>
 <li>8: PFIFO [fifo/nv50-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv50-pgraph.txt]</li>
-<li>13: PCOPY [fifo/pcopy.txt] [NVA3-]</li>
-<li>14: PCRYPT2 [vdec/vp2/pcrypt2.txt] [NV84:NV98 NVA0:NVAA]</li>
-<li>14: PCRYPT3 [vdec/vp3/pcrypt3.txt] [NV98:NVA0 NVAA:NVA3]</li>
-<li>14: PVCOMP [vdec/pvcomp.txt] [NVAF]</li>
-<li>15: PBSP [vdec/vp2/pbsp.txt] [NV84:NV98 NVA0:NVAA]</li>
-<li>15: PVLD [vdec/vp3/pvld.txt] [NV98:NVA0 NVAA-]</li>
+<li>13: <a class="reference internal" href="../fifo/index.html#pcopy"><em>PCOPY</em></a> [NVA3-]</li>
+<li>14: <a class="reference internal" href="../vdec/vp2/pcrypt2.html#pcrypt2"><em>PCRYPT2</em></a> [NV84:NV98 NVA0:NVAA]</li>
+<li>14: <a class="reference internal" href="../vdec/vp3/pcrypt3.html#pcrypt3"><em>PCRYPT3</em></a> [NV98:NVA0 NVAA:NVA3]</li>
+<li>14: <a class="reference internal" href="../vdec/pvcomp.html#pvcomp"><em>PVCOMP</em></a> [NVAF]</li>
+<li>15: <a class="reference internal" href="../vdec/vp2/pbsp.html#pbsp"><em>PBSP</em></a> [NV84:NV98 NVA0:NVAA]</li>
+<li>15: <a class="reference internal" href="../vdec/vp3/pvld.html#pvld"><em>PVLD</em></a> [NV98:NVA0 NVAA-]</li>
 <li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
-<li>17: PVP2 [vdec/vp2/pvp2.txt] [NV84:NV98 NVA0:NVAA]</li>
-<li>17: PVDEC [vdec/vp3/pvdec.txt] [NV98:NVA0 NVAA-]</li>
-<li>20: PFB [memory/nv50-pfb.txt]</li>
+<li>17: <a class="reference internal" href="../vdec/vp2/pvp2.html#pvp2"><em>PVP2</em></a> [NV84:NV98 NVA0:NVAA]</li>
+<li>17: <a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec"><em>PVDEC</em></a> [NV98:NVA0 NVAA-]</li>
+<li>20: <a class="reference internal" href="../memory/nv50-pfb.html#nv50-pfb"><em>PFB</em></a></li>
 <li>21: PGRAPH CHSW [NV84-] [fifo/nv50-pfifo.txt]</li>
 <li>22: PMPEG CHSW [NV84-]</li>
 <li>23: PCOPY CHSW [NVA3-]</li>
@@ -376,33 +376,33 @@ default state when disabled.</dd>
 <li>26: PVLD CHSW [NV98:NVA0 NVAA-] [fifo/nv50-pfifo.txt]</li>
 <li>27: ??? [NV84-]</li>
 <li>28: ??? [NV84-]</li>
-<li>30: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>30: <a class="reference internal" href="../display/nv50/pdisplay.html#pdisplay"><em>PDISPLAY</em></a></li>
 <li>31: ???</li>
 </ul>
 <p>On NVC0+, the bits are:</p>
 <ul class="simple">
 <li>0: ??? - alleged to be related to I2C</li>
-<li>1: PPPP [vdec/vp3/pppp.txt]</li>
-<li>2: PXBAR [memory/nvc0-pxbar.txt]</li>
-<li>3: PMFB [memory/nvc0-pmfb.txt]</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
-<li>5: PIBUS [bus/pibus.txt]</li>
-<li>6: PCOPY[0] [fifo/pcopy.txt]</li>
-<li>7: PCOPY[1] [fifo/pcopy.txt]</li>
+<li>1: <a class="reference internal" href="../vdec/vp3/pppp.html#pppp"><em>PPPP</em></a></li>
+<li>2: <a class="reference internal" href="../memory/pxbar.html#pxbar"><em>PXBAR</em></a></li>
+<li>3: <a class="reference internal" href="../memory/pmfb.html#pmfb"><em>PMFB</em></a></li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia"><em>PMEDIA</em></a></li>
+<li>5: <a class="reference internal" href="pibus.html#pibus"><em>PIBUS</em></a></li>
+<li>6: <a class="reference internal" href="../fifo/index.html#pcopy"><em>PCOPY[0]</em></a></li>
+<li>7: <a class="reference internal" href="../fifo/index.html#pcopy"><em>PCOPY[1]</em></a></li>
 <li>8: PFIFO [fifo/nvc0-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nvc0-pgraph.txt]</li>
-<li>13: PDAEMON [pm/pdaemon.txt]</li>
-<li>15: PVLD [vdec/vp3/pvld.txt]</li>
+<li>13: <a class="reference internal" href="../pm/pdaemon/index.html#pdaemon"><em>PDAEMON</em></a></li>
+<li>15: <a class="reference internal" href="../vdec/vp3/pvld.html#pvld"><em>PVLD</em></a></li>
 <li>16: <a class="reference internal" href="ptimer.html#ptimer"><em>PTIMER</em></a></li>
-<li>17: PVDEC [vdec/vp3/pvdec.txt]</li>
-<li>18: PVENC [NVE4-] [vdec/pvenc.txt]</li>
-<li>20: PBFB [memory/nvc0-pbfb.txt]</li>
-<li>21: PCOPY[2] [NVE4-] [fifo/pcopy.txt]</li>
+<li>17: <a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec"><em>PVDEC</em></a></li>
+<li>18: <a class="reference internal" href="../vdec/pvenc.html#pvenc"><em>PVENC</em></a> [NVE4-]</li>
+<li>20: <a class="reference internal" href="../memory/pbfb.html#pbfb"><em>PBFB</em></a></li>
+<li>21: <a class="reference internal" href="../fifo/index.html#pcopy"><em>PCOPY[2]</em></a> [NVE4-]</li>
 <li>26: ??? [NVE4-]</li>
 <li>27: ???</li>
-<li>28: PCOUNTER [pcounter/intro.txt]</li>
-<li>29: PFFB [memory/nvc0-pffb.txt]</li>
-<li>30: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>28: <a class="reference internal" href="../pcounter/intro.html#pcounter"><em>PCOUNTER</em></a></li>
+<li>29: <a class="reference internal" href="../memory/pffb.html#pffb"><em>PFFB</em></a></li>
+<li>30: <a class="reference internal" href="../display/nv50/pdisplay.html#pdisplay"><em>PDISPLAY</em></a></li>
 <li>31: ???</li>
 </ul>
 <p>NVC0 also introduced SUBFIFO_ENABLE register:</p>
@@ -432,7 +432,7 @@ bit which comes up as 0.</dd>
 </dl>
 </div>
 <div class="section" id="interrupts">
-<span id="pmc-intr"></span><span id="pmc-mmio-intr"></span><h2><a class="toc-backref" href="#id7">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
+<span id="pdaemon-intr-pmc-daemon"></span><span id="pmc-intr"></span><span id="pmc-mmio-intr"></span><h2><a class="toc-backref" href="#id7">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
 <p>Another thing that PMC handles is the top-level interrupt routing. On cards
 earlier than NVA3, PMC gets interrupt lines from all interested engines on
 the card, aggregates them together, adds in an option to trigger a &#8220;software&#8221;
@@ -441,7 +441,7 @@ register, but it only allows one to enable/disable all hardware or all
 software interrupts.</p>
 <p>NVA3 introduced fine-grained interrupt masking, as well as an option to route
 interrupts to PDAEMON. The HOST interrupts have a new redirection stage in
-PDAEMON [see <a class="reference external" href="pm/pdaemon.txt">pm/pdaemon.txt</a>] - while normally routed to the PCI interrupt line,
+PDAEMON [see <a class="reference internal" href="../pm/pdaemon/iredir.html#pdaemon-iredir"><em>PMC interrupt redirection</em></a>] - while normally routed to the PCI interrupt line,
 they may be switched over to PDAEMON delivery when it so decides. As a side
 effect of that, powering off PDAEMON will disable host interrupt delivery.
 A subset of interrupt types can also be routed to NRHOST destination, which
@@ -486,8 +486,8 @@ NRHOST on NVC0+ cards all interrupts but the software interrupt can be
 enabled - however in this case software interrupt works even without being
 enabled.</div></blockquote>
 <p>The HOST and NRHOST output interrupt lines are connected to the PCI INTA pin
-on the card. HOST goes through PDAEMON&#8217;s HOST interrupt masking circuitry
-[IHM], while NRHOST doesn&#8217;t. DAEMON goes to PDAEMON&#8217;s falcon interrupt line #10
+on the card. HOST goes through PDAEMON&#8217;s HOST interrupt redirection circuitry
+[IREDIR], while NRHOST doesn&#8217;t. DAEMON goes to PDAEMON&#8217;s falcon interrupt line #10
 [PMC_DAEMON].</p>
 <p>On pre-NVA3, each PMC interrupt input is a single 0/1 line. On NVA3+, some
 inputs have a single line for all three outputs, while some others have 2
@@ -495,7 +495,7 @@ lines: one for HOST and DAEMON outputs, and one for NRHOST outuput.</p>
 <p>The input interrupts are, for NV01:</p>
 <ul class="simple">
 <li>0: <a class="reference internal" href="../nv01-paudio.html#nv01-paudio-intr"><em>PAUDIO</em></a></li>
-<li>4: PDMA [memory/nv01-pdma.txt]</li>
+<li>4: <a class="reference internal" href="../memory/nv01-pdma.html#nv01-pdma-intr"><em>PDMA</em></a></li>
 <li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv01-pgraph.txt]</li>
 <li>16: <a class="reference internal" href="nv01-prm.html#nv01-prm-intr"><em>PRM</em></a></li>
@@ -505,89 +505,89 @@ lines: one for HOST and DAEMON outputs, and one for NRHOST outuput.</p>
 </ul>
 <p>For NV03:</p>
 <ul class="simple">
-<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia-intr"><em>PMEDIA</em></a></li>
 <li>8: PFIFO [fifo/nv01-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv03-pgraph.txt]</li>
 <li>13: PDMA [graph/nv03-pdma.txt]</li>
-<li>16: PRAMDAC.VIDEO [display/nv03/pramdac.txt]</li>
+<li>16: <a class="reference internal" href="../display/nv03/pvideo.html#pvideo-intr"><em>PRAMDAC.VIDEO</em></a></li>
 <li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
-<li>24: PGRAPH&#8217;s vblank interrupt [graph/nv03-pgraph.txt, display/nv03/vga.txt]</li>
+<li>24: <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc-intr"><em>PGRAPH&#8217;s vblank interrupt</em></a></li>
 <li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a></li>
 <li>31: software</li>
 </ul>
 <p>For NV04:NV50:</p>
 <ul class="simple">
-<li>0: VPE [vdec/vpe/intro.txt] [NV17:NV20 and NV25:NV50]</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>0: <a class="reference internal" href="../vdec/vpe/pvpe.html#pvpe-intr"><em>PVPE</em></a> [NV17:NV20 and NV25:NV50]</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia-intr"><em>PMEDIA</em></a></li>
 <li>8: PFIFO [fifo/nv04-pfifo.txt]</li>
 <li>12: PGRAPH [graph/nv04-pgraph.txt, graph/nv10-pgraph.txt, graph/nv20-pgraph.txt, graph/nv40-pgraph.txt]</li>
-<li>16: PRAMDAC.VIDEO [display/nv03/pramdac.txt] [NV04:NV10] or PVIDEO [display/nv03/pvideo.txt] [NV10:NV50]</li>
+<li>16: <a class="reference internal" href="../display/nv03/pvideo.html#pvideo-intr"><em>PRAMDAC.VIDEO</em></a> [NV04:NV10] or <a class="reference internal" href="../display/nv03/pvideo.html#pvideo-intr"><em>PVIDEO</em></a> [NV10:NV50]</li>
 <li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
-<li>24: PCRTC [display/nv03/vga.txt]</li>
-<li>25: PCRTC2 [display/nv03/vga.txt] [NV17:NV20 and NV25:NV50]</li>
+<li>24: <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc-intr"><em>PCRTC</em></a></li>
+<li>25: <a class="reference internal" href="../display/nv03/pcrtc.html#pcrtc-intr"><em>PCRTC2</em></a> [NV17:NV20 and NV25:NV50]</li>
 <li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a></li>
 <li>31: software</li>
 </ul>
 <p>For NV50:NVC0:</p>
 <ul class="simple">
-<li>0: VPE [vdec/vpe/intro.txt] [NV50:NV98 NVA0:NVAA]</li>
-<li>0: PPPP [vdec/vp3/pppp.txt] [NV98:NVA0 NVAA-]</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
+<li>0: <a class="reference internal" href="../vdec/vpe/pvpe.html#pvpe-intr"><em>PVPE</em></a> [NV50:NV98 NVA0:NVAA]</li>
+<li>0: <a class="reference internal" href="../vdec/vp3/pppp.html#pppp-falcon"><em>PPPP</em></a> [NV98:NVA0 NVAA-]</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia-intr"><em>PMEDIA</em></a></li>
 <li>8: PFIFO [fifo/nv50-pfifo.txt] - has separate NRHOST line on NVA3+</li>
 <li>9: ??? [NVA3?-]</li>
 <li>11: ??? [NVA3?-]</li>
 <li>12: PGRAPH [graph/nv50-pgraph.txt]</li>
 <li>13: ??? [NVA3?-]</li>
-<li>14: PCRYPT2 [vdec/vp2/pcrypt2.txt] [NV84:NV98 NVA0:NVAA]</li>
-<li>14: PCRYPT3 [vdec/vp3/pcrypt3.txt] [NV98:NVA0 NVAA:NVA3]</li>
-<li>14: PVCOMP [vdec/pvcomp.txt] [NVAF-]</li>
-<li>15: PBSP [vdec/vp2/pbsp.txt] [NV84:NV98 NVA0:NVAA]</li>
-<li>15: PVLD [vdec/vp3/pvld.txt] [NV98:NVA0 NVAA-]</li>
+<li>14: <a class="reference internal" href="../vdec/vp2/pcrypt2.html#pcrypt2-intr"><em>PCRYPT2</em></a> [NV84:NV98 NVA0:NVAA]</li>
+<li>14: <a class="reference internal" href="../vdec/vp3/pcrypt3.html#pcrypt3-falcon"><em>PCRYPT3</em></a> [NV98:NVA0 NVAA:NVA3]</li>
+<li>14: <a class="reference internal" href="../vdec/pvcomp.html#pvcomp-falcon"><em>PVCOMP</em></a> [NVAF-]</li>
+<li>15: <a class="reference internal" href="../vdec/vp2/pbsp.html#pbsp-intr"><em>PBSP</em></a> [NV84:NV98 NVA0:NVAA]</li>
+<li>15: <a class="reference internal" href="../vdec/vp3/pvld.html#pvld-falcon"><em>PVLD</em></a> [NV98:NVA0 NVAA-]</li>
 <li>16: ??? [NVA3?-]</li>
-<li>17: PVP2 [vdec/vp2/pvp2.txt] [NV84:NV98 NVA0:NVAA]</li>
-<li>17: PVDEC [vdec/vp3/pvdec.txt] [NV98:NVA0 NVAA-]</li>
-<li>18: PDAEMON [pm/pdaemon.txt] [NVA3-]</li>
-<li>19: PTHERM [pm/ptherm.txt] [NVA3-]</li>
+<li>17: <a class="reference internal" href="../vdec/vp2/pvp2.html#pvp2-intr"><em>PVP2</em></a> [NV84:NV98 NVA0:NVAA]</li>
+<li>17: <a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec-falcon"><em>PVDEC</em></a> [NV98:NVA0 NVAA-]</li>
+<li>18: <a class="reference internal" href="../pm/pdaemon/falcon.html#pdaemon-falcon"><em>PDAEMON [NVA3-]</em></a></li>
+<li>19: <a class="reference internal" href="../pm/ptherm.html#ptherm-intr"><em>PTHERM [NVA3-]</em></a></li>
 <li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
-<li>21: PNVIO&#8217;s GPIO interrupts [io/pnvio.txt]</li>
-<li>22: PCOPY [fifo/pcopy.txt]</li>
-<li>26: PDISPLAY [display/nv50/pdisplay.txt]</li>
+<li>21: <a class="reference internal" href="../io/nv50-gpio.html#nv50-gpio-intr"><em>PNVIO&#8217;s GPIO interrupts</em></a></li>
+<li>22: <a class="reference internal" href="../fifo/index.html#pcopy-falcon"><em>PCOPY</em></a></li>
+<li>26: <a class="reference internal" href="../display/nv50/pdisplay.html#pdisplay-intr"><em>PDISPLAY</em></a></li>
 <li>27: ??? [NVA3?-]</li>
 <li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a></li>
-<li>29: PPCI [bus/pci.txt] [NV84-]</li>
+<li>29: <a class="reference internal" href="pci.html#ppci-intr"><em>PPCI</em></a> [NV84-]</li>
 <li>31: software</li>
 </ul>
 <p>For NVC0+:</p>
 <ul class="simple">
-<li>0: PPPP [vdec/vp3/pppp.txt] - has separate NRHOST line</li>
-<li>4: PMEDIA [io/pmedia.txt]</li>
-<li>5: PCOPY[0] [fifo/pcopy.txt] - has separate NRHOST line</li>
-<li>6: PCOPY[1] [fifo/pcopy.txt] - has separate NRHOST line</li>
-<li>7: PCOPY[2] [NVE4-] [fifo/pcopy.txt] - has separate NRHOST line</li>
+<li>0: <a class="reference internal" href="../vdec/vp3/pppp.html#pppp-falcon"><em>PPPP</em></a> - has separate NRHOST line</li>
+<li>4: <a class="reference internal" href="../io/pmedia.html#pmedia-intr"><em>PMEDIA</em></a></li>
+<li>5: PCOPY[0] [<a class="reference internal" href="../fifo/index.html#pcopy-falcon"><em>NVC0</em></a>, <a class="reference internal" href="../fifo/index.html#pcopy-intr"><em>NVE4</em></a>] - has separate NRHOST line</li>
+<li>6: PCOPY[1] [<a class="reference internal" href="../fifo/index.html#pcopy-falcon"><em>NVC0</em></a>, <a class="reference internal" href="../fifo/index.html#pcopy-intr"><em>NVE4</em></a>] - has separate NRHOST line</li>
+<li>7: <a class="reference internal" href="../fifo/index.html#pcopy-intr"><em>PCOPY[2]</em></a> [NVE4-] - has separate NRHOST line</li>
 <li>8: PFIFO [fifo/nvc0-pfifo.txt]</li>
 <li>9: ???</li>
 <li>12: PGRAPH [graph/nvc0-pgraph.txt] - has separate NRHOST line</li>
-<li>13: PBFB [memory/nvc0-pbfb.txt]</li>
-<li>15: PVLD [vdec/vp3/pvld.txt] - has separate NRHOST line</li>
-<li>16: PVENC [NVE4-] [vdec/pvenc.txt] - has separate NRHOST line</li>
-<li>17: PVDEC [vdec/vp3/pvdec.txt] - has separate NRHOST line</li>
-<li>18: PTHERM [pm/ptherm.txt]</li>
+<li>13: <a class="reference internal" href="../memory/pbfb.html#pbfb-intr"><em>PBFB</em></a></li>
+<li>15: <a class="reference internal" href="../vdec/vp3/pvld.html#pvld-falcon"><em>PVLD</em></a> - has separate NRHOST line</li>
+<li>16: <a class="reference internal" href="../vdec/pvenc.html#pvenc-falcon"><em>PVENC</em></a> [NVE4-] - has separate NRHOST line</li>
+<li>17: <a class="reference internal" href="../vdec/vp3/pvdec.html#pvdec-falcon"><em>PVDEC</em></a> - has separate NRHOST line</li>
+<li>18: <a class="reference internal" href="../pm/ptherm.html#ptherm-intr"><em>PTHERM</em></a></li>
 <li>19: ??? [NVD9-]</li>
 <li>20: <a class="reference internal" href="ptimer.html#ptimer-intr"><em>PTIMER</em></a></li>
-<li>21: PNVIO&#8217;s GPIO interrupts [io/pnvio.txt]</li>
+<li>21: <a class="reference internal" href="../io/nv50-gpio.html#nv50-gpio-intr"><em>PNVIO&#8217;s GPIO interrupts</em></a></li>
 <li>23: ???</li>
-<li>24: PDAEMON [pm/pdaemon.txt]</li>
-<li>25: PMFB [memory/nvc0-pmfb.txt]</li>
-<li>26: PDISPLAY [display/nv50/pdisplay.txt]</li>
-<li>27: PFFB [memory/nvc0-pffb.txt]</li>
+<li>24: <a class="reference internal" href="../pm/pdaemon/falcon.html#pdaemon-falcon"><em>PDAEMON</em></a></li>
+<li>25: <a class="reference internal" href="../memory/pmfb.html#pmfb-intr"><em>PMFB</em></a></li>
+<li>26: <a class="reference internal" href="../display/nv50/pdisplay.html#pdisplay-intr"><em>PDISPLAY</em></a></li>
+<li>27: <a class="reference internal" href="../memory/pffb.html#pffb-intr"><em>PFFB</em></a></li>
 <li>28: <a class="reference internal" href="pbus.html#pbus-intr"><em>PBUS</em></a> - has separate NRHOST line</li>
-<li>29: PPCI [bus/pci.txt]</li>
-<li>30: PIBUS [bus/pibus.txt]</li>
+<li>29: <a class="reference internal" href="pci.html#ppci-intr"><em>PPCI</em></a></li>
+<li>30: <a class="reference internal" href="pibus.html#pibus-intr"><em>PIBUS</em></a></li>
 <li>31: software</li>
 </ul>
 </div>
 <div class="section" id="vram-hidden-area">
-<span id="pmc-mmio-vram-hide"></span><h2><a class="toc-backref" href="#id8">VRAM hidden area</a><a class="headerlink" href="#vram-hidden-area" title="Permalink to this headline">¶</a></h2>
+<span id="pmc-vram-hide"></span><span id="pmc-mmio-vram-hide"></span><h2><a class="toc-backref" href="#id8">VRAM hidden area</a><a class="headerlink" href="#vram-hidden-area" title="Permalink to this headline">¶</a></h2>
 <p>NV17/NV20 added a feature to disable host reads through selected range of
 VRAM. The registers are:</p>
 <dl class="docutils">

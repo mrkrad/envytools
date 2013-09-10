@@ -1,0 +1,148 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PTHERM interface &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="Idle counters" href="../pdaemon/counter.html" />
+    <link rel="prev" title="PMC interrupt redirection" href="../pdaemon/iredir.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/counter.html" title="Idle counters"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/iredir.html" title="PMC interrupt redirection"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ptherm-interface">
+<span id="pdaemon-perf-therm"></span><span id="pdaemon-intr-therm"></span><span id="pdaemon-io-therm"></span><span id="pdaemon-therm"></span><h1>PTHERM interface<a class="headerlink" href="#ptherm-interface" title="Permalink to this headline">¶</a></h1>
+<p>PDAEMON can access all PTHERM registers directly, without having to go through
+the generic MMIO access functionality. The THERM range in the PDAEMON register
+space is mapped straight to PTHERM MMIO register range.</p>
+<p>On NVA3:NVD9, PTHERM registers are mapped into the I[] space at addresses
+0x20000:0x40000, with addresses being shifted left by 6 bits wrt their address
+in PTHERM - PTHERM register 0x20000+x would be visible at I[0x20000 + x * 0x40]
+by falcon, or at 0x10a800+x in MMIO [assuming it wouldn&#8217;t fall into the reserved
+0x10afe0:0x10b000 range]. On NVD9+, the PTHERM registers are instead mapped
+into the I[] space at addresses 0x1000:0x1800, without shifting - PTHERM reg
+0x20000+x is visible at I[0x1000+x]. On NVD9+, the alias area is not visible
+via MMIO [just access PTHERM registers directly instead].</p>
+<p>Reads to the PTHERM-mapped area will always perform 32-bit reads to the
+corresponding PTHERM regs. Writes, however, have their byte enable mask
+controlled via a PDAEMON register, enabling writes with sizes other than
+32-bit:</p>
+<dl class="docutils">
+<dt>MMIO 0x5f4 / I[0x17d00]: THERM_BYTE_MASK</dt>
+<dd>Read/write, only low 4 bits are valid, initialised to 0xf on reset. Selects
+the byte mask to use when writing the THERM range. Bit i corresponds to
+bits i*8..i*8+7 of the written 32-bit value.</dd>
+</dl>
+<p>The PTHERM access circuitry also exports a signal to PCOUNTER:</p>
+<ul class="simple">
+<li>THERM_ACCESS_BUSY: 1 while a THERM range read/write is in progress - will
+light up for a dozen or so cycles per access, depending on relative clock
+speeds.</li>
+</ul>
+<p>In addition to direct register access to PTHERM, PDAEMON also has direct access
+to PTHERM interrupts - falcon interrupt #12 [THERM] comes from PTHERM interrupt
+aggregator. PTHERM subinterrupts can be individually assigned for PMC or
+PDAEMON delivery - see <a class="reference internal" href="../ptherm.html#ptherm-intr"><em>Interrupts</em></a> for more information.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/iredir.html"
+                        title="previous chapter">PMC interrupt redirection</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/counter.html"
+                        title="next chapter">Idle counters</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/therm.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/counter.html" title="Idle counters"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/iredir.html" title="PMC interrupt redirection"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

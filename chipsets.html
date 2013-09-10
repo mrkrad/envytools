@@ -95,7 +95,7 @@ and started using a different numbering. However, for the most part nvidia
 code names correspond 1 to 1 with the chipset ids.</p>
 <p>The chipset id has a one-to-many relationship with pci device ids. Note that
 the last few bits [0-6 depending on chipset id] of PCI device id are
-changeable through straps [see <a class="reference external" href="io/pstraps.txt">io/pstraps.txt</a>]. When pci ids of a chipset are
+changeable through straps [see <a class="reference internal" href="io/pstraps.html#pstraps"><em>PSTRAPS: straps readout and override</em></a>]. When pci ids of a chipset are
 listed in this file, the following shorthands are used:</p>
 <dl class="docutils">
 <dt>1234</dt>
@@ -237,7 +237,7 @@ it in BAR0. It also introduced DMA objects, a RAMIN structure used to define
 a VRAM or host memory area that PGRAPH is allowed to use when executing
 commands on behalf of an application. These early DMA objects are limitted to
 linear VRAM and paged host memory objects, and have to be switched manually
-by host. See <a class="reference external" href="memory/nv03-vram.txt">memory/nv03-vram.txt</a> for details.</p>
+by host. See <a class="reference internal" href="memory/nv03-dmaobj.html#nv03-dmaobj"><em>NV03 DMA objects</em></a> for details.</p>
 </div>
 <div class="section" id="nv04-family-nv04-nv05">
 <h3><a class="toc-backref" href="#id7">NV04 family: NV04, NV05</a><a class="headerlink" href="#nv04-family-nv04-nv05" title="Permalink to this headline">¶</a></h3>
@@ -919,7 +919,7 @@ maximum configs - a card can have just a subset of them enabled.</p>
 <div class="section" id="nv50-family">
 <h3><a class="toc-backref" href="#id12">NV50 family</a><a class="headerlink" href="#nv50-family" title="Permalink to this headline">¶</a></h3>
 <p>The card where they redesigned everything. The most significant change was the
-redesigned memory subsystem, complete with a paging MMU [see <a class="reference external" href="memory/nv50-vm.txt">memory/nv50-vm.txt</a>].</p>
+redesigned memory subsystem, complete with a paging MMU [see <a class="reference internal" href="memory/nv50-vm.html#nv50-vm"><em>NV50 virtual memory</em></a>].</p>
 <ul class="simple">
 <li>NV50:<ul>
 <li>a new VM subsystem, complete with redesigned DMA objects</li>

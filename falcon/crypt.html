@@ -27,6 +27,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="envytools git documentation" href="../index.html" />
     <link rel="up" title="falcon microprocessor" href="index.html" />
+    <link rel="next" title="Video decoding, encoding, and processing" href="../vdec/index.html" />
     <link rel="prev" title="Memory interface" href="memif.html" /> 
   </head>
   <body>
@@ -36,6 +37,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vdec/index.html" title="Video decoding, encoding, and processing"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="memif.html" title="Memory interface"
              accesskey="P">previous</a> |</li>
@@ -56,9 +60,11 @@
 <ul class="simple">
 <li><a class="reference internal" href="#cryptographic-coprocessor" id="id1">Cryptographic coprocessor</a><ul>
 <li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
-<li><a class="reference internal" href="#submitting-crypto-commands-ccmd" id="id3">Submitting crypto commands: ccmd</a></li>
-<li><a class="reference internal" href="#code-authentication-control" id="id4">Code authentication control</a></li>
-<li><a class="reference internal" href="#crypto-xfer-control" id="id5">Crypto xfer control</a></li>
+<li><a class="reference internal" href="#io-registers" id="id3">IO registers</a></li>
+<li><a class="reference internal" href="#interrupts" id="id4">Interrupts</a></li>
+<li><a class="reference internal" href="#submitting-crypto-commands-ccmd" id="id5">Submitting crypto commands: ccmd</a></li>
+<li><a class="reference internal" href="#code-authentication-control" id="id6">Code authentication control</a></li>
+<li><a class="reference internal" href="#crypto-xfer-control" id="id7">Crypto xfer control</a></li>
 </ul>
 </li>
 </ul>
@@ -66,14 +72,20 @@
 <div class="section" id="introduction">
 <h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 </div>
+<div class="section" id="io-registers">
+<span id="falcon-crypt-io"></span><h2><a class="toc-backref" href="#id3">IO registers</a><a class="headerlink" href="#io-registers" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="interrupts">
+<span id="falcon-crypt-intr"></span><h2><a class="toc-backref" href="#id4">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="submitting-crypto-commands-ccmd">
-<span id="falcon-isa-ccmd"></span><h2><a class="toc-backref" href="#id3">Submitting crypto commands: ccmd</a><a class="headerlink" href="#submitting-crypto-commands-ccmd" title="Permalink to this headline">¶</a></h2>
+<span id="falcon-isa-ccmd"></span><h2><a class="toc-backref" href="#id5">Submitting crypto commands: ccmd</a><a class="headerlink" href="#submitting-crypto-commands-ccmd" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="code-authentication-control">
-<span id="falcon-sr-cauth"></span><h2><a class="toc-backref" href="#id4">Code authentication control</a><a class="headerlink" href="#code-authentication-control" title="Permalink to this headline">¶</a></h2>
+<span id="falcon-sr-cauth"></span><h2><a class="toc-backref" href="#id6">Code authentication control</a><a class="headerlink" href="#code-authentication-control" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="crypto-xfer-control">
-<span id="falcon-sr-cx"></span><h2><a class="toc-backref" href="#id5">Crypto xfer control</a><a class="headerlink" href="#crypto-xfer-control" title="Permalink to this headline">¶</a></h2>
+<span id="falcon-sr-cx"></span><h2><a class="toc-backref" href="#id7">Crypto xfer control</a><a class="headerlink" href="#crypto-xfer-control" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -87,6 +99,8 @@
   <ul>
 <li><a class="reference internal" href="#">Cryptographic coprocessor</a><ul>
 <li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#io-registers">IO registers</a></li>
+<li><a class="reference internal" href="#interrupts">Interrupts</a></li>
 <li><a class="reference internal" href="#submitting-crypto-commands-ccmd">Submitting crypto commands: ccmd</a></li>
 <li><a class="reference internal" href="#code-authentication-control">Code authentication control</a></li>
 <li><a class="reference internal" href="#crypto-xfer-control">Crypto xfer control</a></li>
@@ -97,6 +111,9 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="memif.html"
                         title="previous chapter">Memory interface</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vdec/index.html"
+                        title="next chapter">Video decoding, encoding, and processing</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/falcon/crypt.txt"
@@ -125,6 +142,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../vdec/index.html" title="Video decoding, encoding, and processing"
+             >next</a> |</li>
         <li class="right" >
           <a href="memif.html" title="Memory interface"
              >previous</a> |</li>

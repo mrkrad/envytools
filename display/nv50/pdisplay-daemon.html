@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PDISPLAY’s monitoring engine &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="NV50- display subsystem" href="../nv50/index.html" />
+    <link rel="next" title="NV50 VGA emulation" href="../nv50/vga.html" />
+    <link rel="prev" title="PDISPLAY: NV50 display engine" href="../nv50/pdisplay.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../nv50/vga.html" title="NV50 VGA emulation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../nv50/pdisplay.html" title="PDISPLAY: NV50 display engine"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Display subsystem</a> &raquo;</li>
+          <li><a href="../nv50/index.html" accesskey="U">NV50- display subsystem</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pdisplay-s-monitoring-engine">
+<span id="pdisplay-daemon"></span><h1><a class="toc-backref" href="#id1">PDISPLAY&#8217;s monitoring engine</a><a class="headerlink" href="#pdisplay-s-monitoring-engine" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#pdisplay-s-monitoring-engine" id="id1">PDISPLAY&#8217;s monitoring engine</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#falcon-parameters" id="id3">falcon parameters</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id4">MMIO registers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="falcon-parameters">
+<span id="pdisplay-daemon-falcon"></span><h2><a class="toc-backref" href="#id3">falcon parameters</a><a class="headerlink" href="#falcon-parameters" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Present on:</dt>
+<dd>v0:
+NVD9:NVE4
+v1:
+NVE4+</dd>
+<dt>BAR0 address:</dt>
+<dd>0x627000</dd>
+<dt>PMC interrupt line:</dt>
+<dd>26 [shared with the rest of PDISPLAY], also INTR_HOST_SUMMARY bit 8</dd>
+<dt>PMC enable bit:</dt>
+<dd>30 [all of PDISPLAY]</dd>
+<dt>Version:</dt>
+<dd>4</dd>
+<dt>Code segment size:</dt>
+<dd>0x4000</dd>
+<dt>Data segment size:</dt>
+<dd>0x2000</dd>
+<dt>Fifo size:</dt>
+<dd>3</dd>
+<dt>Xfer slots:</dt>
+<dd>8</dd>
+<dt>Secretful:</dt>
+<dd>no</dd>
+<dt>Code TLB index bits:</dt>
+<dd>8</dd>
+<dt>Code ports:</dt>
+<dd>1</dd>
+<dt>Data ports:</dt>
+<dd>4</dd>
+<dt>Version 4 unknown caps:</dt>
+<dd>31</dd>
+<dt>Unified address space:</dt>
+<dd>no</dd>
+<dt>IO adressing type:</dt>
+<dd>full</dd>
+<dt>Core clock:</dt>
+<dd>???</dd>
+<dt>NVC0 VM engine:</dt>
+<dd>none</dd>
+<dt>NVC0 VM client:</dt>
+<dd>HUB 0x03 [shared with rest of PDISPLAY]</dd>
+<dt>Interrupts:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="7%" />
+<col width="7%" />
+<col width="13%" />
+<col width="12%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Line</th>
+<th class="head">Type</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>12</td>
+<td>level</td>
+<td>all</td>
+<td>PDISPLAY</td>
+<td>DISPLAY_DAEMON-routed interrupt</td>
+</tr>
+<tr class="row-odd"><td>13</td>
+<td>level</td>
+<td>all</td>
+<td>FIFO</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>14</td>
+<td>level</td>
+<td>all</td>
+<td>???</td>
+<td>520? 524 apparently not required</td>
+</tr>
+<tr class="row-odd"><td>15</td>
+<td>level</td>
+<td>v1-</td>
+<td>PNVIO</td>
+<td>DISPLAY_DAEMON-routed interrupt, but also 554?</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>Status bits:</dt>
+<dd><table border="1" class="first last docutils">
+<colgroup>
+<col width="9%" />
+<col width="11%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Bit</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>FALCON</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-status"><em>Falcon unit</em></a></td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-status"><em>Memory interface</em></a></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt>IO registers:</dt>
+<dd><a class="reference internal" href="#pdisplay-daemon-mmio"><em>MMIO registers</em></a></dd>
+</dl>
+</div>
+<div class="section" id="mmio-registers">
+<span id="pdisplay-daemon-mmio"></span><h2><a class="toc-backref" href="#id4">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="12%" />
+<col width="15%" />
+<col width="52%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Address</th>
+<th class="head">Present on</th>
+<th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0x627000:0x627400</td>
+<td>all</td>
+<td>N/A</td>
+<td><a class="reference internal" href="../../falcon/io.html#falcon-io-common"><em>Falcon registers</em></a></td>
+</tr>
+<tr class="row-odd"><td>0x627400</td>
+<td>all</td>
+<td>???</td>
+<td>[alias of 610018]</td>
+</tr>
+<tr class="row-even"><td>0x627440+i*4</td>
+<td>all</td>
+<td>FIFO_PUT</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>0x627450+i*4</td>
+<td>all</td>
+<td>FIFO_GET</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>0x627460</td>
+<td>all</td>
+<td>FIFO_INTR</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>0x627464</td>
+<td>all</td>
+<td>FIFO_INTR_EN</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>0x627470+i*4</td>
+<td>all</td>
+<td>RFIFO_PUT</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>0x627480+i*4</td>
+<td>all</td>
+<td>RFIFO_GET</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>0x627490</td>
+<td>all</td>
+<td>RFIFO_STATUS</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>0x6274a0</td>
+<td>v1-</td>
+<td>???</td>
+<td>[ffffffff/ffffffff/0]</td>
+</tr>
+<tr class="row-even"><td>0x627500+i*4</td>
+<td>all</td>
+<td>???</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>0x627520</td>
+<td>v1-?</td>
+<td>???</td>
+<td>interrupt 14</td>
+</tr>
+<tr class="row-even"><td>0x627524</td>
+<td>v1-</td>
+<td>???</td>
+<td>[0/ffffffff/0]</td>
+</tr>
+<tr class="row-odd"><td>0x627550</td>
+<td>v1-</td>
+<td>???</td>
+<td>[2710/ffffffff/0]</td>
+</tr>
+<tr class="row-even"><td>0x627554</td>
+<td>v1-</td>
+<td>???</td>
+<td>interrupt 15 [0/1/0]</td>
+</tr>
+<tr class="row-odd"><td>0x627600:0x627680</td>
+<td>all</td>
+<td>MEMIF</td>
+<td><a class="reference internal" href="../../falcon/memif.html#falcon-memif-io"><em>Memory interface</em></a></td>
+</tr>
+<tr class="row-even"><td>0x627680:0x627700</td>
+<td>all</td>
+<td>-</td>
+<td>[alias of 627600+]</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PDISPLAY&#8217;s monitoring engine</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#falcon-parameters">falcon parameters</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../nv50/pdisplay.html"
+                        title="previous chapter">PDISPLAY: NV50 display engine</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../nv50/vga.html"
+                        title="next chapter">NV50 VGA emulation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/display/nv50/pdisplay-daemon.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../nv50/vga.html" title="NV50 VGA emulation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../nv50/pdisplay.html" title="PDISPLAY: NV50 display engine"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Display subsystem</a> &raquo;</li>
+          <li><a href="../nv50/index.html" >NV50- display subsystem</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,264 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Memory structure &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="Memory access and structure" href="index.html" />
+    <link rel="next" title="NV01 VRAM structure and usage" href="nv01-vram.html" />
+    <link rel="prev" title="Memory access and structure" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="nv01-vram.html" title="NV01 VRAM structure and usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Memory access and structure"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Memory access and structure</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="memory-structure">
+<span id="vram"></span><h1><a class="toc-backref" href="#id1">Memory structure</a><a class="headerlink" href="#memory-structure" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#memory-structure" id="id1">Memory structure</a><ul>
+<li><a class="reference internal" href="#memory-planes-and-banks" id="id2">Memory planes and banks</a></li>
+<li><a class="reference internal" href="#memory-banks-ranks-and-subpartitions" id="id3">Memory banks, ranks, and subpartitions</a></li>
+<li><a class="reference internal" href="#memory-partitions-and-subpartitions" id="id4">Memory partitions and subpartitions</a></li>
+<li><a class="reference internal" href="#memory-addressing" id="id5">Memory addressing</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>While DRAM is often treated as a flat array of bytes, its internal structure
+is far more complicated. A good understanding of it is necessary for
+high-performance applications like GPUs.</p>
+<p>Looking roughly from the bottom up, VRAM is made of:</p>
+<ol class="arabic simple">
+<li>Memory planes of R rows by C columns, with each cell being one bit</li>
+<li>Memory banks made of 32, 64, or 128 memory planes used in parallel - the
+planes are usually spread across several chips, with one chip containing
+16 or 32 memory planes</li>
+<li>Memory ranks made of several [2, 4 or 8] memory banks wired together and
+selected by address bits - all banks for a given memory plane reside in
+the same chip</li>
+<li>Memory subpartitions made of one or two memory ranks wired together and
+selected by chip select wires - ranks behave similarly to banks, but don&#8217;t
+have to have uniform geometry, and are in separate chips</li>
+<li>Memory partitions made of one or two somewhat independent subpartitions</li>
+<li>The whole VRAM, made of several [1-8] memory partitions</li>
+</ol>
+<div class="section" id="memory-planes-and-banks">
+<h2><a class="toc-backref" href="#id2">Memory planes and banks</a><a class="headerlink" href="#memory-planes-and-banks" title="Permalink to this headline">¶</a></h2>
+<p>The most basic unit of DRAM is a memory plane, which is a 2d array of bits
+organised in so-called columns and rows:</p>
+<div class="highlight-python"><pre>     column
+row  0  1  2  3  4  5  6  7
+0    X  X  X  X  X  X  X  X
+1    X  X  X  X  X  X  X  X
+2    X  X  X  X  X  X  X  X
+3    X  X  X  X  X  X  X  X
+4    X  X  X  X  X  X  X  X
+5    X  X  X  X  X  X  X  X
+6    X  X  X  X  X  X  X  X
+7    X  X  X  X  X  X  X  X
+
+buf  X  X  X  X  X  X  X  X</pre>
+</div>
+<p>A memory plane contains a buffer, which holds a whole row. Internally, DRAM is
+read/written in row units via the buffer. This has several consequences:</p>
+<ul class="simple">
+<li>before a bit can be operated on, its row must be loaded into the buffer,
+which is slow</li>
+<li>after a row is done with, it needs to be written back to the memory array,
+which is also slow</li>
+<li>accessing a new row is thus slow, and even slower when there already is
+an active row</li>
+<li>it&#8217;s often useful to preemptively close a row after some inactivity time -
+such operation is called &#8220;precharging&#8221; a bank</li>
+<li>different columns in the same row, however, can be accessed quickly</li>
+</ul>
+<p>Since loading column address itself takes more time than actually accessing
+a bit in the active buffer, DRAM is accessed in bursts - a series of accesses
+to 1-8 neighbouring bits in the active row. Usually all bits in a burst have
+to be located in a single aligned 8-bit group.</p>
+<p>The amount of rows and columns in memory plane is always a power of two, and
+is measured by the count of row selection and column selection bits [ie. log2
+of the row/column count]. There are typically 8-10 column bits and 10-14 row
+bits.</p>
+<p>The memory planes are organised in banks - groups of some power of two number
+of memory planes. The memory planes are wired in parallel, sharing the address
+and control wires, with only the data / data enable wires separate. This
+effectively makes a memory bank like a memory plane that&#8217;s composed of
+32/64/128-bit memory cells instead of single bits - all the rules that apply
+to a plane still apply to a bank, except larger units than a bit are operated
+on.</p>
+<p>A single memory chip usually contains 16 or 32 memory planes for a single
+bank, thus several chips are often wired together to make wider banks.</p>
+</div>
+<div class="section" id="memory-banks-ranks-and-subpartitions">
+<h2><a class="toc-backref" href="#id3">Memory banks, ranks, and subpartitions</a><a class="headerlink" href="#memory-banks-ranks-and-subpartitions" title="Permalink to this headline">¶</a></h2>
+<p>A memory chip contains several [2, 4, or 8] banks, using the same data wires
+and multiplexed via bank select wires. While switching between banks is
+slightly slower than switching between columns in a row, it&#8217;s much faster
+than switching between rows in the same bank.</p>
+<p>A memory rank is thus made of <cite>(MEMORY_CELL_SIZE / MEMORY_CELL_SIZE_PER_CHIP)</cite>
+memory chips.</p>
+<p>One or two memory ranks connected via common wires [including data] except
+a chip select wire make up a memory subpartition. Switching between ranks
+has basically the same performance consequences as switching between banks
+in a rank - the only differences are the physical implementation and
+the possibility of using different amount of row selection bits for each
+rank [though bank count and column count have to match].</p>
+<p>The consequences of existence of several banks/ranks:</p>
+<ul class="simple">
+<li>it&#8217;s important to ensure that data accessed together belongs to either
+the same row, or to different banks [to avoid row switching]</li>
+<li>tiled memory layouts are designed so that a tile corresponds roughly to
+a row, and neighbouring tiles never share a bank</li>
+</ul>
+</div>
+<div class="section" id="memory-partitions-and-subpartitions">
+<h2><a class="toc-backref" href="#id4">Memory partitions and subpartitions</a><a class="headerlink" href="#memory-partitions-and-subpartitions" title="Permalink to this headline">¶</a></h2>
+<p>A memory subpartition has its own DRAM controller on the GPU. 1 or 2
+subpartitions make a memory partition, which is a fairly independent entity
+with its own memory access queue, own ZROP and CROP units, and own L2 cache
+on later cards. All memory partitions taken together with the crossbar logic
+make up the entire VRAM logic for a GPU.</p>
+<p>All subpartitions in a partition have to be configured identically. Partitions
+in a GPU are usually configured identically, but don&#8217;t have to on newer cards.</p>
+<p>The consequences of subpartition/partition existence:</p>
+<ul class="simple">
+<li>like banks, different partitions may be utilised to avoid row conflicts for
+related data</li>
+<li>unlike banks, bandwidth suffers if (sub)partitions are not utilised equally
+- load balancing is thus very important</li>
+</ul>
+</div>
+<div class="section" id="memory-addressing">
+<h2><a class="toc-backref" href="#id5">Memory addressing</a><a class="headerlink" href="#memory-addressing" title="Permalink to this headline">¶</a></h2>
+<p>While memory addressing is highly dependent on chipset family, the basic
+approach is outlined here.</p>
+<p>The bits of a memory address are, in sequence, assigned to:</p>
+<ul class="simple">
+<li>identifying a byte inside a memory cell - since whole cells always have to
+be accessed anyway</li>
+<li>several column selection bits, to allow for a burst</li>
+<li>partition/subpartition selection - in low bits to ensure good load
+balancing, but not too low to keep relatively large tiles in a single
+partition for ROP&#8217;s benefit</li>
+<li>remaining column selection bits</li>
+<li>all/most of bank selection bits, sometimes a rank selection bit - so that
+immediately neighbouring addresses never cause a row conflict</li>
+<li>row bits</li>
+<li>remaining bank bit or rank bit - effectively allows splitting VRAM into two
+areas, placing color buffer in one and zeta buffer in the other, so that
+there are never row conflicts between them</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Memory structure</a><ul>
+<li><a class="reference internal" href="#memory-planes-and-banks">Memory planes and banks</a></li>
+<li><a class="reference internal" href="#memory-banks-ranks-and-subpartitions">Memory banks, ranks, and subpartitions</a></li>
+<li><a class="reference internal" href="#memory-partitions-and-subpartitions">Memory partitions and subpartitions</a></li>
+<li><a class="reference internal" href="#memory-addressing">Memory addressing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Memory access and structure</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nv01-vram.html"
+                        title="next chapter">NV01 VRAM structure and usage</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/memory/vram.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="nv01-vram.html" title="NV01 VRAM structure and usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Memory access and structure"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >Memory access and structure</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

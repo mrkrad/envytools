@@ -1,0 +1,147 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Second-level interrupts &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="User busy indication" href="../pdaemon/user.html" />
+    <link rel="prev" title="PCOUNTER signals" href="../pdaemon/perf.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/user.html" title="User busy indication"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/perf.html" title="PCOUNTER signals"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="second-level-interrupts">
+<span id="pdaemon-io-subintr"></span><span id="pdaemon-intr-subintr"></span><span id="pdaemon-subintr"></span><h1>Second-level interrupts<a class="headerlink" href="#second-level-interrupts" title="Permalink to this headline">¶</a></h1>
+<p>Because falcon has space for only 8 engine interrupts and PDAEMON needs many
+more, a second-level interrupt register was introduced:</p>
+<dl class="docutils">
+<dt>MMIO 0x688 / I[0x1a200]: SUBINTR</dt>
+<dd><ul class="first last simple">
+<li>bit 0: H2D - <a class="reference internal" href="../pdaemon/host.html#pdaemon-subintr-h2d"><em>host to PDAEMON scratch register written</em></a></li>
+<li>bit 1: FIFO - <a class="reference internal" href="../pdaemon/host.html#pdaemon-subintr-fifo"><em>host to PDAEMON fifo pointer updated</em></a></li>
+<li>bit 2: EPWR_GRAPH - <a class="reference internal" href="../pdaemon/epwr.html#pdaemon-subintr-epwr"><em>PGRAPH engine power control</em></a></li>
+<li>bit 3: EPWR_VDEC - <a class="reference internal" href="../pdaemon/epwr.html#pdaemon-subintr-epwr"><em>video decoding engine power control</em></a></li>
+<li>bit 4: MMIO - <a class="reference internal" href="../pdaemon/mmio.html#pdaemon-subintr-mmio"><em>indirect MMIO access error</em></a></li>
+<li>bit 5: IREDIR_ERR - <a class="reference internal" href="../pdaemon/iredir.html#pdaemon-subintr-iredir-err"><em>interrupt redirection error</em></a></li>
+<li>bit 6: IREDIR_HOST_REQ - <a class="reference internal" href="../pdaemon/iredir.html#pdaemon-subintr-host-irq"><em>interrupt redirection request</em></a></li>
+<li>bit 7: ???</li>
+<li>bit 8: ??? - goes to 0x670</li>
+<li>bit 9: EPWR_VCOMP [NVAF] - <a class="reference internal" href="../pdaemon/epwr.html#pdaemon-subintr-epwr"><em>PVCOMP engine power control</em></a></li>
+<li>bit 13: ??? [NVD9-] - goes to 0x888</li>
+</ul>
+</dd>
+</dl>
+<p>The second-level interrupts are merged into a single level-triggered interrupt
+and delivered to falcon interrupt line 11. This line is asserted whenever any bit
+of SUBINTR register is non-0. A given SUBINTR bit is set to 1 whenever the
+input second-level interrupt line is 1, but will not auto-clear when the input
+line goes back to 0 - only writing 1 to that bit in SUBINTR will clear it.
+This effectively means that SUBINTR bits have to be cleared after the
+downstream interrupt. Note that SUBINTR has no corresponding enable bit - if
+an interrupt needs to be disabled, software should use the enable registers
+corresponding to individual second-level interrupts instead.</p>
+<p>Note that IREDIR_HOST_REQ interrupt has special semantics when cleared - see
+IREDIR_TRIGGER documentation.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/perf.html"
+                        title="previous chapter">PCOUNTER signals</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/user.html"
+                        title="next chapter">User busy indication</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/subintr.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/user.html" title="User busy indication"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/perf.html" title="PCOUNTER signals"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

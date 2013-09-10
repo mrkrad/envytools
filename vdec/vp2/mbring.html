@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>MBRING format &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="VP2 video decoding" href="../vp2/index.html" />
+    <link rel="next" title="VP2 command macro processor" href="../vp2/macro.html" />
+    <link rel="prev" title="VLD: variable length decoding" href="../vp2/vld.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../vp2/macro.html" title="VP2 command macro processor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/vld.html" title="VLD: variable length decoding"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" accesskey="U">VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mbring-format">
+<h1><a class="toc-backref" href="#id1">MBRING format</a><a class="headerlink" href="#mbring-format" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#mbring-format" id="id1">MBRING format</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#packet-type-0-macroblock-info" id="id3">Packet type 0: macroblock info</a></li>
+<li><a class="reference internal" href="#packet-type-1-motion-vectors" id="id4">Packet type 1: motion vectors</a></li>
+<li><a class="reference internal" href="#packet-type-2-residual-data" id="id5">Packet type 2: residual data</a></li>
+<li><a class="reference internal" href="#packet-type-3-coded-block-mask" id="id6">Packet type 3: coded block mask</a></li>
+<li><a class="reference internal" href="#packet-type-4-pred-weight-table" id="id7">Packet type 4: pred weight table</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>An invocation of SLICE_DATA VLD command writes the decoded data into the
+MBRING. The MBRING is a ring buffer located in VM memory, made of 32-bit word
+oriented packets. Each packet starts with a header word, whose high 8 bits
+signify the packet type.</p>
+<p>An invocation of SLICE_DATA command writes the following packets, in order:</p>
+<ul class="simple">
+<li>pred weight table [packet type 4] - if PRED_WEIGHT_TABLE command has been
+invoked previously</li>
+<li>for each macroblock [including skipped] in slice, in decoding order:<ul>
+<li>motion vectors [packet type 1] - if macroblock is not skipped and not
+intra coded</li>
+<li>macroblock info [packet type 0] - always</li>
+<li>residual data [packet type 2] - if at least one non-zero coefficient
+present</li>
+<li>coded block mask [packet type 3] - if macroblock is not skipped</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="packet-type-0-macroblock-info">
+<h2><a class="toc-backref" href="#id3">Packet type 0: macroblock info</a><a class="headerlink" href="#packet-type-0-macroblock-info" title="Permalink to this headline">¶</a></h2>
+<p>Packet is made of a header word and 3 or 6 payload words.</p>
+<ul class="simple">
+<li>Header word:<ul>
+<li>bits 0-23: number of payload words [3 or 6]</li>
+<li>bits 24-31: packet type [0]</li>
+</ul>
+</li>
+<li>Payload word 0:<ul>
+<li>bits 0-12: macroblock address</li>
+</ul>
+</li>
+<li>Payload word 1:<ul>
+<li>bits 0-7: y coord in macroblock units</li>
+<li>bits 8-15: x coord in macroblock units</li>
+</ul>
+</li>
+<li>Payload word 2:<ul>
+<li>bit 0: first macroblock of a slice flag</li>
+<li>bit 1: mb_skip_flag</li>
+<li>bit 2: mb_field_coding_flag</li>
+<li>bits 3-8: mb_type</li>
+<li>bits 9+i*4 - 12+i*4, i &lt; 4: sub_mb_type[i]</li>
+<li>bit 25: transform_size_8x8_flag</li>
+</ul>
+</li>
+<li>Payload word 3:<ul>
+<li>bits 0-5: mb_qp_delta</li>
+<li>bits 6-7: intra_chroma_pred_mode</li>
+</ul>
+</li>
+<li>Payload word 4:<ul>
+<li>bits i*4+0 - i*4+2, i &lt; 8: rem_intra_pred_mode[i]</li>
+<li>bit i*4+3, i &lt; 8: prev_intra_pred_mode_flag[i]</li>
+</ul>
+</li>
+<li>Payload word 5:<ul>
+<li>bits i*4+0 - i*4+2, i &lt; 8: rem_intra_pred_mode[i+8]</li>
+<li>bit i*4+3, i &lt; 8: prev_intra_pred_mode_flag[i+8]</li>
+</ul>
+</li>
+</ul>
+<p>Packet has 3 payload words when macroblock is skipped, 6 when it&#8217;s not
+skipped. This packet type is present for all macroblocks. The mb_type
+and sub_mb_type values correspond to values used in CAVLC mode for current
+slice_type - thus for example I_NxN is mb_type 0 when decoding I slices,
+mb_type 5 when decoding P slices. For I_NxN macroblocks encoded in 4x4
+transform mode, rem_intra_pred_mode[i] and pred_intra_pred_mode_flag[i]
+correspond to rem_intra4x4_pred_mode[i] and pred_intra4x4_pred_mode_flag[i]
+for i = 0..15. For I_NxN macroblocks encoded in 8x8 transform mode,
+rem_intra_pred_mode[i] and pred_intra_pred_mode_flag[i] correspond to
+rem_intra8x8_pred_mode[i] and pred_intra8x8_pred_mode_flag[i] for i = 0..3,
+and are unused for i = 4..15.</p>
+</div>
+<div class="section" id="packet-type-1-motion-vectors">
+<h2><a class="toc-backref" href="#id4">Packet type 1: motion vectors</a><a class="headerlink" href="#packet-type-1-motion-vectors" title="Permalink to this headline">¶</a></h2>
+<p>Packet is made of two header words + 1 word for each motion vector.</p>
+<ul class="simple">
+<li>Header word:<ul>
+<li>bits 0-23: number of motion vectors [always 0x20]</li>
+<li>bits 24-31: packet type [1]</li>
+</ul>
+</li>
+<li>Second header word:<ul>
+<li>bit i = bit 4 of ref_idx[i]</li>
+</ul>
+</li>
+<li>Motion vector word i:<ul>
+<li>bits 0-12: mvd[i] Y coord</li>
+<li>bits 13-27: mvd[i] X coord</li>
+<li>bits 28-31: bits 0-3 of ref_idx[i]</li>
+</ul>
+</li>
+</ul>
+<p>Indices 0..15 correspond to mvd_l0 and ref_idx_l0, indices 16-31 correspond
+to mvd_l1 and ref_idx_l1. Each index corresponds to one 4x4 block, in the
+usual scan order for 4x4 blocks. Data is always included for all blocks - if
+macroblock/sub-macroblock partition size greater than 4x4 is used, its data
+is duplicated for all covered blocks.</p>
+</div>
+<div class="section" id="packet-type-2-residual-data">
+<h2><a class="toc-backref" href="#id5">Packet type 2: residual data</a><a class="headerlink" href="#packet-type-2-residual-data" title="Permalink to this headline">¶</a></h2>
+<p>Packet is made of a header word + 1 halfword for each residual coefficient +
+0 or 1 halfwords of padding to the next multiple of word size</p>
+<ul class="simple">
+<li>Header word:<ul>
+<li>bits 0-23: number of residual coefficients</li>
+<li>bits 24-31: packet type [2]</li>
+</ul>
+</li>
+<li>Payload halfword:<ul>
+<li>bits 0-15: residual coefficient</li>
+</ul>
+</li>
+</ul>
+<p>For I_PCM macroblocks, this packet contains one coefficient for each
+pcm_sample_* element present in the bitstream, stored in bitstream order.</p>
+<p>For other types of macroblocks, this packet contains data for all blocks
+that have at least one non-zero coefficient. If a block has a non-zero
+coefficient, all coefficients for this block, including zero ones, are
+stored in this packet. Otherwise, The block is entirely skipped. The
+coefficients stored in this packet type are dezigzagged - their order
+inside a single block corresponds to raster scan order. The blocks are
+stored in decoding order. The mask of blocks stored in this packet is
+stored in packet type 3. If there are no non-zero coefficients in the whole
+macroblock, this packet is not present.</p>
+</div>
+<div class="section" id="packet-type-3-coded-block-mask">
+<h2><a class="toc-backref" href="#id6">Packet type 3: coded block mask</a><a class="headerlink" href="#packet-type-3-coded-block-mask" title="Permalink to this headline">¶</a></h2>
+<p>Packet is made of a header word and a payload word.</p>
+<ul class="simple">
+<li>Header word:<ul>
+<li>bits 0-23: number of payload words [1]</li>
+<li>bits 24-31: packet type [3]</li>
+</ul>
+</li>
+<li>Payload word [4x4 mode]:<ul>
+<li>bits 0-15: luma 4x4 blocks 0-15 [16 coords each]</li>
+<li>bit 16: Cb DC block [4 coords]</li>
+<li>bit 17: Cr DC block [4 coords]</li>
+<li>bits 18-21: Cb AC blocks 0-3 [15 coords each]</li>
+<li>bits 22-25: Cr AC blocks 0-3 [15 coords each]</li>
+</ul>
+</li>
+<li>Payload word [8x8 mode]:<ul>
+<li>bits 0-3: luma 8x8 blocks 0-3 [64 coords each]</li>
+<li>bit 4: Cb DC block [4 coords]</li>
+<li>bit 5: Cr DC block [4 coords]</li>
+<li>bits 6-9: Cb AC blocks 0-3 [15 coords each]</li>
+<li>bits 10-13: Cr AC blocks 0-3 [15 coords each]</li>
+</ul>
+</li>
+<li>Payload word [intra 16x16 mode]:<ul>
+<li>bit 0: luma DC block [16 coords]</li>
+<li>bits 1-16: luma AC blocks 0-15 [15 coords each]</li>
+<li>bit 17: Cb DC block [4 coords]</li>
+<li>bit 18: Cr DC block [4 coords]</li>
+<li>bits 19-22: Cb AC blocks 0-3 [15 coords each]</li>
+<li>bits 23-26: Cr AC blocks 0-3 [15 coords each]</li>
+</ul>
+</li>
+<li>Payload word [PCM mode]: [all 0]</li>
+</ul>
+<p>This packet stores the mask of blocks present in preceding packet of type 2
+[if any]. The bit corresponding to a block is 1 if the block has at least one
+non-zero coefficient and is stored in the residual data packet, 0 if all
+its coefficients are zero and it&#8217;s not stored in the residual data packet.
+This packet type is present for all non-skipped macroblocks, including I_PCM
+macroblocks - but its payload word is always equal to 0 for I_PCM.</p>
+</div>
+<div class="section" id="packet-type-4-pred-weight-table">
+<h2><a class="toc-backref" href="#id7">Packet type 4: pred weight table</a><a class="headerlink" href="#packet-type-4-pred-weight-table" title="Permalink to this headline">¶</a></h2>
+<p>Packet is made of a header word and a variable number of table write requests,
+each request being two words long.</p>
+<ul class="simple">
+<li>Header word:<ul>
+<li>bits 0-23: number of write requests</li>
+<li>bits 24-31: packet type [4]</li>
+</ul>
+</li>
+<li>Request word 0: table index to write</li>
+<li>Request word 1: data value to write</li>
+</ul>
+<p>The pred weight table is treated as an array of 0x81 32-bit numbers. This
+packet is made of &#8220;write requests&#8221; which are supposed to modify the table
+entries in the receiver.</p>
+<p>The table indices are:</p>
+<ul class="simple">
+<li>Index i * 2, 0 &lt;= i &lt;= 0x1f:<ul>
+<li>bits 0-7: luma_offset_l0[i]</li>
+<li>bits 8-15: luma_weight_l0[i]</li>
+<li>bit 16: chroma_weight_l0_flag[i]</li>
+<li>bit 17: luma_weight_l0_flag[i]</li>
+</ul>
+</li>
+<li>Index i * 2 + 1, 0 &lt;= i &lt;= 0x1f:<ul>
+<li>bits 0-7: chroma_offset_l0[i][1]</li>
+<li>bits 8-15: chroma_weight_l0[i][1]</li>
+<li>bits 16-23: chroma_offset_l0[i][0]</li>
+<li>bits 24-31: chroma_weight_l0[i][0]</li>
+</ul>
+</li>
+<li>Index 0x40 + i * 2, 0 &lt;= i &lt;= 0x1f:<ul>
+<li>bits 0-7: luma_offset_l1[i]</li>
+<li>bits 8-15: luma_weight_l1[i]</li>
+<li>bit 16: chroma_weight_l1_flag[i]</li>
+<li>bit 17: luma_weight_l1_flag[i]</li>
+</ul>
+</li>
+<li>Index 0x40 + i * 2 + 1, 0 &lt;= i &lt;= 0x1f:<ul>
+<li>bits 0-7: chroma_offset_l1[i][1]</li>
+<li>bits 8-15: chroma_weight_l1[i][1]</li>
+<li>bits 16-23: chroma_offset_l1[i][0]</li>
+<li>bits 24-31: chroma_weight_l1[i][0]</li>
+</ul>
+</li>
+<li>Index 0x80:<ul>
+<li>bits 0-2: chroma_log2_weight_denom</li>
+<li>bits 3-5: luma_log2_weight_denom</li>
+</ul>
+</li>
+</ul>
+<p>The requests are emitted in the following order:</p>
+<ul class="simple">
+<li>0x80</li>
+<li>for 0 &lt;= i &lt;= num_ref_idx_l0_active_minus1: 2*i, 2*i + 1</li>
+<li>for 0 &lt;= i &lt;= num_ref_idx_l1_active_minus1: 0x40 + 2*i, 0x40 + 2*i + 1</li>
+</ul>
+<p>The fields corresponding to data not present in the bitstream are set to 0,
+they&#8217;re <em>not</em> set to their inferred values.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MBRING format</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#packet-type-0-macroblock-info">Packet type 0: macroblock info</a></li>
+<li><a class="reference internal" href="#packet-type-1-motion-vectors">Packet type 1: motion vectors</a></li>
+<li><a class="reference internal" href="#packet-type-2-residual-data">Packet type 2: residual data</a></li>
+<li><a class="reference internal" href="#packet-type-3-coded-block-mask">Packet type 3: coded block mask</a></li>
+<li><a class="reference internal" href="#packet-type-4-pred-weight-table">Packet type 4: pred weight table</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../vp2/vld.html"
+                        title="previous chapter">VLD: variable length decoding</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../vp2/macro.html"
+                        title="next chapter">VP2 command macro processor</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/vdec/vp2/mbring.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../vp2/macro.html" title="VP2 command macro processor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../vp2/vld.html" title="VLD: variable length decoding"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Video decoding, encoding, and processing</a> &raquo;</li>
+          <li><a href="../vp2/index.html" >VP2 video decoding</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

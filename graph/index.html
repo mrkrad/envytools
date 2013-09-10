@@ -1,0 +1,162 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PGRAPH: 2d/3d graphics and compute engine &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="next" title="falcon microprocessor" href="../falcon/index.html" />
+    <link rel="prev" title="PFIFO: command submission to execution engines" href="../fifo/index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../falcon/index.html" title="falcon microprocessor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../fifo/index.html" title="PFIFO: command submission to execution engines"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pgraph-2d-3d-graphics-and-compute-engine">
+<span id="nv50-pgraph-clipid"></span><span id="nv50-pgraph-dispatch"></span><span id="nv50-pgraph-rop"></span><span id="nv50-pgraph-texture"></span><span id="nv50-pgraph-ccache"></span><span id="nv50-pgraph-strmout"></span><span id="nv50-pgraph-vfetch"></span><span id="nv50-pgraph"></span><h1>PGRAPH: 2d/3d graphics and compute engine<a class="headerlink" href="#pgraph-2d-3d-graphics-and-compute-engine" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="highlight-python"><pre>PGRAPH, user perspective
+[**   ] graph/intro.txt - Overview of graph objects, functionality common between object classes
+[     ] graph/m2mf.txt - The memory copying objects
+[**   ] graph/2d.txt - Overview of the 2D pipeline
+[**** ] graph/pattern.txt - 2D pattern
+[**   ] graph/ctxobj.txt - graph context objects
+[**   ] graph/solid.txt - 2d solid shape rendering
+[     ] graph/ifc.txt - 2d image from cpu upload
+[     ] graph/nv01-blit.txt - BLIT object
+[     ] graph/nv01-ifm.txt - image to/from memory objects
+[     ] graph/nv01-tex.txt - NV01 textured quad objects
+[     ] graph/nv03-3d.txt - NV03-style 3D objects
+[     ] graph/nv03-gdi.txt - GDI object
+[     ] graph/nv03-sifm.txt - scaled image from memory object
+[     ] graph/nv04-dvd.txt - YCbCr blending object
+[     ] graph/nv10-3d.txt - NV10 Celsius 3D objects
+[     ] graph/nv20-3d.txt - NV20 Kelvin 3D objects
+[     ] graph/nv30-3d.txt - NV30 Rankine 3D objects
+[     ] graph/nv40-3d.txt - NV40 Curie 3D objects
+[     ] graph/nv50-3d.txt - NV50 Tesla 3D objects
+[     ] graph/nvc0-3d.txt - NVC0 Fermi 3D objects
+[     ] graph/nv50-compute.txt - NV50 Compute object
+[     ] graph/nvc0-compute.txt - NVC0 Compute object
+[     ] graph/nv50-texture.txt - NV50 and NVC0 texturing
+[**   ] graph/nv50-cuda-isa.txt - NV50 CUDA/shader ISA overview
+[     ] graph/nvc0-macro.txt - NVC0 graph macro ISA
+[     ] graph/nvc0-cuda-isa.txt - NVC0 CUDA/shader ISA overview
+
+
+PGRAPH, kernel perspective
+[*    ] graph/nv01-pgraph.txt - NV01 graphics engine
+[     ] graph/nv03-pgraph.txt - NV03 graphics engine
+[     ] graph/nv03-pdma.txt - NV03 PGRAPH&#x27;s DMA controller
+[     ] graph/nv04-pgraph.txt - NV04 graphics engine
+[     ] graph/nv10-pgraph.txt - NV10 graphics engine
+[     ] graph/nv20-pgraph.txt - NV20 graphics engine
+[     ] graph/nv40-pgraph.txt - NV40 graphics engine
+[     ] graph/nv50-pgraph.txt - NV50 graphics engine
+[     ] graph/nv50-ctxctl.txt - NV50 PGRAPH context switching unit
+[     ] graph/nvc0-pgraph.txt - NVC0 graphics engine
+[*    ] graph/nvc0-ctxctl/intro.txt - the NVC0 context switching microcoded engines
+[     ] graph/nvc0-ctxctl/mmio.txt - NVC0 CTXCTL MMIO access
+[     ] graph/nvc0-ctxctl/strand.txt - NVC0 strands
+[     ] graph/nvc0-ctxctl/memif.txt - NVC0 CTXCTL memory interface</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../fifo/index.html"
+                        title="previous chapter">PFIFO: command submission to execution engines</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../falcon/index.html"
+                        title="next chapter">falcon microprocessor</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/graph/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../falcon/index.html" title="falcon microprocessor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../fifo/index.html" title="PFIFO: command submission to execution engines"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,160 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PROM: VBIOS ROM access &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../index.html" />
+    <link rel="up" title="GPU external device I/O units" href="index.html" />
+    <link rel="next" title="PNVIO: external device interface" href="pnvio.html" />
+    <link rel="prev" title="PSTRAPS: straps readout and override" href="pstraps.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pnvio.html" title="PNVIO: external device interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pstraps.html" title="PSTRAPS: straps readout and override"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">GPU external device I/O units</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="prom-vbios-rom-access">
+<span id="prom"></span><h1><a class="toc-backref" href="#id1">PROM: VBIOS ROM access</a><a class="headerlink" href="#prom-vbios-rom-access" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#prom-vbios-rom-access" id="id1">PROM: VBIOS ROM access</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#prom-read-access" id="id3">PROM read access</a></li>
+<li><a class="reference internal" href="#prom-timings" id="id4">PROM timings</a></li>
+<li><a class="reference internal" href="#prom-write-access-parallel" id="id5">PROM write access - parallel</a></li>
+<li><a class="reference internal" href="#prom-write-access-spi" id="id6">PROM write access - SPI</a></li>
+<li><a class="reference internal" href="#palt-space" id="id7">PALT space</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="prom-read-access">
+<span id="prom-mmio"></span><h2><a class="toc-backref" href="#id3">PROM read access</a><a class="headerlink" href="#prom-read-access" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="prom-timings">
+<span id="prom-mmio-rom-timings"></span><h2><a class="toc-backref" href="#id4">PROM timings</a><a class="headerlink" href="#prom-timings" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="prom-write-access-parallel">
+<h2><a class="toc-backref" href="#id5">PROM write access - parallel</a><a class="headerlink" href="#prom-write-access-parallel" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="prom-write-access-spi">
+<h2><a class="toc-backref" href="#id6">PROM write access - SPI</a><a class="headerlink" href="#prom-write-access-spi" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="palt-space">
+<span id="palt-mmio"></span><h2><a class="toc-backref" href="#id7">PALT space</a><a class="headerlink" href="#palt-space" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PROM: VBIOS ROM access</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#prom-read-access">PROM read access</a></li>
+<li><a class="reference internal" href="#prom-timings">PROM timings</a></li>
+<li><a class="reference internal" href="#prom-write-access-parallel">PROM write access - parallel</a></li>
+<li><a class="reference internal" href="#prom-write-access-spi">PROM write access - SPI</a></li>
+<li><a class="reference internal" href="#palt-space">PALT space</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pstraps.html"
+                        title="previous chapter">PSTRAPS: straps readout and override</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pnvio.html"
+                        title="next chapter">PNVIO: external device interface</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/io/prom.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pnvio.html" title="PNVIO: external device interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pstraps.html" title="PSTRAPS: straps readout and override"
+             >previous</a> |</li>
+        <li><a href="../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="index.html" >GPU external device I/O units</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

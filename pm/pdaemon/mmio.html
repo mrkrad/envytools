@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>General MMIO register access &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="PDAEMON: card management microprocesor" href="../pdaemon/index.html" />
+    <link rel="next" title="Engine power gating" href="../pdaemon/epwr.html" />
+    <link rel="prev" title="Idle counters" href="../pdaemon/counter.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/epwr.html" title="Engine power gating"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/counter.html" title="Idle counters"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" accesskey="U">PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="general-mmio-register-access">
+<span id="pdaemon-subintr-mmio"></span><span id="pdaemon-mmio"></span><h1>General MMIO register access<a class="headerlink" href="#general-mmio-register-access" title="Permalink to this headline">¶</a></h1>
+<p>PDAEMON can access the whole MMIO range through the IO space.</p>
+<p>To read from a MMIO address, poke the address into MMIO_ADDR then trigger a read
+by poking 0x100f1 to MMIO_CTRL. Wait for MMIO_CTRL&#8217;s bits 12-14 to be cleared
+then read the value from MMIO_VALUE.</p>
+<p>To write to a MMIO address, poke the address into MMIO_ADDR, poke the value
+to be written into MMIO_VALUE then trigger a write by poking 0x100f2 to
+MMIO_CTRL. Wait for MMIO_CTRL&#8217;s bits 12-14 to be cleared if you want to
+make sure the write has been completed.</p>
+<p>Accessing an unexisting address will set MMIO_CTRL&#8217;s bit 13 after MMIO_TIMEOUT
+cycles have passed.</p>
+<p>NVD9 introduced the possibility to choose from which access point should
+the MMIO request be sent. ROOT can access everything, IBUS accesses everything
+minus PMC, PBUS, PFIFO, PPCI and a few other top-level MMIO range.
+On nvd9+, accessing an un-existing address with the ROOT access point can lead
+to a hard-lock.
+XXX: What&#8217;s the point of this feature?</p>
+<p>It is possible to get an interrupt when an error occurs by poking 1 to
+MMIO_INTR_EN. The interrupt will be fired on line 11. The error is described
+in MMIO_ERR.</p>
+<dl class="docutils">
+<dt>MMIO 0x7a0 / I[0x1e800]: MMIO_ADDR</dt>
+<dd><p class="first">Specifies the MMIO address that will be written to/read from by MMIO_CTRL.</p>
+<p>On nva3-d9, this register only contains the address to be accessed.</p>
+<p>On nvd9, this register became a bitfield:
+bits 0-25: ADDR
+bit 27: ACCESS_POINT</p>
+<blockquote class="last">
+<div>0: ROOT
+1: IBUS</div></blockquote>
+</dd>
+<dt>MMIO 0x7a4 / I[0x1e900]: MMIO_VALUE</dt>
+<dd>The value that will be written to / is read from MMIO_ADDR when an operation
+is triggered by MMIO_CTRL.</dd>
+<dt>MMIO 0x7a8 / I[0x1e900]: MMIO_TIMEOUT</dt>
+<dd>Specifies the timeout for MMIO access.
+XXX: Clock source? PDAEMON&#8217;s core clock, PTIMER&#8217;s, Host&#8217;s?</dd>
+<dt>MMIO 0x7ac / I[0x1eb00]: MMIO_CTRL</dt>
+<dd><p class="first">Process the MMIO request with given params (MMIO_ADDR, MMIO_VALUE).
+bits 0-1: request</p>
+<blockquote>
+<div>0: XXX
+1: read
+2: write
+3: XXX</div></blockquote>
+<p class="last">bits 4-7: BYTE_MASK
+bit 12: BUSY [RO]
+bit 13: TIMEOUT [RO]
+bit 14: FAULT [RO]
+bit 16: TRIGGER</p>
+</dd>
+<dt>MMIO 0x7b0 / I[0x1ec00] <span class="classifier-delimiter">:</span> <span class="classifier">MMIO_ERR</span></dt>
+<dd><dl class="first docutils">
+<dt>Specifies the MMIO error status:</dt>
+<dd><ul class="first last simple">
+<li>TIMEOUT: ROOT/IBUS has not answered PDAEMON&#8217;s request</li>
+<li>CMD_WHILE_BUSY: a request has been fired while being busy</li>
+<li>WRITE: set if the request was a write, cleared if it was a read</li>
+<li>FAULT: No engine answered ROOT/IBUS&#8217;s request</li>
+</ul>
+</dd>
+</dl>
+<p>On nva3-d9, clearing MMIO_INTR&#8217;s bit 0 will also clear MMIO_ERR.
+On nvd9+, clearing MMIO_ERR is done by poking 0xffffffff.</p>
+<p>Nva3-c0:
+bit 0: TIMEOUT
+bit 1: CMD_WHILE_BUSY
+bit 2: WRITE
+bits 3-31: ADDR</p>
+<p>Nvc0-d9:
+bit 0: TIMEOUT
+bit 1: CMD_WHILE_BUSY
+bit 2: WRITE
+bits 3-30: ADDR
+bit 31: FAULT</p>
+<p class="last">Nvd9+:
+bit 0: TIMEOUT_ROOT
+bit 1: TIMEOUT_IBUS
+bit 2: CMD_WHILE_BUSY
+bit 3: WRITE
+bits 4-29: ADDR
+bit 30: FAULT_ROOT
+bit 31: FAULT_IBUS</p>
+</dd>
+<dt>MMIO 0x7b4 / I[0x1ed00] <span class="classifier-delimiter">:</span> <span class="classifier">MMIO_INTR</span></dt>
+<dd><p class="first">Specifies which MMIO interrupts are active. Clear the associated bit to ACK.
+bit 0: ERR</p>
+<blockquote class="last">
+<div>Clearing this bit will also clear MMIO_ERR on nva3-d9.</div></blockquote>
+</dd>
+<dt>MMIO 0x7b8 / I[0x1ee00] <span class="classifier-delimiter">:</span> <span class="classifier">MMIO_INTR_EN</span></dt>
+<dd>Specifies which MMIO interrupts are enabled. Interrupts will be fired on
+SUBINTR #4.
+bit 0: ERR</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../pdaemon/counter.html"
+                        title="previous chapter">Idle counters</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../pdaemon/epwr.html"
+                        title="next chapter">Engine power gating</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/pm/pdaemon/mmio.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../pdaemon/epwr.html" title="Engine power gating"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../pdaemon/counter.html" title="Idle counters"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Power, thermal, and clock management</a> &raquo;</li>
+          <li><a href="../pdaemon/index.html" >PDAEMON: card management microprocesor</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

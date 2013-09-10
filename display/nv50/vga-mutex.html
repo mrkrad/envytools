@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NV50 VGA mutexes &mdash; envytools git documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'git',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="envytools git documentation" href="../../index.html" />
+    <link rel="up" title="NV50- display subsystem" href="../nv50/index.html" />
+    <link rel="next" title="PUNK1C3: ???" href="../nv50/punk1c3.html" />
+    <link rel="prev" title="NV50 VGA emulation" href="../nv50/vga.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../nv50/punk1c3.html" title="PUNK1C3: ???"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../nv50/vga.html" title="NV50 VGA emulation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Display subsystem</a> &raquo;</li>
+          <li><a href="../nv50/index.html" accesskey="U">NV50- display subsystem</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nv50-vga-mutexes">
+<span id="nv50-vga-mutex"></span><h1><a class="toc-backref" href="#id1">NV50 VGA mutexes</a><a class="headerlink" href="#nv50-vga-mutexes" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#nv50-vga-mutexes" id="id1">NV50 VGA mutexes</a><ul>
+<li><a class="reference internal" href="#introduction" id="id2">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers" id="id3">MMIO registers</a></li>
+<li><a class="reference internal" href="#operation" id="id4">Operation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2><a class="toc-backref" href="#id2">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Dedicated mutex support hardware supporting trylock and unlock operations
+on 64 mutexes by 2 clients. Present on NV50+ cards.</p>
+</div>
+<div class="section" id="mmio-registers">
+<h2><a class="toc-backref" href="#id3">MMIO registers</a><a class="headerlink" href="#mmio-registers" title="Permalink to this headline">¶</a></h2>
+<p>On NV50+, the registers are located in PDISPLAY.VGA area:</p>
+<ul class="simple">
+<li>619e80 MUTEX_TRYLOCK_A[0]</li>
+<li>619e84 MUTEX_TRYLOCK_A[1]</li>
+<li>619e88 MUTEX_UNLOCK_A[0]</li>
+<li>619e8c MUTEX_UNLOCK_A[1]</li>
+<li>619e90 MUTEX_TRYLOCK_B[0]</li>
+<li>619e94 MUTEX_TRYLOCK_B[1]</li>
+<li>619e98 MUTEX_UNLOCK_B[0]</li>
+<li>619e9c MUTEX_UNLOCK_B[1]</li>
+</ul>
+</div>
+<div class="section" id="operation">
+<h2><a class="toc-backref" href="#id4">Operation</a><a class="headerlink" href="#operation" title="Permalink to this headline">¶</a></h2>
+<p>There are 64 mutexes and 2 clients. The clients are called A and B. Each mutex
+can be either unlocked, locked by A, or locked by B at any given moment. Each
+of the clients has two register sets: TRYLOCK and UNLOCK. Each register set
+contains two MMIO registers, one controlling mutexes 0-31, the other mutexes
+32-63. Bit i of a given register corresponds directly to mutex i or i+32.</p>
+<p>Writing a value to the TRYLOCK register will execute a trylock operation on
+all mutexes whose corresponding bit is set to 1. The trylock operation makes
+an unlocked mutex locked by the requesting client, and does nothing on
+an already locked mutex.</p>
+<p>Writing a value to the UNLOCK register will likewise execute an unlock
+operation on selected mutexes. The unlock operation makes a mutex locked
+by the requesting client unlocked. It doesn&#8217;t affect mutexes that are
+unlocked or locked by the other client.</p>
+<p>Reading a value from either the TRYLOCK or UNLOCK register will return 1
+for mutexes locked by the requesting client, 0 for unlocked mutexes and
+mutexes locked by the other client.</p>
+<dl class="docutils">
+<dt>MMIO 0x619e80+i*4, i &lt; 2: MUTEX_TRYLOCK_A</dt>
+<dd>Writing executes the trylock operation as client A, treating the written
+value as a mask of mutexes to lock. Reading returns a mask of mutexes
+locked by client A. Bit j of the value corresponds to mutex i*32+j.</dd>
+<dt>MMIO 0x619e88+i*4, i &lt; 2: MUTEX_UNLOCK_A</dt>
+<dd>Like MUTEX_TRYLOCK_A, but executes the unlock operation on write.</dd>
+<dt>MMIO 0x619e90+i*4, i &lt; 2: MUTEX_TRYLOCK_B</dt>
+<dd>Like MUTEX_TRYLOCK_A, but for client B.</dd>
+<dt>MMIO 0x619e98+i*4, i &lt; 2: MUTEX_UNLOCK_B</dt>
+<dd>Like MUTEX_UNLOCK_A, but for client B.</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">NV50 VGA mutexes</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#mmio-registers">MMIO registers</a></li>
+<li><a class="reference internal" href="#operation">Operation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../nv50/vga.html"
+                        title="previous chapter">NV50 VGA emulation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../nv50/punk1c3.html"
+                        title="next chapter">PUNK1C3: ???</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/display/nv50/vga-mutex.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../nv50/punk1c3.html" title="PUNK1C3: ???"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../nv50/vga.html" title="NV50 VGA emulation"
+             >previous</a> |</li>
+        <li><a href="../../index.html">envytools git documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Display subsystem</a> &raquo;</li>
+          <li><a href="../nv50/index.html" >NV50- display subsystem</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Marcin Kościelnicki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -82,6 +82,10 @@ some engines have their own type of memory interface.</li>
 coprocessor is called a &#8220;secretful&#8221; unit. [see <a class="reference internal" href="crypt.html#falcon-crypt"><em>Cryptographic coprocessor</em></a>]</li>
 <li>any unit-specific logic the microprocessor is supposed to control</li>
 </ul>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out remaining circuitry</p>
+</div>
 <p>The base falcon hardware comes in three different revisions:</p>
 <ul class="simple">
 <li>version 0: used on NV98, NVAA, NVAC</li>
@@ -90,7 +94,16 @@ edge/level interrupt modes, new instructions [division, software traps,
 bitfield manipulation, ...], and other features</li>
 <li>version 4: used on NVD9+ for some engines [others are still version 3]:
 adds support for 24-bit code addressing, debugging and ???</li>
+<li>version 5: used on NVF0+ for some engines, redesigned ISA encoding</li>
 </ul>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out v4 new stuff</p>
+</div>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out v5 new stuff</p>
+</div>
 <p>The falcon units present on nvidia cards are:</p>
 <ul class="simple">
 <li>The VP3/VP4/VP5 engines [NV98 and NVAA+]:<ul>

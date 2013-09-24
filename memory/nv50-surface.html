@@ -100,6 +100,14 @@ storage, and can be bound to at least the following slots on the engines:</p>
 <li>PCOPY input and output buffers</li>
 <li>PDISPLAY: the framebuffer</li>
 </ul>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">vdec stuff</p>
+</div>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">NVC0 ZCULL?</p>
+</div>
 <p>Surfaces on nv50+ cards come in two types: linear and tiled. Linear surfaces
 have a simple format, but they&#8217;re are limitted to 2 dimensions only, don&#8217;t
 support arrays nor mipmapping when used as textures, cannot be used for zeta
@@ -152,6 +160,11 @@ information is needed</li>
 <li>height: surface height in elements, only used when bounds checking / size
 information is needed</li>
 </ul>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">check pitch, width, height min/max values. this may depend on binding
+point. check if 64 byte alignment still holds on NVC0.</p>
+</div>
 <p>The address of element (x,y) is:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">address</span> <span class="o">+</span> <span class="n">pitch</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="n">elem_size</span> <span class="o">*</span> <span class="n">x</span>
 </pre></div>
@@ -181,6 +194,14 @@ is byte-oriented</li>
 <li>height: surface height [size in y dimension] in elements</li>
 <li>depth: surface depth [size in z dimension] in elements</li>
 </ul>
+<div class="admonition-todo admonition" id="index-3">
+<p class="first admonition-title">Todo</p>
+<p class="last">check bounduaries on them all, check tiling on NVC0.</p>
+</div>
+<div class="admonition-todo admonition" id="index-4">
+<p class="first admonition-title">Todo</p>
+<p class="last">PCOPY surfaces with weird tile size</p>
+</div>
 <p>It should be noted that some limits on these parameters are to some extent
 specific to the binding point. In particular, x tile size greater than 0 is
 only supported by the render targets and texture units, with render targets
@@ -595,9 +616,29 @@ mode.</p>
 <li><p class="first">mode 0xb: MS8_CS24 [NVC0-]</p>
 </li>
 </ul>
+<div class="admonition-todo admonition" id="index-5">
+<p class="first admonition-title">Todo</p>
+<p class="last">wtf is up with modes 4 and 5?</p>
+</div>
+<div class="admonition-todo admonition" id="index-6">
+<p class="first admonition-title">Todo</p>
+<p class="last">nail down MS8_CS24 sample positions</p>
+</div>
+<div class="admonition-todo admonition" id="index-7">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out mode 6</p>
+</div>
+<div class="admonition-todo admonition" id="index-8">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out MS8_CS24 C component</p>
+</div>
 <p>Note that MS8 and MS8_C* modes cannot be used with surfaces that have 16-byte
 element size due to a hardware limitation. Also, multisampling is only
 possible with tiled surfaces.</p>
+<div class="admonition-todo admonition" id="index-9">
+<p class="first admonition-title">Todo</p>
+<p class="last">check MS8/128bpp on NVC0.</p>
+</div>
 <p>The sample ids are, for full samples, the values appearing in the sampleid
 register. The numbers in () are the geometric coordinates of the sample
 inside a pixel, as used by the rasterization process. The dimensions in []
@@ -668,6 +709,10 @@ texturing.</li>
 with 1 bit per sample. Has to be used with a special texture sampler.
 Usable for texturing and 2d engine.</li>
 </ul>
+<div class="admonition-todo admonition" id="index-10">
+<p class="first admonition-title">Todo</p>
+<p class="last">wtf is color format 0x1d?</p>
+</div>
 <div class="section" id="simple-color-surface-formats">
 <h3><a class="toc-backref" href="#id9">Simple color surface formats</a><a class="headerlink" href="#simple-color-surface-formats" title="Permalink to this headline">¶</a></h3>
 <p>A simple color surface is a surface where each element corresponds directly to
@@ -743,6 +788,10 @@ and filled with the R value on write.</p>
 <ul class="simple">
 <li>texture format 0x07: 8_8_8_X8</li>
 </ul>
+<div class="admonition-todo admonition" id="index-11">
+<p class="first admonition-title">Todo</p>
+<p class="last">htf do I determine if a surface format counts as 0x07 or 0x08?</p>
+</div>
 <ul class="simple">
 <li>texture format 0x08: 8_8_8_8<ul>
 <li>color format 0xcf: BGRA, unorm</li>
@@ -832,6 +881,14 @@ and filled with the R value on write.</p>
 </li>
 <li>texture format 0x1e: 4_4</li>
 </ul>
+<div class="admonition-todo admonition" id="index-12">
+<p class="first admonition-title">Todo</p>
+<p class="last">which component types are valid for a given bitfield size?</p>
+</div>
+<div class="admonition-todo admonition" id="index-13">
+<p class="first admonition-title">Todo</p>
+<p class="last">clarify float encoding for weird sizes</p>
+</div>
 </div>
 <div class="section" id="shared-exponent-color-format">
 <h3><a class="toc-backref" href="#id10">Shared exponent color format</a><a class="headerlink" href="#shared-exponent-color-format" title="Permalink to this headline">¶</a></h3>
@@ -857,6 +914,10 @@ of both pixels. There are two YUV formats, differing in bitfield order:</p>
 <li>texture format 0x21: U8_YA8_V8_YB8</li>
 <li>texture format 0x22: YA8_U8_YB8_V8</li>
 </ul>
+<div class="admonition-todo admonition" id="index-14">
+<p class="first admonition-title">Todo</p>
+<p class="last">verify I haven&#8217;t screwed up the ordering here</p>
+</div>
 </div>
 <div class="section" id="zeta-surface-format">
 <h3><a class="toc-backref" href="#id12">Zeta surface format</a><a class="headerlink" href="#zeta-surface-format" title="Permalink to this headline">¶</a></h3>
@@ -943,9 +1004,17 @@ about the sampling process.</p>
 </ul>
 </li>
 </ul>
+<div class="admonition-todo admonition" id="index-15">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out the MS8_CS24 formats</p>
+</div>
 </div>
 <div class="section" id="compressed-texture-formats">
 <h3><a class="toc-backref" href="#id13">Compressed texture formats</a><a class="headerlink" href="#compressed-texture-formats" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-16">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 </div>
 <div class="section" id="bitmap-surface-format">
 <h3><a class="toc-backref" href="#id14">Bitmap surface format</a><a class="headerlink" href="#bitmap-surface-format" title="Permalink to this headline">¶</a></h3>
@@ -959,6 +1028,10 @@ by x coordinate of the sample, then by its y coordinate.</p>
 it forces using a special &#8220;box&#8221; filter: result of sampling is a percentage of
 &#8220;lit&#8221; area in WxH rectangle centered on the sampled location. See
 graph/nv50-texture.txt for more details.</p>
+<div class="admonition-todo admonition" id="index-17">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out more. Check how it works with 2d engine.</p>
+</div>
 <p>The formats are:</p>
 <p>Element size 8:</p>
 <ul class="simple">
@@ -980,6 +1053,10 @@ is a 2-bit enum.</p>
 <li>1: SINGLE - 2 compression tag bits per roptile, 1 tag cell per 64kB page</li>
 <li>2: DOUBLE - 4 compression tag bits per roptile, 2 tag cells per 64kB page</li>
 </ul>
+<div class="admonition-todo admonition" id="index-18">
+<p class="first admonition-title">Todo</p>
+<p class="last">verify somehow.</p>
+</div>
 <p>The set of valid compression modes varies with the storage type. NONE is
 always valid.</p>
 <p>As mentioned before, the low-level rearrangement is further split into two
@@ -1024,6 +1101,10 @@ a roptile is identical between the virtual and physical addresses.</dd>
 </dl>
 <div class="section" id="tiled-color-storage-types">
 <h3><a class="toc-backref" href="#id16">Tiled color storage types</a><a class="headerlink" href="#tiled-color-storage-types" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-19">
+<p class="first admonition-title">Todo</p>
+<p class="last">reformat</p>
+</div>
 <p>The following tiled color storage types exist:</p>
 <dl class="docutils">
 <dt>storage type 0x70: TILED</dt>
@@ -1123,10 +1204,18 @@ valid multisampling modes: MS8*</dd>
 </div>
 <div class="section" id="zeta-storage-types">
 <h3><a class="toc-backref" href="#id17">Zeta storage types</a><a class="headerlink" href="#zeta-storage-types" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-20">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 </div>
 </div>
 <div class="section" id="nvc0-storage-types">
 <h2><a class="toc-backref" href="#id18">NVC0 storage types</a><a class="headerlink" href="#nvc0-storage-types" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-21">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 </div>
 </div>
 

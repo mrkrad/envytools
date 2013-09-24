@@ -141,6 +141,10 @@ as well. They can be triggered by hw events, or by the user.</p>
 </tr>
 </tbody>
 </table>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out interrupt 5</p>
+</div>
 <p>Each interrupt line has a physical wire assigned to it. For edge-triggered
 interrupts, there&#8217;s a flip-flop that&#8217;s set by 0-to-1 edge on the wire or
 a write to INTR_SET register, and cleared by writing to INTR_CLEAR register.
@@ -180,6 +184,10 @@ wasn&#8217;t meant to be set is likely a bad idea.</p>
 <p class="last">This register is set to 0xfc04 on reset.</p>
 </dd>
 </dl>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">check edge/level distinction on v0</p>
+</div>
 </div>
 <div class="section" id="interrupt-routing">
 <span id="falcon-io-intr-route"></span><h2><a class="toc-backref" href="#id5">Interrupt routing</a><a class="headerlink" href="#interrupt-routing" title="Permalink to this headline">¶</a></h2>
@@ -296,6 +304,10 @@ if (falcon_version &gt;= 4) {
 $sp -= 4;
 ST(32, $sp, $pc);
 $pc = $tv;</pre>
+</div>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">didn&#8217;t ieX -&gt; isX happen before v4?</p>
 </div>
 </div>
 <div class="section" id="returning-form-an-interrupt-iret">

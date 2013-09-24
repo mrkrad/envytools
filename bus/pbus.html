@@ -185,6 +185,10 @@ NV25:NVC0</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">loads and loads of unknown registers not shown</p>
+</div>
 </div>
 <div class="section" id="debug-registers">
 <span id="pbus-mmio-debug"></span><h2><a class="toc-backref" href="#id4">DEBUG registers</a><a class="headerlink" href="#debug-registers" title="Permalink to this headline">¶</a></h2>
@@ -201,6 +205,10 @@ bit 28: HEADS_TIED - mirrors writes to <a class="reference internal" href="../di
 <dd>bit 3: <a class="reference internal" href="hwsq.html#hwsq-mmio"><em>HWSQ_ENABLE - enables HWSQ effects</em></a>
 bit 4: <a class="reference internal" href="hwsq.html#hwsq-mmio"><em>HWSQ_OVERRIDE_MODE - selects read value for HWSQ-overriden registers</em></a></dd>
 </dl>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">document other known stuff</p>
+</div>
 </div>
 <div class="section" id="interrupts">
 <span id="pbus-mmio-intr"></span><span id="pbus-intr"></span><h2><a class="toc-backref" href="#id5">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
@@ -216,6 +224,10 @@ bit 4: <a class="reference internal" href="hwsq.html#hwsq-mmio"><em>HWSQ_OVERRID
 <li>001170 INTR_USER1_TRIGGER - user interrupt generation [NVC0-]</li>
 <li>001174+i*4, i&lt;4 INTR_USER1_SCRATCH - user interrupt generation [NVC0-]</li>
 </ul>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">cleanup</p>
+</div>
 <p>On NV03+, PMC interrupt line 28 is connected to PBUS. On NVC0+, there are
 actually two lines: the normal line and the NRHOST line [see <a class="reference internal" href="pmc.html#pmc-intr"><em>Interrupts</em></a>
 for a description of them]. PBUS has many subinterrupts. The PBUS-&gt;PMC interrupt
@@ -289,12 +301,20 @@ The hardware doesn&#8217;t use their contents for anything:</p>
 </div>
 <div class="section" id="nva3-ibus-timeout">
 <span id="pbus-mmio-ibus-timeout"></span><h2><a class="toc-backref" href="#id7">NVA3 IBUS timeout</a><a class="headerlink" href="#nva3-ibus-timeout" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-3">
+<p class="first admonition-title">Todo</p>
+<p class="last">description, maybe move somewhere else</p>
+</div>
 <p>On NVA3:NVC0, the IBUS timeout is controlled by:</p>
 <dl class="docutils">
 <dt>MMIO 0x001a14: IBUS_TIMEOUT [NVA3:NVC0]</dt>
 <dd>Specifies how many host cycles to wait for response on MMIO accesses
 forwarded to the IBUS.</dd>
 </dl>
+<div class="admonition-todo admonition" id="index-4">
+<p class="first admonition-title">Todo</p>
+<p class="last">verify that it&#8217;s host cycles</p>
+</div>
 <p>Reads that time out return a value of 0. Note that using too long timeout
 value will result in PCIE master timeouts instead, with possibly quite bad
 consequences. An IBUS timeout will cause the MMIO_FAULT interrupt to be lit.</p>

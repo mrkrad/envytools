@@ -84,6 +84,10 @@ specifies the virtual address corresponding to it + some flags. The flags are:</
 <li>bit 1: busy. Set if page is mapped, but is still being uploaded.</li>
 <li>bit 2: secret. Set if page contains secret code. [see <a class="reference internal" href="crypt.html#falcon-crypt"><em>Cryptographic coprocessor</em></a>]</li>
 </ul>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">check interaction of secret / usable flags and entering/exitting auth mode</p>
+</div>
 <p>A TLB entry is considered valid if any of the three flags is set. Whenever
 a virtual address is accessed, the TLBs are scanned for a valid entry
 with matching virtual address. The physical page whost TLB matched is then

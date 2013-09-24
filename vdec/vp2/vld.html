@@ -116,6 +116,10 @@ commands that parse single syntax elements.</p>
 <li>max picture width and height: 128 macroblocks</li>
 <li>max macroblocks in picture: 8192</li>
 </ul>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">width/height max may be 255?</p>
+</div>
 <p>There are two modes of operation that VLD can be used with: single-macroblock
 mode and whole-slice mode. In the single-macroblock mode, parsing for each
 macroblock has to be manually triggered by the firmware. In whole-slice mode,
@@ -245,6 +249,10 @@ context selection algorithms</li>
 </tr>
 </tbody>
 </table>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">reg 0x00800</p>
+</div>
 </div>
 <div class="section" id="reset">
 <span id="pbsp-io-vld-reset"></span><h2><a class="toc-backref" href="#id4">Reset</a><a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h2>
@@ -317,6 +325,10 @@ slice, 0 otherwise</li>
 <p>Both CAVLC and CABAC sometimes use decoded data of previous macroblocks in the
 slice to determine the decoding algorithm for syntax elements of the current
 macroblock. The VLD thus stores this data in its internal hidden memory.</p>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">what macroblocks are stored, indexing, tagging, reset state</p>
+</div>
 <p>For each macroblock, the following data is stored:</p>
 <ul class="simple">
 <li>slice_tag</li>
@@ -331,6 +343,10 @@ macroblock. The VLD thus stores this data in its internal hidden memory.</p>
 <li>coded_block_flag for each block</li>
 <li>total_coeffs for each luma 4x4 / luma AC block</li>
 </ul>
+<div class="admonition-todo admonition" id="index-3">
+<p class="first admonition-title">Todo</p>
+<p class="last">and availability status?</p>
+</div>
 <p>Additionally, the following data of the previous decoded macroblock [not
 indexed by macroblock address] is stored:</p>
 <ul class="simple">
@@ -339,6 +355,10 @@ indexed by macroblock address] is stored:</p>
 </div>
 <div class="section" id="interrupts">
 <span id="pbsp-io-vld-intr"></span><span id="pbsp-intr-vld"></span><h2><a class="toc-backref" href="#id7">Interrupts</a><a class="headerlink" href="#interrupts" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-4">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 <dl class="docutils">
 <dt>BAR0 0x10301c / XLMI 0x00700: INTR_EN</dt>
 <dd><ul class="first last simple">
@@ -364,12 +384,24 @@ indexed by macroblock address] is stored:</p>
 </div>
 <div class="section" id="stream-input">
 <span id="pbsp-io-vld-stream"></span><h2><a class="toc-backref" href="#id8">Stream input</a><a class="headerlink" href="#stream-input" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-5">
+<p class="first admonition-title">Todo</p>
+<p class="last">RE and write me</p>
+</div>
 </div>
 <div class="section" id="mbring-output">
 <span id="pbsp-io-vld-mbring"></span><h2><a class="toc-backref" href="#id9">MBRING output</a><a class="headerlink" href="#mbring-output" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-6">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 </div>
 <div class="section" id="command-and-status-registers">
 <span id="pbsp-io-vld-result"></span><span id="pbsp-io-vld-status"></span><span id="pbsp-io-vld-command"></span><h2><a class="toc-backref" href="#id10">Command and status registers</a><a class="headerlink" href="#command-and-status-registers" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-7">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 <div class="section" id="command-0-get-ue">
 <h3><a class="toc-backref" href="#id11">Command 0: GET_UE</a><a class="headerlink" href="#command-0-get-ue" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
@@ -560,6 +592,10 @@ this_mb.mb_skip_flag = 1;
 this_mb.slice_tag = slice_tag;
 mbring_emit_macroblock();</pre>
 </div>
+<div class="admonition-todo admonition" id="index-8">
+<p class="first admonition-title">Todo</p>
+<p class="last">more inferred crap</p>
+</div>
 </div>
 <div class="section" id="command-0xa-macroblock-layer-mbfdf">
 <h3><a class="toc-backref" href="#id21">Command 0xa: MACROBLOCK_LAYER_MBFDF</a><a class="headerlink" href="#command-0xa-macroblock-layer-mbfdf" title="Permalink to this headline">¶</a></h3>
@@ -599,6 +635,10 @@ macroblock_layer();</pre>
 <p>Parses the pred_weight_table element, stores its contents in internal memory,
 and advances the bitstream to the end of the element.</p>
 <p>Operation:</p>
+<div class="admonition-todo admonition" id="index-9">
+<p class="first admonition-title">Todo</p>
+<p class="last">write me</p>
+</div>
 </div>
 <div class="section" id="command-0xc-slice-data">
 <h3><a class="toc-backref" href="#id23">Command 0xc: SLICE_DATA</a><a class="headerlink" href="#command-0xc-slice-data" title="Permalink to this headline">¶</a></h3>

@@ -163,6 +163,10 @@ bytes seem to conflict with UNK2. Related to PAUDIO.</li>
 <li>UNK2 - unknown 0x400-byte long area.</li>
 <li>RAMIN proper - PDMA INstance memory, used to store <a class="reference internal" href="nv01-pdma.html#nv01-dmaobj"><em>DMA objects</em></a></li>
 </ul>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">figure out what UNK1 nad UNK2 are for</p>
+</div>
 <p>Of the above areas, the first 5 have fixed address and size, selected from
 4 possible layout options by software. DMA objects, however, can be located
 anywhere in RAMIN - including space taken up by one of the other areas, but
